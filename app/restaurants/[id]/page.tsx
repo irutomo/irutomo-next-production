@@ -1,13 +1,14 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Globe } from 'lucide-react';
+import { ArrowLeft, Globe, Clock, MapPin, Calendar } from 'lucide-react';
 import { createServerComponentClient } from '@/lib/supabase';
 import { Restaurant } from '@/lib/types';
 import { notFound } from 'next/navigation';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // 星評価を表示するコンポーネント
@@ -22,11 +23,55 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+// タブコンポーネント
+function TabButton({ 
+  active, 
+  onClick, 
+  children 
+}: { 
+  active: boolean; 
+  onClick: () => void; 
+  children: React.ReactNode 
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+        active 
+          ? 'border-orange-500 text-orange-500' 
+          : 'border-transparent text-gray-600 hover:text-gray-800'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 // データベースから取得したレストラン情報の型
 type DatabaseRestaurant = Partial<Restaurant> & {
   id: string;
   name: string;
   image_url?: string;
+  description?: string;
+  cuisine?: string;
+  price_range?: string;
+  opening_hours?: string;
+  phone_number?: string;
+  phone?: string;
+  website?: string;
+  menu_items?: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    image?: string;
+  }[];
+  business_hours?: {
+    day: string;
+    open_time: string;
+    close_time: string;
+    is_closed: boolean;
+  }[];
 };
 
 // レストラン情報をSupabaseから取得する関数
@@ -55,7 +100,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const restaurant = await getRestaurant(params.id);
+  const id = (await params).id;
+  const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
     return {
@@ -65,26 +111,62 @@ export async function generateMetadata(
 
   return {
     title: `${restaurant.name} | IRUTOMO - 日本の飲食店予約サービス`,
-    description: `${restaurant.name}の詳細情報。${restaurant.category || ''}のお店です。`,
+    description: `${restaurant.name}の詳細情報。${restaurant.cuisine || ''}のお店です。`,
   };
 }
 
-export default async function RestaurantPage({ params }: Props) {
-  const restaurant = await getRestaurant(params.id);
+export default async function RestaurantPage({ params, searchParams }: Props) {
+  const id = (await params).id;
+  const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
     notFound();
   }
 
-  // デモデータ（画像内の情報に合わせる）
+  // 実際のレストランデータを使用
   const restaurantData = {
-    name: '熟成肉と本格炭火焼肉 又三郎',
-    address: '大阪府大阪市中央区東心斎橋1丁目16-20',
-    category: '焼肉',
-    rating: 4.7,
+    name: restaurant.name,
+    address: restaurant.address || '住所情報がありません',
+    category: restaurant.cuisine || 'カテゴリなし',
+    rating: restaurant.rating || 0,
     image: restaurant.image_url || '/images/restaurants/restaurant1_main.jpg',
     id: restaurant.id,
+    description: restaurant.description || 'このレストランの説明はまだありません。',
+    phone: restaurant.phone_number || restaurant.phone || '電話番号情報がありません',
+    price_range: restaurant.price_range || '価格情報がありません',
+    website: restaurant.website || '#',
+    opening_hours: restaurant.opening_hours || '営業時間情報がありません',
+    menu_items: restaurant.menu_items || [],
+    business_hours: restaurant.business_hours || []
   };
+
+  // 営業時間のフォーマット
+  const formatBusinessHours = (hours: typeof restaurantData.business_hours) => {
+    if (!hours || hours.length === 0) {
+      return [
+        { day: '月曜日', formattedHours: '情報なし' },
+        { day: '火曜日', formattedHours: '情報なし' },
+        { day: '水曜日', formattedHours: '情報なし' },
+        { day: '木曜日', formattedHours: '情報なし' },
+        { day: '金曜日', formattedHours: '情報なし' },
+        { day: '土曜日', formattedHours: '情報なし' },
+        { day: '日曜日', formattedHours: '情報なし' },
+      ];
+    }
+
+    const days = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'];
+    // 曜日順にソート
+    const sortedHours = [...hours].sort((a, b) => 
+      days.indexOf(a.day) - days.indexOf(b.day)
+    );
+    
+    return sortedHours.map(hour => ({
+      ...hour,
+      formattedHours: hour.is_closed ? '定休日' : `${hour.open_time} - ${hour.close_time}`
+    }));
+  };
+
+  const formattedHours = formatBusinessHours(restaurantData.business_hours);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,27 +207,95 @@ export default async function RestaurantPage({ params }: Props) {
             </div>
           </div>
 
+          {/* タブナビゲーション */}
+          <div className="border-b mb-6">
+            <div className="flex overflow-x-auto hide-scrollbar">
+              <TabButton active={true} onClick={() => {}}>
+                店舗情報
+              </TabButton>
+              <TabButton active={false} onClick={() => {}}>
+                メニュー
+              </TabButton>
+              <TabButton active={false} onClick={() => {}}>
+                レビュー
+              </TabButton>
+            </div>
+          </div>
+
           {/* 店舗詳細情報 */}
           <div className="space-y-6">
-            {/* 住所 */}
-            <div className="flex items-start gap-2">
-              <div className="text-gray-700 mt-1">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
+            {/* 基本情報 */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4">基本情報</h2>
+              <div className="space-y-4">
+                {/* 住所 */}
+                <div className="flex items-start gap-2">
+                  <div className="text-gray-700 mt-1">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <p className="text-gray-700">{restaurantData.address}</p>
+                </div>
+
+                {/* 電話番号 */}
+                <div className="flex items-start gap-2">
+                  <div className="text-gray-700 mt-1">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-gray-700">{restaurantData.phone}</p>
+                </div>
+
+                {/* 料金目安 */}
+                <div className="flex items-start gap-2">
+                  <div className="text-gray-700 mt-1">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-gray-700">{restaurantData.price_range}</p>
+                </div>
+
+                {/* ウェブサイト */}
+                <div className="flex items-start gap-2">
+                  <div className="text-orange-500 mt-1">
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <Link href={restaurantData.website} className="text-orange-500 hover:underline">
+                    ウェブサイトを見る
+                  </Link>
+                </div>
               </div>
-              <p className="text-gray-700">{restaurantData.address}</p>
             </div>
 
-            {/* ウェブサイト */}
-            <div className="flex items-start gap-2">
-              <div className="text-orange-500 mt-1">
-                <Globe className="w-5 h-5" />
+            {/* 紹介文 */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4">紹介</h2>
+              <p className="text-gray-700 whitespace-pre-line">{restaurantData.description}</p>
+            </div>
+
+            {/* 営業時間 */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4">営業時間</h2>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <tbody>
+                    {formattedHours.map((hour, index) => (
+                      <tr 
+                        key={hour.day} 
+                        className={index % 2 === 0 ? 'bg-gray-50' : ''}
+                      >
+                        <td className="py-3 px-4 border-b">{hour.day}</td>
+                        <td className={`py-3 px-4 border-b ${
+                          hour.formattedHours === '定休日' ? 'text-red-500' : ''
+                        }`}>
+                          {hour.formattedHours}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <Link href="#" className="text-orange-500 hover:underline">
-                ウェブサイトを見る
-              </Link>
             </div>
 
             {/* 予約ボタン */}

@@ -15,7 +15,7 @@ export function HeroSection() {
         
         <div className="flex justify-center">
           <Link 
-            href="/reservation" 
+            href="/restaurants" 
             className="bg-primary-500 hover:bg-primary-600 text-white font-medium px-8 py-3 rounded-md transition-colors"
           >
             今すぐ予約

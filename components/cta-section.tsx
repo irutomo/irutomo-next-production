@@ -8,7 +8,7 @@ export function CTASection() {
         
         <div className="flex flex-col md:flex-row justify-center gap-4">
           <Link
-            href="/reservation"
+            href="/restaurants"
             className="bg-primary-500 hover:bg-primary-600 text-white font-medium px-8 py-3 rounded-md transition-colors"
           >
             レストラン予約する

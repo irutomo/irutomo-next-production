@@ -1,54 +1,149 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { NavBar } from './ui/navbar';
+import { Home, Info, Store, Star, User } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Sidebar } from './ui/sidebar';
+import { useState, useEffect } from 'react';
+import { Fade as Hamburger } from 'hamburger-react';
+import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 
 export function Header() {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const { isSignedIn, user } = useUser();
+  
+  // モバイルメニューが開いている間はスクロールを無効化
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+  
+  // 画面幅が変わったときにメニューを閉じる
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isOpen]);
+  
+  // ルート遷移時にモバイルメニューを閉じる
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+  
+  const navItems = [
+    { name: 'ホーム', url: '/', icon: Home },
+    { name: 'サービス紹介', url: '/service', icon: Info },
+    { name: '店舗情報', url: '/restaurants', icon: Store },
+    { name: 'レビュー', url: '/reviews', icon: Star }
+  ];
+  
+  // オーバーレイコンポーネント
+  const MobileOverlay = () => (
+    <div 
+      className={cn(
+        "fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300",
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      )}
+      onClick={() => setIsOpen(false)}
+      aria-hidden="true"
+    />
+  );
+  
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b">
-      <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center">
-            <span className="font-bold text-2xl">
-              <span className="text-primary-500">IRU</span>
-              <span className="text-black">tomo</span>
-            </span>
-          </Link>
+    <>
+      {/* モバイルオーバーレイ */}
+      <MobileOverlay />
+      
+      {/* サイドバー */}
+      <Sidebar isOpen={isOpen} />
+      
+      <header className="sticky top-0 z-30 w-full bg-white border-b">
+        <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
+          {/* ロゴ */}
+          <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center">
+              <Image 
+                src="/irulogo-hidariue.svg"
+                alt="IRUtomo Logo"
+                width={120}
+                height={24}
+                priority
+              />
+            </Link>
+          </div>
+          
+          {/* デスクトップナビゲーション */}
+          <div className="hidden md:flex md:items-center md:justify-center md:flex-1">
+            <nav className="flex space-x-8">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.url}
+                  className={cn(
+                    "text-base font-medium transition-colors hover:text-primary-600",
+                    pathname === item.url || pathname.startsWith(`${item.url}/`)
+                      ? "text-primary-600"
+                      : "text-gray-700"
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          
+          {/* 右側ユーザーエリア */}
+          <div className="flex items-center gap-4">
+            {/* Clerk認証ボタン */}
+            <div className="hidden md:block">
+              {isSignedIn ? (
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: "w-9 h-9",
+                    },
+                  }}
+                  afterSignOutUrl="/"
+                />
+              ) : (
+                <SignInButton mode="modal">
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 py-2 text-sm font-medium">
+                    ログイン
+                  </Button>
+                </SignInButton>
+              )}
+            </div>
+            
+            {/* ハンバーガーメニュー（モバイル用） */}
+            <div className="md:hidden flex items-center">
+              <Hamburger 
+                toggled={isOpen} 
+                toggle={setIsOpen} 
+                size={20} 
+                color="#F97316" 
+                label="メニューを開く"
+                rounded
+              />
+            </div>
+          </div>
         </div>
-        
-        <div className="hidden md:flex items-center">
-          <nav className="flex items-center rounded-full border border-gray-200 overflow-hidden">
-            <Link href="/" className="bg-primary-500 text-white px-6 py-2 text-sm font-medium">
-              ホーム
-            </Link>
-            <Link href="/service" className="px-6 py-2 text-sm font-medium text-gray-700">
-              サービス紹介
-            </Link>
-            <Link href="/restaurants" className="px-6 py-2 text-sm font-medium text-gray-700">
-              店舗情報
-            </Link>
-            <Link href="/reviews" className="px-6 py-2 text-sm font-medium text-gray-700">
-              レビュー
-            </Link>
-          </nav>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <button className="flex items-center gap-1 text-sm font-medium text-gray-700">
-            <svg width="16" height="16" viewBox="0 0 16 16" className="text-gray-400" fill="currentColor">
-              <path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
-              <path d="M10.5 8C10.5 9.38 9.38 10.5 8 10.5 6.62 10.5 5.5 9.38 5.5 8 5.5 6.62 6.62 5.5 8 5.5 9.38 5.5 10.5 6.62 10.5 8zM8 3.5C5.51 3.5 3.5 5.51 3.5 8 3.5 10.49 5.51 12.5 8 12.5 10.49 12.5 12.5 10.49 12.5 8 12.5 5.51 10.49 3.5 8 3.5z"/>
-            </svg>
-            teller
-          </button>
-          <button className="text-gray-700">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="4" y1="12" x2="20" y2="12"></line>
-              <line x1="4" y1="18" x2="20" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

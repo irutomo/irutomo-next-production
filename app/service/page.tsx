@@ -95,25 +95,24 @@ export default function ServicePage() {
       {/* サービスの特徴 */}
       <section className="py-12 bg-gray-50">
         <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-primary-500 mb-12">サービスの特徴</h2>
+          <h2 className="text-2xl font-bold text-primary-500 mb-8">サービスの特徴</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {features.map((feature, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-8 flex items-start">
-                <div className="mr-6 mt-1">
-                  <div className="bg-primary-100 rounded-full p-4 w-16 h-16 flex items-center justify-center">
+              <div key={index} className="bg-white rounded-lg shadow-sm p-6 flex items-start">
+                <div className="mr-4">
+                  <div className="bg-primary-50 rounded-full p-3 w-14 h-14 flex items-center justify-center">
                     <Image 
                       src={feature.icon} 
                       alt={feature.title} 
-                      width={32} 
-                      height={32} 
-                      className="text-primary-500" 
+                      width={28} 
+                      height={28} 
                     />
                   </div>
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                  <p className="text-gray-600 text-sm">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -124,19 +123,19 @@ export default function ServicePage() {
       {/* 利用方法 */}
       <section className="py-12">
         <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-primary-500 mb-12">利用方法</h2>
+          <h2 className="text-2xl font-bold text-primary-500 mb-8">利用方法</h2>
           
-          <div className="space-y-8">
+          <div className="space-y-6">
             {usageSteps.map((step, index) => (
               <div key={index} className="flex">
-                <div className="mr-6">
-                  <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center">
-                    <span className="text-primary-500 text-xl font-bold">{step.number}</span>
+                <div className="mr-4">
+                  <div className="bg-primary-100 rounded-full w-12 h-12 flex items-center justify-center">
+                    <span className="text-primary-500 text-lg font-bold">{step.number}</span>
                   </div>
                 </div>
-                <div className="pt-2">
-                  <h3 className="font-bold text-lg mb-2">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
+                <div className="pt-1">
+                  <h3 className="font-bold text-lg mb-1">{step.title}</h3>
+                  <p className="text-gray-600 text-sm">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -145,15 +144,15 @@ export default function ServicePage() {
       </section>
 
       {/* よくある質問 */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-primary-50">
         <div className="container max-w-6xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-primary-500 mb-8">よくある質問</h2>
           
-          <div className="bg-white rounded-lg p-8">
+          <div className="bg-white rounded-lg p-8 shadow-md">
             <div className="space-y-8">
               {faqs.map((faq, index) => (
-                <div key={index}>
-                  <h3 className="font-bold text-lg mb-2">{faq.question}</h3>
+                <div key={index} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                  <h3 className="font-bold text-lg mb-3">{faq.question}</h3>
                   <p className="text-gray-600">{faq.answer}</p>
                 </div>
               ))}

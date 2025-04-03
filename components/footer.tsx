@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Footer() {
   return (
@@ -7,10 +8,13 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
             <Link href="/" className="flex items-center justify-center md:justify-start">
-              <span className="font-bold text-2xl">
-                <span className="text-primary-500">IRU</span>
-                <span className="text-black">tomo</span>
-              </span>
+              <Image 
+                src="/irulogo-hidariue.svg" 
+                alt="IRUTOMO" 
+                width={120} 
+                height={30} 
+                className="h-auto"
+              />
             </Link>
             <p className="text-sm text-gray-500 mt-2 text-center md:text-left">© 2025 IRUTOMO. All rights reserved.</p>
           </div>

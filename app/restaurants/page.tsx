@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { SearchBar } from '@/components/ui/search-bar';
 import { createServerComponentClient } from '@/lib/supabase';
 import { Restaurant } from '@/lib/types';
+import { RestaurantActionButton } from '@/components/restaurant/restaurant-action-button';
 
 export const metadata: Metadata = {
   title: '店舗情報 | IRUTOMO - 日本の飲食店予約サービス',
@@ -112,12 +113,7 @@ export default async function RestaurantsPage() {
                       地図で見る
                     </Link>
                     
-                    <Link
-                      href={`/restaurants/${restaurant.id}`}
-                      className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md text-sm transition-colors"
-                    >
-                      選択
-                    </Link>
+                    <RestaurantActionButton restaurantId={restaurant.id} />
                   </div>
                 </div>
               </div>

@@ -85,7 +85,15 @@ export async function POST(req: Request) {
         // ユーザーをSupabaseに挿入
         const { error } = await supabase
           .from("users")
-          .insert(userData);
+          .insert({
+            clerk_id: id,
+            email: email_addresses?.[0]?.email_address || "no-email@example.com",
+            id: id,
+            name: `${first_name || ""} ${last_name || ""}`.trim(),
+            phone: phone_numbers?.[0]?.phone_number || "",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
           
         if (error) {
           console.error("Supabaseユーザー作成エラー:", error);
@@ -98,7 +106,13 @@ export async function POST(req: Request) {
         // ユーザー情報を更新
         const { error } = await supabase
           .from("users")
-          .update(userData)
+          .update({
+            clerk_id: id,
+            email: email_addresses?.[0]?.email_address || "no-email@example.com",
+            name: `${first_name || ""} ${last_name || ""}`.trim(),
+            phone: phone_numbers?.[0]?.phone_number || "",
+            updated_at: new Date().toISOString()
+          })
           .eq("id", id);
           
         if (error) {
@@ -115,10 +129,19 @@ export async function POST(req: Request) {
     if (eventType === "user.deleted") {
       const { id } = evt.data;
       
+      // idがundefinedまたはnullの場合はエラーを返す
+      if (!id) {
+        console.error("削除対象のユーザーIDが不明です");
+        return NextResponse.json(
+          { error: "ユーザーIDが指定されていません" },
+          { status: 400 }
+        );
+      }
+      
       const { error } = await supabase
         .from("users")
         .delete()
-        .eq("id", id);
+        .eq("id", id as string);
         
       if (error) {
         console.error("Supabaseユーザー削除エラー:", error);

@@ -12,35 +12,35 @@ export type Json =
 export type Restaurant = {
   id: string
   name: string
-  description: string
-  address: string
-  phone_number?: string
-  phone?: string
-  category?: string
-  price_range?: string
-  opening_hours?: string
-  images?: string[]
-  image_url?: string
-  image?: string
-  rating?: number
-  cuisine?: string
-  location?: string
-  created_at: string
-  updated_at?: string
-  japanese_name?: string
-  korean_name?: string
-  english_address?: string
-  korean_address?: string
-  korean_description?: string
-  google_maps_link?: string
-  has_vegetarian_options?: boolean
-  has_english_menu?: boolean
-  has_korean_menu?: boolean
-  has_japanese_menu?: boolean
-  phone_reservation_required?: boolean
-  owner_id?: string
-  is_active?: boolean
-  email?: string
+  description?: string | null
+  address?: string | null
+  phone_number?: string | null
+  phone?: string | null
+  category?: string | null
+  price_range?: string | null
+  opening_hours?: string | null
+  images?: Json | null
+  image_url?: string | null
+  image?: string | null
+  rating?: number | null
+  cuisine?: string | null
+  location?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+  japanese_name?: string | null
+  korean_name?: string | null
+  english_address?: string | null
+  korean_address?: string | null
+  korean_description?: string | null
+  google_maps_link?: string | null
+  has_vegetarian_options?: boolean | null
+  has_english_menu?: boolean | null
+  has_korean_menu?: boolean | null
+  has_japanese_menu?: boolean | null
+  phone_reservation_required?: boolean | null
+  owner_id?: string | null
+  is_active?: boolean | null
+  email?: string | null
 }
 
 // 予約情報の型

@@ -102,12 +102,15 @@
   /* ハンバーガーメニュースタイル */
   .hamburger-react {
     @apply z-[60] !important;
+    position: relative !important;
+    display: block !important;
     transform: scale(1.2);
   }
   
   .hamburger-react > * {
     @apply bg-orange-500 !important;
     height: 2px !important;
+    display: block !important;
   }
   
   /* ハンバーガーメニューのラップ要素 */
@@ -115,6 +118,25 @@
     @apply relative z-[60] flex items-center justify-center;
     width: 40px;
     height: 40px;
+    position: relative !important;
+    display: flex !important;
+  }
+  
+  /* サイドバーのスタイル */
+  .sidebar-open {
+    overflow: hidden;
+  }
+  
+  /* モバイルナビゲーション */
+  @media (max-width: 767px) {
+    body {
+      padding-top: env(safe-area-inset-top, 0);
+    }
+    
+    /* ハンバーガーメニューがオープン時のスタイル */
+    body:has(.hamburger-react[data-toggled="true"]) {
+      overflow: hidden;
+    }
   }
 }
 

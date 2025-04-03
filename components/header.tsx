@@ -73,7 +73,7 @@ export function Header() {
       {/* サイドバー */}
       <Sidebar isOpen={isOpen} />
       
-      <header className="sticky top-0 z-30 w-full bg-white shadow-sm">
+      <header className="sticky top-0 z-40 w-full bg-white shadow-sm">
         <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
           {/* ロゴ */}
           <div className="flex items-center gap-2">
@@ -121,18 +121,20 @@ export function Header() {
             </div>
             
             {/* ハンバーガーメニュー（モバイル用） */}
-            <div className="md:hidden hamburger-container">
-              <Hamburger 
-                toggled={isOpen} 
-                toggle={setIsOpen} 
-                size={24}
-                color="#F97316" 
-                duration={0.3}
-                distance="md"
-                easing="ease-in-out"
-                rounded
-                label="メニューを開く"
-              />
+            <div className="block md:hidden relative z-50">
+              <div className="hamburger-container">
+                <Hamburger 
+                  toggled={isOpen} 
+                  toggle={() => setIsOpen(!isOpen)} 
+                  size={24}
+                  color="#F97316" 
+                  duration={0.3}
+                  distance="md"
+                  rounded
+                  label="メニューを開く"
+                  hideOutline={false}
+                />
+              </div>
             </div>
           </div>
         </div>

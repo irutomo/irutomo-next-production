@@ -24,7 +24,8 @@ const sidebarVariants = {
     transition: {
       type: "spring",
       stiffness: 300,
-      damping: 30
+      damping: 30,
+      duration: 0.3
     }
   },
   closed: {
@@ -32,8 +33,9 @@ const sidebarVariants = {
     opacity: 0,
     transition: {
       type: "spring",
-      stiffness: 300,
-      damping: 30
+      stiffness: 400,
+      damping: 40,
+      duration: 0.3
     }
   }
 };
@@ -49,7 +51,7 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
   return (
     <motion.div
       className={cn(
-        "fixed top-0 left-0 h-full w-[280px] z-[55] bg-white shadow-lg",
+        "fixed top-0 left-0 h-full w-[280px] z-[50] bg-white shadow-xl",
         "md:hidden", // モバイルのみ表示
       )}
       initial="closed"
@@ -98,7 +100,7 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
         {/* ナビゲーションメニュー */}
         <ScrollArea className="flex-grow">
           <nav className="p-4">
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               <SidebarItem 
                 href="/" 
                 icon={<Home className="w-5 h-5" />}
@@ -127,6 +129,17 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
               >
                 レビュー
               </SidebarItem>
+
+              {/* ログイン後のみ表示される項目 */}
+              {isSignedIn && (
+                <SidebarItem 
+                  href="/dashboard" 
+                  icon={<User className="w-5 h-5" />} 
+                  isActive={pathname.startsWith("/dashboard")} 
+                >
+                  マイページ
+                </SidebarItem>
+              )}
             </ul>
           </nav>
         </ScrollArea>
@@ -170,7 +183,7 @@ function SidebarItem({ href, icon, isActive, children }: SidebarItemProps) {
         className={cn(
           "flex items-center gap-3 px-4 py-3 rounded-md transition-colors",
           isActive 
-            ? "bg-orange-50 text-orange-500" 
+            ? "bg-orange-50 text-orange-500 font-medium" 
             : "hover:bg-gray-100"
         )}
       >

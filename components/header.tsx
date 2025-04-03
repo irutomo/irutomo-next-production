@@ -7,7 +7,7 @@ import { Home, Info, Store, Star, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './ui/sidebar';
 import { useState, useEffect } from 'react';
-import { Fade as Hamburger } from 'hamburger-react';
+import { Turn as Hamburger } from 'hamburger-react';
 import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -57,7 +57,7 @@ export function Header() {
   const MobileOverlay = () => (
     <div 
       className={cn(
-        "fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300",
+        "fixed inset-0 bg-black/50 z-[45] md:hidden transition-opacity duration-300",
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
       onClick={() => setIsOpen(false)}
@@ -121,15 +121,17 @@ export function Header() {
             </div>
             
             {/* ハンバーガーメニュー（モバイル用） */}
-            <div className="md:hidden flex items-center z-50 relative">
+            <div className="md:hidden hamburger-container">
               <Hamburger 
                 toggled={isOpen} 
                 toggle={setIsOpen} 
-                size={20} 
+                size={24}
                 color="#F97316" 
-                label="メニューを開く"
+                duration={0.3}
+                distance="md"
+                easing="ease-in-out"
                 rounded
-                hideOutline={false}
+                label="メニューを開く"
               />
             </div>
           </div>

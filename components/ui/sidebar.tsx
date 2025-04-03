@@ -49,7 +49,7 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
   return (
     <motion.div
       className={cn(
-        "fixed top-0 left-0 h-full w-[280px] z-50 bg-white shadow-lg",
+        "fixed top-0 left-0 h-full w-[280px] z-[55] bg-white shadow-lg",
         "md:hidden", // モバイルのみ表示
       )}
       initial="closed"

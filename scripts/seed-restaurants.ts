@@ -4,6 +4,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { Database } from '../lib/database.types';
 
 // 環境変数を読み込む
 dotenv.config({ path: '.env.local' });
@@ -17,7 +18,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+console.log('クラウドSupabaseに接続します:', supabaseUrl);
+const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
 
 // サンプルレストランデータ
 const sampleRestaurants = [

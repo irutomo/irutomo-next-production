@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="#ff9900" />
+  
+  <!-- ロゴマーク -->
+  <g transform="translate(120, 315) scale(0.5)">
+    <rect width="512" height="512" rx="60" ry="60" fill="#ff9900" />
+    <g transform="translate(256, 256) scale(0.8) translate(-256, -256)">
+      <path d="M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm-32.1 281.7c-7.5 7.5-19.8 7.5-27.3 0l-95-95c-7.5-7.5-7.5-19.8 0-27.3s19.8-7.5 27.3 0l81.3 81.3L378.9 119c7.5-7.5 19.7-7.5 27.3 0s7.5 19.8 0 27.3l-182.3 183.4z" fill="#6a329f" />
+    </g>
+    <text x="430" y="400" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="end">IRU</text>
+  </g>
+  
+  <!-- テキスト -->
+  <text x="600" y="260" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white" text-anchor="middle">오사카여행</text>
+  <text x="600" y="360" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="white" text-anchor="middle">일본 현지인 맛집 예약</text>
+  <text x="600" y="440" font-family="Arial, sans-serif" font-size="40" fill="white" text-anchor="middle">현지인이 추천하는 진짜 맛집을 만나보세요</text>
+</svg> 

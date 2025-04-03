@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "node",
+      "args": ["/Users/ori/.nvm/versions/node/v20.19.0/lib/node_modules/@modelcontextprotocol/server-postgres/dist/index.js", "postgresql://postgres.qgqebyunvamzfaaaypmd:irutomo-kr@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?sslaccept=accept_invalid_certs&readOnly=false"],
+      "permissions": ["read", "write"]
+    }
+  }
+} 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { NavBar } from './ui/navbar';
+import { NavBar } from './ui/tubelight-navbar';
 import { Home, Info, Store, Star, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './ui/sidebar';
@@ -73,7 +73,7 @@ export function Header() {
       {/* サイドバー */}
       <Sidebar isOpen={isOpen} />
       
-      <header className="sticky top-0 z-30 w-full bg-white border-b">
+      <header className="sticky top-0 z-30 w-full bg-white shadow-sm">
         <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
           {/* ロゴ */}
           <div className="flex items-center gap-2">
@@ -90,22 +90,12 @@ export function Header() {
           
           {/* デスクトップナビゲーション */}
           <div className="hidden md:flex md:items-center md:justify-center md:flex-1">
-            <nav className="flex space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.url}
-                  className={cn(
-                    "text-base font-medium transition-colors hover:text-primary-600",
-                    pathname === item.url || pathname.startsWith(`${item.url}/`)
-                      ? "text-primary-600"
-                      : "text-gray-700"
-                  )}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
+            <div className="w-auto">
+              <NavBar 
+                items={navItems} 
+                className="static transform-none w-auto" 
+              />
+            </div>
           </div>
           
           {/* 右側ユーザーエリア */}
@@ -131,7 +121,7 @@ export function Header() {
             </div>
             
             {/* ハンバーガーメニュー（モバイル用） */}
-            <div className="md:hidden flex items-center">
+            <div className="md:hidden flex items-center z-50 relative">
               <Hamburger 
                 toggled={isOpen} 
                 toggle={setIsOpen} 
@@ -139,6 +129,7 @@ export function Header() {
                 color="#F97316" 
                 label="メニューを開く"
                 rounded
+                hideOutline={false}
               />
             </div>
           </div>

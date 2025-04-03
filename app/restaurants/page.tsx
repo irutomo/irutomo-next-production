@@ -26,6 +26,8 @@ function StarRating({ rating }: { rating: number }) {
 async function getRestaurants(): Promise<Restaurant[]> {
   try {
     const supabase = await createServerComponentClient();
+    console.log('Supabaseに接続しました');
+    
     const { data, error } = await supabase
       .from('restaurants')
       .select('*')
@@ -36,6 +38,7 @@ async function getRestaurants(): Promise<Restaurant[]> {
       return [];
     }
     
+    console.log('取得したレストラン数:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('レストラン情報の取得中にエラーが発生しました:', error);
@@ -64,7 +67,7 @@ export default async function RestaurantsPage() {
               <div key={restaurant.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
                 <div className="relative h-48">
                   <Image
-                    src={restaurant.images?.[0] || '/images/restaurants/placeholder.jpg'}
+                    src={restaurant.image_url || '/images/restaurants/placeholder.jpg'}
                     alt={restaurant.name}
                     fill
                     className="object-cover"
@@ -77,8 +80,8 @@ export default async function RestaurantsPage() {
                 
                 <div className="p-4">
                   <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
-                  {/* 評価情報はレストランデータに含まれていないため仮の値を表示、あるいは別途取得が必要 */}
-                  <StarRating rating={4.5} />
+                  {/* 評価情報表示 */}
+                  <StarRating rating={restaurant.rating || 0} />
                   <p className="text-gray-600 text-sm mt-2">{restaurant.description || 'No description available'}</p>
                   
                   <div className="flex justify-between items-center mt-4">

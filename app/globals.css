@@ -45,6 +45,15 @@
   .primary-bg {
     @apply bg-primary-500;
   }
+  
+  /* ハンバーガーメニュースタイル */
+  .hamburger-react {
+    @apply z-50;
+  }
+  
+  .hamburger-react > * {
+    @apply bg-orange-500 !important;
+  }
 }
 
 @layer utilities {

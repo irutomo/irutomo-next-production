@@ -6,6 +6,7 @@ const publicRoutes = [
   '/',
   '/service',
   '/restaurants',
+  '/restaurants/(.*)',
   '/reviews',
   '/write-review',
   '/auth',

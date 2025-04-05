@@ -13,7 +13,7 @@ const config = {
 };
 
 // リモートディレクトリ
-const remoteNodeDir = '/domains/irutomo-trip.com/public_html/';
+const remoteNodeDir = '/home/irutomokrserver/node-apps/irutomo-nextjs/';
 
 // アップロードするファイル
 const filesToUpload = [
@@ -45,7 +45,7 @@ module.exports = {
       name: 'irutomo-nextjs',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3000',
-      cwd: '/home/irutomokrserver/domains/irutomo-trip.com/public_html',
+      cwd: '/home/irutomokrserver/node-apps/irutomo-nextjs',
       instances: 1,
       autorestart: true,
       watch: false,
@@ -74,13 +74,17 @@ function buildProject() {
 
 // 再起動スクリプトの内容
 const restartScript = `#!/bin/bash
-cd /home/irutomokrserver/domains/irutomo-trip.com/public_html
+cd /home/irutomokrserver/node-apps/irutomo-nextjs
 npm install --production
 pm2 delete irutomo-nextjs 2>/dev/null || true
 pm2 start ecosystem.config.js
 pm2 save
+pm2 startup
 echo "Next.jsアプリケーションが再起動されました"
 `;
+
+// .htaccessファイルの内容
+const htaccessContent = fs.readFileSync(path.join(__dirname, 'node-htaccess', '.htaccess'), 'utf8');
 
 // FTPを使用してファイルをアップロード
 async function deployToFtp() {
@@ -100,11 +104,40 @@ async function deployToFtp() {
     console.log('接続成功！ファイルをアップロードしています...');
     
     // リモートディレクトリを確認、なければ作成
+    console.log(`リモートディレクトリを確認・作成: ${remoteNodeDir}`);
     try {
-      await client.ensureDir(remoteNodeDir);
+      // ディレクトリ階層を作成
+      const dirParts = remoteNodeDir.split('/').filter(Boolean);
+      let currentPath = '/';
+      
+      for (const part of dirParts) {
+        currentPath = `${currentPath}${part}/`;
+        try {
+          await client.ensureDir(currentPath);
+        } catch (err) {
+          console.log(`ディレクトリ作成試行: ${currentPath}`);
+          try {
+            await client.mkdir(currentPath);
+          } catch (mkdirErr) {
+            console.log(`既存ディレクトリを使用: ${currentPath}`);
+          }
+          await client.cd(currentPath);
+        }
+      }
     } catch (err) {
       console.log(`リモートディレクトリの確認中にエラーが発生しました: ${err.message}`);
       console.log('既存のディレクトリを使用します...');
+    }
+    
+    // ホームディレクトリに.htaccessファイルをアップロード
+    console.log('Node.js用.htaccessファイルをアップロードしています...');
+    try {
+      await client.cd('/');
+      fs.writeFileSync('temp_htaccess', htaccessContent);
+      await client.uploadFrom('temp_htaccess', '/.htaccess');
+      fs.unlinkSync('temp_htaccess');
+    } catch (err) {
+      console.error(`htaccessアップロード中にエラー: ${err.message}`);
     }
 
     // PM2設定ファイルを作成してアップロード
@@ -144,7 +177,7 @@ async function deployToFtp() {
     console.log('デプロイが完了しました！');
     console.log('');
     console.log('アプリケーションを起動するには、以下のコマンドをサーバー上で実行してください:');
-    console.log('cd /home/irutomokrserver/domains/irutomo-trip.com/public_html');
+    console.log('cd /home/irutomokrserver/node-apps/irutomo-nextjs');
     console.log('bash restart-nextjs.sh');
 
   } catch (err) {

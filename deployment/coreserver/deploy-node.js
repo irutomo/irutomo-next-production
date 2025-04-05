@@ -13,7 +13,7 @@ const config = {
 };
 
 // リモートディレクトリ
-const remoteNodeDir = '/node-apps/';
+const remoteNodeDir = '/domains/irutomo-trip.com/public_html/';
 
 // アップロードするファイル
 const filesToUpload = [
@@ -45,7 +45,7 @@ module.exports = {
       name: 'irutomo-nextjs',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3000',
-      cwd: '/home/irutomokrserver/node-apps',
+      cwd: '/home/irutomokrserver/domains/irutomo-trip.com/public_html',
       instances: 1,
       autorestart: true,
       watch: false,
@@ -74,7 +74,7 @@ function buildProject() {
 
 // 再起動スクリプトの内容
 const restartScript = `#!/bin/bash
-cd /home/irutomokrserver/node-apps
+cd /home/irutomokrserver/domains/irutomo-trip.com/public_html
 npm install --production
 pm2 delete irutomo-nextjs 2>/dev/null || true
 pm2 start ecosystem.config.js
@@ -115,7 +115,7 @@ async function deployToFtp() {
     // 再起動スクリプトを作成してアップロード
     fs.writeFileSync('restart-nextjs.sh', restartScript);
     console.log('再起動スクリプトをアップロードしています...');
-    await client.uploadTo('restart-nextjs.sh', `${remoteNodeDir}restart-nextjs.sh`);
+    await client.uploadFrom('restart-nextjs.sh', `${remoteNodeDir}restart-nextjs.sh`);
     
     // .nextディレクトリをアップロード
     console.log('.nextディレクトリをアップロードしています...');
@@ -144,7 +144,7 @@ async function deployToFtp() {
     console.log('デプロイが完了しました！');
     console.log('');
     console.log('アプリケーションを起動するには、以下のコマンドをサーバー上で実行してください:');
-    console.log('cd /home/irutomokrserver/node-apps');
+    console.log('cd /home/irutomokrserver/domains/irutomo-trip.com/public_html');
     console.log('bash restart-nextjs.sh');
 
   } catch (err) {

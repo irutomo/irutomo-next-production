@@ -1,12 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // 静的エクスポート設定
-  output: 'export',
-  distDir: 'deployment/coreserver/out',
-  // Server Actionsを無効化
+  // 静的エクスポートを無効化
+  output: 'standalone',
+  // Server Actionsを有効化
   experimental: {
-    serverActions: false,
+    serverActions: true,
   },
   images: {
     unoptimized: true,

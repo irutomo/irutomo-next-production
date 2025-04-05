@@ -1,144 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { NavBar } from './ui/tubelight-navbar';
-import { Home, Info, Store, Star, User } from 'lucide-react';
-import { usePathname } from 'next/navigation';
-import { Sidebar } from './ui/sidebar';
-import { useState, useEffect } from 'react';
-import { Turn as Hamburger } from 'hamburger-react';
 import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
 import { Button } from './ui/button';
-import { cn } from '@/lib/utils';
 
 export function Header() {
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
-  const { isSignedIn, user } = useUser();
-  
-  // モバイルメニューが開いている間はスクロールを無効化
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-  
-  // 画面幅が変わったときにメニューを閉じる
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768 && isOpen) {
-        setIsOpen(false);
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen]);
-  
-  // ルート遷移時にモバイルメニューを閉じる
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-  
-  const navItems = [
-    { name: 'ホーム', url: '/', icon: Home },
-    { name: 'サービス紹介', url: '/service', icon: Info },
-    { name: '店舗情報', url: '/restaurants', icon: Store },
-    { name: 'レビュー', url: '/reviews', icon: Star }
-  ];
-  
-  // オーバーレイコンポーネント
-  const MobileOverlay = () => (
-    <div 
-      className={cn(
-        "fixed inset-0 bg-black/50 z-[45] md:hidden transition-opacity duration-300",
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      )}
-      onClick={() => setIsOpen(false)}
-      aria-hidden="true"
-    />
-  );
+  const { isSignedIn } = useUser();
   
   return (
-    <>
-      {/* モバイルオーバーレイ */}
-      <MobileOverlay />
-      
-      {/* サイドバー */}
-      <Sidebar isOpen={isOpen} />
-      
-      <header className="sticky top-0 z-40 w-full bg-white shadow-sm">
-        <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
-          {/* ロゴ */}
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center">
-              <Image 
-                src="/irulogo-hidariue.svg"
-                alt="IRUtomo Logo"
-                width={120}
-                height={24}
-                priority
-              />
-            </Link>
-          </div>
-          
-          {/* デスクトップナビゲーション */}
-          <div className="hidden md:flex md:items-center md:justify-center md:flex-1">
-            <div className="w-auto">
-              <NavBar 
-                items={navItems} 
-                className="static transform-none w-auto" 
-              />
-            </div>
-          </div>
-          
-          {/* 右側ユーザーエリア */}
-          <div className="flex items-center gap-4">
-            {/* Clerk認証ボタン */}
-            <div className="hidden md:block">
-              {isSignedIn ? (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: "w-9 h-9",
-                    },
-                  }}
-                  afterSignOutUrl="/"
-                />
-              ) : (
-                <SignInButton mode="modal">
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 py-2 text-sm font-medium">
-                    ログイン
-                  </Button>
-                </SignInButton>
-              )}
-            </div>
-            
-            {/* ハンバーガーメニュー（モバイル用） */}
-            <div className="block md:hidden relative z-50">
-              <div className="hamburger-container">
-                <Hamburger 
-                  toggled={isOpen} 
-                  toggle={() => setIsOpen(!isOpen)} 
-                  size={24}
-                  color="#F97316" 
-                  duration={0.3}
-                  distance="md"
-                  rounded
-                  label="メニューを開く"
-                  hideOutline={false}
-                />
-              </div>
-            </div>
-          </div>
+    <header className="sticky top-0 z-40 w-full bg-white shadow-sm">
+      <div className="container max-w-[430px] mx-auto flex h-16 items-center justify-between px-4">
+        {/* ロゴ */}
+        <div className="flex items-center gap-2">
+          <Link href="/" className="text-xl font-bold text-[#FFA500]">
+            韓国グルメ予約
+          </Link>
         </div>
-      </header>
-    </>
+        
+        {/* 通知アイコン */}
+        <div className="flex items-center">
+          <Link href={isSignedIn ? "/dashboard/notifications" : "/auth/sign-in"} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    </header>
   );
 }

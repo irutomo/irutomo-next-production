@@ -6,8 +6,8 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { jaJP } from '@clerk/localizations';
 
 export const metadata: Metadata = {
-  title: 'IRUTOMO - 日本の飲食店予約サービス',
-  description: '日本の電話番号がなくても、簡単に飲食店の予約ができるサービスです。',
+  title: '韓国グルメ予約',
+  description: '現地日本人から人気の韓国食堂を簡単予約できるサービスです。',
 };
 
 export const viewport = {
@@ -33,10 +33,12 @@ export default function RootLayout({
             rel="stylesheet"
           />
         </head>
-        <body className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
+        <body className="flex flex-col min-h-screen bg-[#F8F8F8]">
+          <div className="max-w-[430px] mx-auto w-full flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </div>
         </body>
       </html>
     </ClerkProvider>

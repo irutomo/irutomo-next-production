@@ -41,6 +41,13 @@ const restaurants = [
   },
 ];
 
+// 静的パスを生成
+export function generateStaticParams() {
+  return restaurants.map((restaurant) => ({
+    id: restaurant.id,
+  }));
+}
+
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata

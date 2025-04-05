@@ -1,0 +1,148 @@
+# コアサーバー用.htaccessファイル（irutomokrserver.v2007.coreserver.jp用）
+
+# PHP設定
+php_flag display_errors off
+php_flag log_errors on
+php_value error_log /home/v2007/log/php_errors.log
+
+# 環境変数設定
+SetEnv VITE_SUPABASE_URL "https://pyoyziehtekhpergqztm.supabase.co"
+SetEnv VITE_SUPABASE_ANON_KEY "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5b3l6aWVodGVraHBlcmdxenRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA2NjU2MjgsImV4cCI6MjA1NjI0MTYyOH0.8X_4oNt3raXl2sK2MV6VWcLoWwyYHu0DguoPbiC2W-0"
+SetEnv VITE_REDIRECT_URL "https://irutomokrserver.v2007.coreserver.jp/auth/callback"
+SetEnv VITE_STRIPE_WEBHOOK_SECRET "whsec_mvHOIo6eAZffxhq8DebRJZpHYSUCcFza"
+SetEnv VITE_DEBUG_MODE "true"
+SetEnv VITE_LOG_LEVEL "debug"
+SetEnv VITE_ENVIRONMENT "production"
+
+AddHandler application/x-httpd-php .php
+
+# HTTPからHTTPSへのリダイレクト
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# SPA基本設定
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # 認証コールバックを最優先で処理
+  RewriteCond %{REQUEST_URI} ^/auth/callback [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/auth/callback/ [NC]
+  RewriteRule .* /index.html [L]
+  
+  # 既存のファイルやディレクトリは通常通り処理
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  
+  # 404エラーを回避するためにすべてのリクエストをindex.htmlにリダイレクト
+  RewriteRule ^ /index.html [L]
+</IfModule>
+
+# SPA向け404エラーハンドリング
+ErrorDocument 404 /index.html
+
+# キャッシュ設定 - 統合版
+<IfModule mod_headers.c>
+  # サービスワーカーファイルのキャッシュを無効化
+  <Files "service-worker.js">
+    Header set Cache-Control "max-age=0, private, no-store, no-cache, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </Files>
+
+  # デバッグページのキャッシュを無効化
+  <Files "debug.html">
+    Header set Cache-Control "max-age=0, private, no-store, no-cache, must-revalidate"
+  </Files>
+
+  # HTMLファイルのキャッシュを無効化
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # JSとCSSファイルに適切なキャッシュ設定
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "max-age=86400, public"
+  </FilesMatch>
+
+  # 画像ファイルに長めのキャッシュ設定
+  <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico)$">
+    Header set Cache-Control "max-age=2592000, public"
+  </FilesMatch>
+
+  # フォントファイルに長めのキャッシュ設定
+  <FilesMatch "\.(woff|woff2|ttf|otf|eot)$">
+    Header set Cache-Control "max-age=2592000, public"
+  </FilesMatch>
+</IfModule>
+
+# GZip圧縮 - 統合
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript text/javascript application/json application/xml
+</IfModule>
+
+# ブラウザーキャッシュの設定 - 統合
+<IfModule mod_expires.c>
+  ExpiresActive On
+  
+  # デフォルトのキャッシュタイム
+  ExpiresDefault "access plus 1 month"
+  
+  # HTMLドキュメントは1時間
+  ExpiresByType text/html "access plus 0 seconds"
+  
+  # CSSとJSは1週間
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+  ExpiresByType text/javascript "access plus 1 week"
+  
+  # 画像、動画、オーディオは1ヶ月
+  ExpiresByType image/jpg "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/webp "access plus 1 month"
+  
+  # フォントは1ヶ月
+  ExpiresByType application/font-woff "access plus 1 month"
+  ExpiresByType application/font-woff2 "access plus 1 month"
+  ExpiresByType font/woff "access plus 1 month"
+  ExpiresByType font/woff2 "access plus 1 month"
+  ExpiresByType font/ttf "access plus 1 month"
+  ExpiresByType font/otf "access plus 1 month"
+</IfModule>
+
+# セキュリティヘッダー - 統合
+<IfModule mod_headers.c>
+  # XSS Protection
+  Header set X-XSS-Protection "1; mode=block"
+  
+  # Content Type Options
+  Header set X-Content-Type-Options "nosniff"
+  
+  # Frame Options
+  Header set X-Frame-Options "SAMEORIGIN"
+  
+  # Referrer Policy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  
+  # Content Security Policy - すべてのドメインを統合
+  Header set Content-Security-Policy "default-src 'self' blob: data: https://*.gstatic.com https://*.google.com https://*.googleapis.com https://*.cloudfront.net https://*.stripe.com https://*.supabase.co https://*.pyoyziehtekhpergqztm.supabase.co https://*.irutomokrserver.v2007.coreserver.jp https://*.channel.io https://*.channels.io https://*.clerk.accounts.dev https://*.clerk.dev https://*.sentry.io https://*.sentry-cdn.com https://js.sentry-cdn.com https://api.channel.io https://cdn.channel.io https://*.paypal.com https://www.paypal.com https://www.paypalobjects.com wss://*.channels.io wss://*.channel.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.google.com https://*.googleapis.com https://*.cloudfront.net https://*.stripe.com https://*.supabase.co https://*.pyoyziehtekhpergqztm.supabase.co https://*.irutomokrserver.v2007.coreserver.jp https://*.channel.io https://*.channels.io https://*.clerk.accounts.dev https://*.clerk.dev https://*.sentry-cdn.com https://js.sentry-cdn.com https://*.sentry.io https://cdn.channel.io https://*.paypal.com https://www.paypal.com https://www.paypalobjects.com; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://fonts.googleapis.com https://*.channel.io https://cdn.channel.io https://*.clerk.com; img-src 'self' data: blob: https://*.unsplash.com https://*.supabase.co https://*.pyoyziehtekhpergqztm.supabase.co https://*.googleusercontent.com https://*.ggpht.com https://*.ytimg.com https://i.ytimg.com https://*.gstatic.com https://*.google.com https://*.channel.io https://*.channels.io https://*.clerk.accounts.dev https://*.clerk.dev https://cf.channel.io https://cdn.channel.io https://*.clerk.com https://img.clerk.com https://*.paypal.com; media-src 'self' blob: data: https://*.channel.io https://cdn.channel.io https://*.irutomokrserver.v2007.coreserver.jp; font-src 'self' data: https://fonts.gstatic.com https://cdn.channel.io https://*.clerk.com; worker-src 'self' blob: https://*.clerk.com https://*.clerk.accounts.dev https://*.paypal.com; frame-src 'self' https://*.irutomokrserver.v2007.coreserver.jp https://*.clerk.accounts.dev https://*.clerk.dev https://*.youtube.com https://*.paypal.com; connect-src 'self' blob: https://*.gstatic.com https://*.google.com https://*.googleapis.com https://*.cloudfront.net https://*.stripe.com https://*.supabase.co https://*.pyoyziehtekhpergqztm.supabase.co https://*.irutomokrserver.v2007.coreserver.jp https://*.unsplash.com https://*.channel.io https://*.channels.io https://*.clerk.accounts.dev https://*.clerk.dev https://api.channel.io https://cdn.channel.io https://*.sentry.io https://*.sentry-cdn.com https://*.paypal.com wss://*.channels.io wss://*.channel.io; manifest-src 'self';"
+</IfModule>
+
+# ETags無効化（キャッシュ効率向上のため）
+<IfModule mod_headers.c>
+  Header unset ETag
+</IfModule>
+FileETag None
+
+# Stripe APIリバースプロキシ設定
+RewriteRule ^stripe/(.*)$ http://localhost:3001/$1 [P,L]
+RewriteRule ^api/stripe/(.*)$ http://localhost:3001/$1 [P,L]

@@ -12,6 +12,23 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+// 静的パスを生成
+export async function generateStaticParams() {
+  try {
+    const supabase = await createServerComponentClient();
+    const { data } = await supabase.from('restaurants').select('id');
+    
+    if (!data) return [];
+    
+    return data.map((restaurant) => ({
+      id: restaurant.id,
+    }));
+  } catch (error) {
+    console.error('レストランIDの取得エラー:', error);
+    return [];
+  }
+}
+
 // 星評価を表示するコンポーネント
 function StarRating({ rating }: { rating: number }) {
   return (

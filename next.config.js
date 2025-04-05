@@ -1,7 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // 静的エクスポート設定を復活
+  output: 'export',
+  distDir: 'deployment/coreserver/out',
+  // Server Actionsを無効化
+  serverActions: {
+    bodySizeLimit: '2mb',
+    allowedOrigins: ['*'],
+  },
+  experimental: {
+    serverActions: false,
+  },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -22,6 +34,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'irutomo-trip.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qgqebyunvamzfaaaypmd.supabase.co',
       },
     ],
   },

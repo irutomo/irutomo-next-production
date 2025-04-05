@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
+// 静的エクスポート設定を追加
+// 静的エクスポート用のために書き換え
+export const dynamic = 'error';
+export const runtime = 'edge';
+
 // ClerkからSupabaseアクセストークンを取得するAPIルート
 export async function GET() {
   try {

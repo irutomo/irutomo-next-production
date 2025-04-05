@@ -1,0 +1,108 @@
+# NextJS静的サイト用の.htaccessファイル
+
+# PHPの設定
+php_flag display_errors off
+php_value upload_max_filesize 20M
+php_value post_max_size 20M
+
+# 環境変数の設定
+SetEnv NEXT_PUBLIC_SUPABASE_URL "https://qgqebyunvamzfaaaypmd.supabase.co"
+SetEnv NEXT_PUBLIC_SUPABASE_ANON_KEY "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFncWVieXVudmFtemZhYWFhcG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTA0ODQyNTQsImV4cCI6MjAyNjA2MDI1NH0.bq2x4kkKZGjOZXVQV9n9Yw7i5CKydPrK4IA0b64pKQE"
+SetEnv NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY "pk_test_ZGlzdGluY3QtZHVuZmxseS05Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+SetEnv PAYPAL_CLIENT_ID "AX__ZB3M5gT4CkuFI9T8bXoyZYZPqsvVu7JilzrpPg2rzkOPqJ1kh8WbPdeFEVwp9lS4NzQDzfF_SSqv"
+
+# MIMEタイプの定義
+AddType application/javascript .js
+AddType application/json .json
+AddType text/css .css
+AddType image/svg+xml .svg
+AddType image/x-icon .ico
+AddType application/font-woff .woff
+AddType application/font-woff2 .woff2
+
+# ブラウザキャッシュ
+<IfModule mod_expires.c>
+    ExpiresActive On
+    # 画像、フォント、動画など
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType video/webm "access plus 1 year"
+    
+    # CSS, JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/json "access plus 1 month"
+    
+    # HTML, XML
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType text/xml "access plus 0 seconds"
+</IfModule>
+
+# GZip圧縮
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# セキュリティヘッダー
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "no-referrer-when-downgrade"
+    # CSPはNext.jsアプリに合わせて調整が必要
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' *.clerk.accounts.dev *.clerk.com *.paypal.com; connect-src 'self' *.paypal.com *.clerk.accounts.dev *.clerk.com qgqebyunvamzfaaaypmd.supabase.co; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' *.clerk.accounts.dev *.clerk.com *.paypal.com;"
+</IfModule>
+
+# クロスオリジンリソース共有(CORS)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css|js|json)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
+# NextJSルーティング
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # _next/static/ へのリクエストはそのまま通す
+    RewriteRule ^_next/static/(.*)$ _next/static/$1 [L]
+    
+    # APIリクエストはPHPハンドラーにリダイレクト
+    RewriteRule ^api/(.*)$ api/fallback.php [L,QSA]
+    
+    # 存在するファイルへのリクエストはそのまま通す
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+    
+    # 存在するディレクトリへのリクエストはそのまま通す
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # その他すべてのリクエストはindex.htmlにフォールバック
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# サーバーシグネチャを非表示
+ServerSignature Off
+
+# ディレクトリインデックス表示の無効化
+Options -Indexes 

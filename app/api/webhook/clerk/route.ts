@@ -4,6 +4,10 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 
+// 静的エクスポート用に設定を変更
+export const dynamic = 'error';
+export const runtime = 'edge';
+
 export async function POST(req: Request) {
   try {
     // webhookシークレットを取得

@@ -111,21 +111,21 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
               <SidebarItem 
                 href="/service" 
                 icon={<Info className="w-5 h-5" />} 
-                isActive={pathname.startsWith("/service")} 
+                isActive={pathname ? pathname.startsWith("/service") : false} 
               >
                 サービス紹介
               </SidebarItem>
               <SidebarItem 
                 href="/restaurants" 
                 icon={<Store className="w-5 h-5" />} 
-                isActive={pathname.startsWith("/restaurants")} 
+                isActive={pathname ? pathname.startsWith("/restaurants") : false} 
               >
                 店舗情報
               </SidebarItem>
               <SidebarItem 
                 href="/reviews" 
                 icon={<Star className="w-5 h-5" />} 
-                isActive={pathname.startsWith("/reviews")} 
+                isActive={pathname ? pathname.startsWith("/reviews") : false} 
               >
                 レビュー
               </SidebarItem>
@@ -135,7 +135,7 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
                 <SidebarItem 
                   href="/dashboard" 
                   icon={<User className="w-5 h-5" />} 
-                  isActive={pathname.startsWith("/dashboard")} 
+                  isActive={pathname ? pathname.startsWith("/dashboard") : false} 
                 >
                   マイページ
                 </SidebarItem>

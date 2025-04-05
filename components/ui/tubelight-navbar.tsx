@@ -25,8 +25,12 @@ export function NavBar({ items, className }: NavBarProps) {
 
   useEffect(() => {
     // パスに基づいてアクティブなアイテムを設定
-    const currentItem = items.find(item => pathname === item.url || pathname.startsWith(item.url + '/'))
-    setActiveTab(currentItem?.name || items[0].name)
+    if (pathname) {
+      const currentItem = items.find(item => pathname === item.url || pathname.startsWith(item.url + '/'))
+      setActiveTab(currentItem?.name || items[0].name)
+    } else {
+      setActiveTab(items[0].name)
+    }
     
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)

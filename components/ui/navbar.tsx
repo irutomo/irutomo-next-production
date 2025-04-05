@@ -23,8 +23,10 @@ export function NavBar({ items, className }: NavBarProps) {
 
   // パスに基づいてアクティブなアイテムを設定
   useEffect(() => {
-    const currentIndex = items.findIndex(item => pathname === item.url || pathname.startsWith(item.url + '/'));
-    setActiveIndex(currentIndex >= 0 ? currentIndex : null);
+    if (pathname) {
+      const currentIndex = items.findIndex(item => pathname === item.url || pathname.startsWith(item.url + '/'));
+      setActiveIndex(currentIndex >= 0 ? currentIndex : null);
+    }
   }, [pathname, items]);
 
   // チューブライトスタイルのナビゲーション

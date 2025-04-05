@@ -24,7 +24,7 @@ function ReservationForm({ restaurantId }: { restaurantId?: string }) {
         <h2 className="text-xl font-bold">予約情報入力</h2>
       </div>
       
-      <form className="p-6 space-y-6" action="/reservation/input">
+      <form className="p-6 space-y-6" action="/reservation/confirmation">
         {/* 店舗情報 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">店舗</label>
@@ -144,6 +144,60 @@ function ReservationForm({ restaurantId }: { restaurantId?: string }) {
           <p className="mt-1 text-sm text-gray-500">※希望に添えない場合があります</p>
         </div>
         
+        {/* 予約者情報 */}
+        <div className="pt-4 border-t border-gray-100">
+          <h3 className="text-lg font-bold mb-4">予約者情報</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">お名前</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="山田 太郎"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="example@email.com"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="090-1234-5678"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">その他のリクエスト</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="アレルギーや特別なご要望があればお知らせください"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        
         {/* 注意事項 */}
         <div className="bg-gray-50 p-4 rounded-md text-sm text-gray-600">
           <h4 className="font-medium mb-2">予約にあたっての注意事項</h4>
@@ -161,7 +215,7 @@ function ReservationForm({ restaurantId }: { restaurantId?: string }) {
             type="submit"
             className="w-full sm:w-auto bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-8 rounded-md transition-colors"
           >
-            次へ進む
+            予約を確定する
           </button>
         </div>
       </form>

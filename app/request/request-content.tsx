@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { BackHeader } from '@/components/ui/header';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
 export default function RequestContent() {
   // フォームの状態を管理
@@ -94,13 +94,8 @@ export default function RequestContent() {
 
   return (
     <div className="max-w-md mx-auto bg-[#f9fafb] min-h-screen pb-20">
-      {/* ヘッダー */}
-      <header className="sticky top-0 z-10 bg-white shadow-sm flex items-center p-4">
-        <Link href="/" className="mr-3">
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
-        </Link>
-        <h1 className="text-lg font-bold flex-1">リクエストフォーム</h1>
-      </header>
+      {/* 共通ヘッダーコンポーネントを使用 */}
+      <BackHeader title="リクエストフォーム" backUrl="/" />
       
       <div className="m-4">
         <div className="card bg-white p-6 rounded-lg shadow-sm">
@@ -222,29 +217,21 @@ export default function RequestContent() {
 
       {/* 成功モーダル */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
-            <button 
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={closeModal}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6 6 18"/>
-                <path d="m6 6 12 12"/>
-              </svg>
-            </button>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">✅</span>
-              </div>
-              <h3 className="text-xl font-bold mb-4">Success!</h3>
-              <p className="text-gray-600 mb-6">予約リクエストを受け付けました！予約成功メールをお待ちください。予約不可時も100%返金します👍</p>
-              
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg w-11/12 max-w-md">
+            <h2 className="text-xl font-bold mb-4">リクエストを送信しました</h2>
+            <p className="mb-6">内容を確認次第、メールにてご連絡いたします。</p>
+            <div className="flex justify-between">
+              <button 
+                onClick={closeModal}
+                className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+              >
+                閉じる
+              </button>
               <Link href="/">
-                <button className="w-full bg-teal-500 text-white font-bold py-3 rounded-xl transition-all hover:bg-teal-400 active:scale-[0.99]">
+                <div className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                   ホームに戻る
-                </button>
+                </div>
               </Link>
             </div>
           </div>

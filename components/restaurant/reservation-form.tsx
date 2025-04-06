@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from 'react';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 interface ReservationFormProps {
   restaurantId: string;
@@ -17,6 +18,18 @@ export function ReservationForm({ restaurantId }: ReservationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [reservationAmount] = useState("1000"); // 予約手数料1000円固定
+  const [paypalError, setPaypalError] = useState<string | null>(null);
+
+  // PayPal初期化オプション
+  const initialOptions = {
+    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "AX__ZB3M5gT4CkuFI9T8bXoyZYZPqsvVu7JilzrpPg2rzkOPqJ1kh8WbPdeFEVwp9lS4NzQDzfF_SSqv",
+    currency: "JPY",
+    intent: "capture",
+    components: "buttons",
+    debug: process.env.NODE_ENV !== "production",
+  };
 
   // 今日の日付を取得しフォーマット (YYYY-MM-DD)
   const today = new Date().toISOString().split('T')[0];
@@ -37,31 +50,81 @@ export function ReservationForm({ restaurantId }: ReservationFormProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // フォーム送信処理
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  // 注文の作成
+  const createOrder = async () => {
+    setPaypalError(null);
     
-    if (!validateForm()) return;
-    
+    if (!validateForm()) {
+      return Promise.reject("入力内容を確認してください");
+    }
+
     setIsSubmitting(true);
     
     try {
-      // ここに実際の予約処理のコードを追加
-      // 例: APIエンドポイントへのリクエストなど
-      console.log('予約データ:', {
-        restaurantId,
-        name,
-        guests,
-        date,
-        time,
-        phone,
-        email,
-        request
+      console.log("PayPal: 注文作成開始");
+      const response = await fetch('/api/paypal/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: reservationAmount,
+          currency: 'JPY',
+          restaurantId
+        }),
       });
+
+      const data = await response.json();
       
-      // 成功時の処理（デモ用に1秒待機）
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!response.ok) {
+        console.error('注文作成エラーレスポンス:', data);
+        throw new Error(data.message || '注文の作成に失敗しました');
+      }
       
+      console.log("PayPal: 注文ID取得成功", data.orderId);
+      return data.orderId;
+    } catch (error) {
+      console.error('PayPal注文作成エラー:', error);
+      setPaypalError(error instanceof Error ? error.message : '注文の作成に失敗しました');
+      setIsSubmitting(false);
+      return Promise.reject("注文の作成に失敗しました");
+    }
+  };
+
+  // 注文の処理（支払い完了時）
+  const onApprove = async (data: { orderID: string }) => {
+    try {
+      console.log("PayPal: 支払い承認済み、キャプチャ開始", data.orderID);
+      const response = await fetch('/api/paypal/capture-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: data.orderID,
+          reservationData: {
+            restaurantId,
+            name,
+            guests,
+            date,
+            time,
+            phone,
+            email,
+            request
+          }
+        }),
+      });
+
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        console.error('支払い処理エラーレスポンス:', responseData);
+        throw new Error(responseData.message || '支払いの処理に失敗しました');
+      }
+      
+      console.log("PayPal: 支払い完了", responseData);
+      // 支払い成功
+      setOrderId(data.orderID);
       setShowSuccessModal(true);
       
       // フォームをリセット
@@ -73,8 +136,8 @@ export function ReservationForm({ restaurantId }: ReservationFormProps) {
       setEmail("");
       setRequest("");
     } catch (error) {
-      console.error('予約処理エラー:', error);
-      // エラー処理を追加
+      console.error('PayPal支払い処理エラー:', error);
+      setPaypalError(error instanceof Error ? error.message : '支払いの処理に失敗しました');
     } finally {
       setIsSubmitting(false);
     }
@@ -82,7 +145,7 @@ export function ReservationForm({ restaurantId }: ReservationFormProps) {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
+      <form>
         {/* 予約者名 */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
@@ -195,13 +258,32 @@ export function ReservationForm({ restaurantId }: ReservationFormProps) {
         
         {/* PayPal決済ボタン */}
         <div className="mb-4">
-          <div className="h-[45px] bg-[#ffc439] rounded-md flex justify-center items-center cursor-pointer">
-            <img
-              src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png"
-              alt="PayPal"
-              className="h-[26px]"
+          <p className="text-center mb-2 font-medium">代行手数料：{parseInt(reservationAmount).toLocaleString()}円</p>
+          
+          {paypalError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              <p className="text-sm">{paypalError}</p>
+            </div>
+          )}
+          
+          <PayPalScriptProvider options={initialOptions}>
+            <PayPalButtons
+              style={{ layout: 'vertical', shape: 'rect' }}
+              disabled={isSubmitting}
+              forceReRender={[reservationAmount, initialOptions.currency]}
+              createOrder={createOrder}
+              onApprove={onApprove}
+              onError={(err) => {
+                console.error('PayPalエラー:', err);
+                setPaypalError('お支払い処理中にエラーが発生しました。もう一度お試しください。');
+                setIsSubmitting(false);
+              }}
+              onCancel={() => {
+                console.log('PayPal: キャンセルされました');
+                setIsSubmitting(false);
+              }}
             />
-          </div>
+          </PayPalScriptProvider>
         </div>
       </form>
 

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { BackHeader } from '@/components/ui/header';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function TermsContent() {
-  const [language, setLanguage] = useState<'ja' | 'ko'>('ja');
+  const { language } = useLanguage();
 
   // 言語に基づいてコンテンツを切り替える
   const content = {
@@ -115,30 +114,8 @@ export default function TermsContent() {
 
   return (
     <main className="max-w-md mx-auto pb-20">
-      {/* ヘッダー */}
-      <header className="flex items-center p-4 bg-white sticky top-0 z-50 shadow-sm">
-        <Link href="/" className="text-gray-600 mr-4">
-          <ArrowLeft className="h-6 w-6" />
-        </Link>
-        <h1 className="text-xl font-bold text-orange-500">{currentContent.title}</h1>
-        <div className="ml-auto flex items-center">
-          {/* 言語切り替えボタン */}
-          <button 
-            className={`bg-transparent border-none cursor-pointer text-xl p-1 mr-2 ${language === 'ko' ? 'opacity-100 scale-110' : 'opacity-50'}`}
-            onClick={() => setLanguage('ko')}
-            aria-label="한국어로 전환"
-          >
-            <span>🇰🇷</span>
-          </button>
-          <button 
-            className={`bg-transparent border-none cursor-pointer text-xl p-1 ${language === 'ja' ? 'opacity-100 scale-110' : 'opacity-50'}`}
-            onClick={() => setLanguage('ja')}
-            aria-label="日本語に切り替え"
-          >
-            <span>🇯🇵</span>
-          </button>
-        </div>
-      </header>
+      {/* 共通ヘッダーコンポーネントを使用 */}
+      <BackHeader title={currentContent.title} backUrl="/" />
 
       <div className="p-4">
         <div className="bg-white/50 rounded-lg p-6 shadow-sm">

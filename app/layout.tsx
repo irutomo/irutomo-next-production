@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Header } from '@/components/header';
+import { GlobalHeader } from '@/components/ui/header';
 import { Footer } from '@/components/footer';
 import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import { jaJP } from '@clerk/localizations';
 import { Toaster } from 'react-hot-toast';
+import { LanguageProvider } from '@/contexts/language-context';
+import { koKR } from '@clerk/localizations';
 
 export const metadata: Metadata = {
   title: {
@@ -30,7 +32,7 @@ export default function RootLayout({
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
   
   return (
-    <html lang="ja">
+    <html lang="ko">
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
@@ -38,36 +40,38 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen bg-gray-50">
-        <ClerkProvider publishableKey={publishableKey} localization={jaJP}>
-          <div className="flex flex-col min-h-screen max-w-md mx-auto">
-            <ClerkLoading>
-              <div className="fixed inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 border-t-4 border-b-4 border-orange-500 rounded-full animate-spin"></div>
-              </div>
-            </ClerkLoading>
-            <ClerkLoaded>
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </ClerkLoaded>
-          </div>
-          <Toaster 
-            position="top-center"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
+        <ClerkProvider publishableKey={publishableKey} localization={koKR}>
+          <LanguageProvider>
+            <div className="flex flex-col min-h-screen max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
+              <ClerkLoading>
+                <div className="fixed inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 border-t-4 border-b-4 border-orange-500 rounded-full animate-spin"></div>
+                </div>
+              </ClerkLoading>
+              <ClerkLoaded>
+                <GlobalHeader />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+              </ClerkLoaded>
+            </div>
+            <Toaster 
+              position="top-center"
+              toastOptions={{
                 duration: 3000,
                 style: {
-                  background: 'green',
-                  color: 'white',
+                  background: '#363636',
+                  color: '#fff',
                 },
-              },
-            }}
-          />
+                success: {
+                  duration: 3000,
+                  style: {
+                    background: 'green',
+                    color: 'white',
+                  },
+                },
+              }}
+            />
+          </LanguageProvider>
         </ClerkProvider>
       </body>
     </html>

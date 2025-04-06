@@ -1,8 +1,12 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createServerComponentClient } from '@/lib/supabase';
 import { StarIcon } from 'lucide-react';
 import { Restaurant } from '@/lib/types';
+import { useLanguage } from '@/contexts/language-context';
 
 // レストラン情報をSupabaseから取得する関数
 async function getPopularRestaurants(): Promise<Restaurant[]> {
@@ -27,20 +31,59 @@ async function getPopularRestaurants(): Promise<Restaurant[]> {
   }
 }
 
-export async function PopularRestaurants() {
-  // Supabaseからレストラン情報を取得
-  const restaurants = await getPopularRestaurants();
+export function PopularRestaurants() {
+  const { language } = useLanguage();
+  
+  const content = {
+    ja: {
+      title: '人気店舗',
+      viewMore: 'もっと見る',
+      popular: '人気店',
+      viewDetails: '詳細を見る',
+      notFound: 'レストラン情報が見つかりませんでした。',
+      location: '未設定'
+    },
+    ko: {
+      title: '인기 맛집',
+      viewMore: '더보기',
+      popular: '인기 맛집',
+      viewDetails: '상세보기',
+      notFound: '레스토랑 정보를 찾을 수 없습니다.',
+      location: '미설정'
+    }
+  };
+
+  // 非同期データフェッチのためのステート
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // コンポーネントマウント時にデータを取得
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        const data = await getPopularRestaurants();
+        setRestaurants(data);
+      } catch (error) {
+        console.error('Error fetching restaurants:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, []);
   
   return (
     <section className="px-4 mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold flex items-center">
           <span className="text-xl mr-2">🔥</span>
-          人気店舗
+          {content[language].title}
         </h2>
         <Link href="/restaurants">
           <button className="text-sm text-yellow-500 font-medium flex items-center">
-            もっと見る
+            {content[language].viewMore}
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
             </svg>
@@ -48,7 +91,11 @@ export async function PopularRestaurants() {
         </Link>
       </div>
       <div className="space-y-4">
-        {restaurants.length > 0 ? (
+        {isLoading ? (
+          <div className="py-10 text-center bg-white rounded-lg border border-gray-200">
+            <div className="w-8 h-8 border-t-4 border-yellow-500 border-solid rounded-full animate-spin mx-auto"></div>
+          </div>
+        ) : restaurants.length > 0 ? (
           restaurants.map((restaurant) => (
             <div key={restaurant.id} className="overflow-hidden shadow-md rounded-lg bg-white transform hover:scale-[1.02] transition-transform duration-200">
               <div className="relative h-48">
@@ -67,7 +114,7 @@ export async function PopularRestaurants() {
                 </div>
                 {restaurant.rating && restaurant.rating >= 4.5 && (
                   <div className="absolute top-3 left-3 bg-yellow-500 px-3 py-1 rounded-full text-xs font-bold text-white">
-                    人気店
+                    {content[language].popular}
                   </div>
                 )}
               </div>
@@ -79,7 +126,7 @@ export async function PopularRestaurants() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {restaurant.location || '未設定'}
+                    {restaurant.location || content[language].location}
                   </div>
                 </div>
                 <div className="flex gap-2 mb-3">
@@ -97,7 +144,7 @@ export async function PopularRestaurants() {
                 <div className="space-y-2">
                   <Link href={`/restaurants/${restaurant.id}`}>
                     <button className="w-full bg-yellow-500 hover:bg-yellow-400 text-white py-2 px-4 rounded-lg">
-                      詳細を見る
+                      {content[language].viewDetails}
                     </button>
                   </Link>
                 </div>
@@ -106,7 +153,7 @@ export async function PopularRestaurants() {
           ))
         ) : (
           <div className="py-10 text-center bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500">レストラン情報が見つかりませんでした。</p>
+            <p className="text-gray-500">{content[language].notFound}</p>
           </div>
         )}
       </div>

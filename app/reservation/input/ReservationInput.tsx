@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import EnhancedPricingPlans from './EnhancedPricingPlans';
@@ -8,12 +8,37 @@ import RequestCommentModal from './RequestCommentModal';
 import PaymentModal from './PaymentModal';
 import { PayPalOrderDetails } from './PayPalCheckout';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
+import useToast from '@/hooks/useToast';
+import { PayPalCheckout } from './PayPalCheckout';
+import { toast } from 'react-toastify';
+
+// 価格をフォーマットする関数
+const formatPrice = (price: number): string => {
+  return price.toLocaleString('ja-JP');
+};
 
 interface ReservationInputProps {
   restaurantId?: string;
   language: 'ko' | 'ja' | 'en';
   onBack: () => void;
   onComplete: () => void;
+}
+
+// PaymentModalの型定義
+interface PaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  amount: number;
+  currency: string;
+  title: string;
+  description: string;
+  reservationId: string;
+  metadata: any;
+  onSuccess: (details: PayPalOrderDetails) => void;
+  onError: (error: Error) => void;
+  onCancel: () => void;
+  language?: string;
+  content?: () => React.ReactElement;
 }
 
 const ReservationInput: React.FC<ReservationInputProps> = ({
@@ -23,6 +48,22 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
   onComplete,
 }) => {
   const router = useRouter();
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    switch (type) {
+      case 'success':
+        toast.success(message);
+        break;
+      case 'error':
+        toast.error(message);
+        break;
+      case 'warning':
+        toast.warning(message);
+        break;
+      default:
+        toast.info(message);
+        break;
+    }
+  }, []);
   
   // 予約情報のstate
   const [date, setDate] = useState('');
@@ -45,12 +86,54 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [reservationId, setReservationId] = useState<string>('');
   const [paymentComplete, setPaymentComplete] = useState(false);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+
+  // 予約データの状態
+  const [reservationData, setReservationData] = useState<{
+    id: number;
+    user_id: string;
+    start_time: string;
+    price: number;
+  } | null>(null);
+  
+  // 予約データの読み込み
+  useEffect(() => {
+    if (reservationId) {
+      // 既存の予約データを取得
+      fetch(`/api/reservations/${reservationId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setReservationData(data.reservation);
+          }
+        })
+        .catch(err => {
+          console.error('予約データの取得に失敗しました:', err);
+        });
+    }
+  }, [reservationId]);
 
   // PayPal初期化オプション
   const paypalOptions = {
-    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AaqhpfKTI4eMBM2zX2Avtlvu-c9IJ30FiDmXYWpcuJkgpUMCazK1DiYEr7UJtEyRECkD0ez3ywHQ9MUb',
+    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AcTjrhc3hFkSrCH3OwxxU8XRJXfgCJFhVBCp68X3xkUC1lqz4FUivsnN7WTeJj_wTKsx4OCrpg9dIy3z',
     currency: "JPY",
     intent: "capture",
+    // サードパーティCookieの制限に対応する設定
+    "data-client-token": "abc123xyz==",
+    "data-partner-attribution-id": "IRUTOMO_reserve",
+    components: "buttons", // 必要なコンポーネントのみロード
+    // 詳細設定
+    "data-user-id-token": "false", // ユーザーIDトークンを無効化
+    "data-sdk-integration-source": "fullstack-button-integrator",
+    // disableFundingを削除し、すべての決済オプションを許可
+    // その他の最適化
+    "enable-funding": "card,credit,paylater",
+    "disable-funding": "", // 何も無効化しない
+    locale: "ja_JP", // 日本語ロケールを明示的に設定
+    "buyer-country": "JP", // 日本を購入者の国として設定
+    debug: false, // 本番環境では必ずfalseに設定
+    "data-namespace": "paypal_sdk",
+    "data-page-type": "checkout",
   };
 
   // レストラン情報を取得（実際の実装ではAPIからフェッチします）
@@ -110,29 +193,45 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
     try {
       // 予約情報をオブジェクトにまとめる
       const reservationData = {
-        restaurant_id: restaurantId,
+        restaurantId,
         date,
         time,
-        party_size: partySize,
+        partySize,
         name,
         email,
         phone,
         notes,
-        seat_type: seatType,
         amount: selectedAmount,
         plan_name: selectedPlanName,
       };
       
       console.log('予約データ:', reservationData);
       
-      // 仮の予約IDを生成（実際の実装ではAPIから取得します）
-      const tempReservationId = `rsv-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      setReservationId(tempReservationId);
+      // 予約情報をデータベースに保存
+      const response = await fetch('/api/reservations/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationData),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || '予約情報の保存に失敗しました');
+      }
+      
+      console.log('予約保存結果:', result);
+      
+      // データベースから返された予約IDを使用
+      setReservationId(result.reservationId);
       
       // 決済モーダルを表示
       setShowPaymentModal(true);
     } catch (error) {
       console.error('予約処理エラー:', error);
+      alert(`予約処理中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
       // エラー処理
     } finally {
       setIsSubmitting(false);
@@ -140,26 +239,23 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
   };
 
   // 決済成功時の処理
-  const handlePaymentSuccess = (details: PayPalOrderDetails) => {
+  const handlePaymentSuccess = useCallback((details: PayPalOrderDetails) => {
     console.log('支払い成功:', details);
+    showToast('お支払いが完了しました！', 'success');
     setPaymentComplete(true);
+    setShowPaymentModal(false);
     
-    // 予約確定と決済情報を更新（実際の実装ではAPIリクエストを行います）
-    setTimeout(() => {
-      setShowPaymentModal(false);
-      
-      // 確認ページへ遷移
-      router.push(`/reservation/confirmation?restaurant=${restaurantId}&date=${date}&time=${time}&people=${partySize}`);
-      
-      onComplete(); // 親コンポーネントに完了を通知
-    }, 2000);
-  };
+    // 予約完了ページへリダイレクト
+    if (reservationId) {
+      router.push(`/reservation/complete?id=${reservationId}`);
+    }
+  }, [router, reservationId, showToast]);
 
   // 決済エラー時の処理
-  const handlePaymentError = (error: Error) => {
+  const handlePaymentError = useCallback((error: Error) => {
     console.error('支払いエラー:', error);
-    // エラー処理
-  };
+    showToast(`お支払い処理中にエラーが発生しました: ${error.message}`, 'error');
+  }, [showToast]);
 
   // 決済キャンセル時の処理
   const handlePaymentCancel = () => {
@@ -175,6 +271,59 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
       router.push('/restaurants');
     }
     onBack();
+  };
+
+  // 決済モーダル内のコンテンツをレンダリング
+  const renderPaymentModalContent = () => {
+    // 予約情報の準備ができていない場合
+    if (!reservationData) {
+      return <div className="p-4 text-center">予約情報の読み込み中...</div>;
+    }
+    
+    return (
+      <div className="p-4">
+        <h3 className="text-lg font-semibold mb-4">お支払い</h3>
+        
+        {isPaymentLoading && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded text-center">
+            <div className="animate-pulse">処理中...</div>
+            <p className="text-sm mt-1">ページを閉じたり更新したりしないでください</p>
+          </div>
+        )}
+        
+        <div className="mb-4">
+          <p className="font-medium">予約詳細:</p>
+          <p>日時: {new Date(reservationData.start_time).toLocaleString('ja-JP')}</p>
+          <p>お支払い金額: {formatPrice(reservationData.price)}円</p>
+        </div>
+                
+        <PayPalCheckout
+          amount={reservationData.price}
+          currency="JPY"
+          reservationId={String(reservationData.id)}
+          paymentDescription={`IRUTOMO reserve - 予約ID: ${reservationData.id}`}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+          onCancel={() => {
+            showToast('お支払いがキャンセルされました', 'warning');
+            setShowPaymentModal(false);
+          }}
+          metadata={{ 
+            reservation_id: reservationData.id,
+            user_id: reservationData.user_id 
+          }}
+          setLoading={setIsPaymentLoading}
+        />
+        
+        <button
+          onClick={() => setShowPaymentModal(false)}
+          className="mt-4 w-full py-2 px-4 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+          disabled={isPaymentLoading}
+        >
+          キャンセル
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -396,12 +545,12 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
       {/* 決済モーダル */}
       {showPaymentModal && (
         <PaymentModal
-          isOpen={showPaymentModal}
+          isOpen={true}
           onClose={() => setShowPaymentModal(false)}
           amount={selectedAmount}
           currency="JPY"
-          title="予約のお支払い"
-          description={`${restaurantName} - ${date} ${time} (${partySize}名様)`}
+          title="予約の確定と支払い"
+          description={`${restaurantName}の予約 - ${date} ${time} - ${partySize}名様`}
           reservationId={reservationId}
           metadata={{
             restaurant_id: restaurantId,
@@ -416,6 +565,7 @@ const ReservationInput: React.FC<ReservationInputProps> = ({
           onError={handlePaymentError}
           onCancel={handlePaymentCancel}
           language={language}
+          content={renderPaymentModalContent}
         />
       )}
     </PayPalScriptProvider>

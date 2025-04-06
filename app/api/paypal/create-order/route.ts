@@ -16,12 +16,13 @@ export async function POST(request: Request) {
     }
 
     // 環境変数の確認
-    const clientId = process.env.PAYPAL_CLIENT_ID;
+    const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     const clientSecret = process.env.PAYPAL_SECRET_KEY;
 
     console.log('PayPal設定の確認:', { 
       clientIdExists: !!clientId, 
       clientSecretExists: !!clientSecret,
+      clientId: clientId?.substring(0, 10) + '...',  // セキュリティのため一部のみ表示
       environment: process.env.NODE_ENV
     });
 
@@ -34,9 +35,7 @@ export async function POST(request: Request) {
     }
 
     // PayPal APIエンドポイント
-    const paypalEndpoint = process.env.NODE_ENV === 'production' 
-      ? 'https://api-m.paypal.com' 
-      : 'https://api-m.sandbox.paypal.com';
+    const paypalEndpoint = 'https://api-m.paypal.com';
     
     console.log('PayPal APIエンドポイント:', paypalEndpoint);
 

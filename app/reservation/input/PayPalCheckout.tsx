@@ -52,9 +52,10 @@ interface PayPalCheckoutProps {
   metadata?: Record<string, unknown>;
   buttonStyle?: Record<string, unknown>;
   disabled?: boolean;
+  setLoading?: (loading: boolean) => void;
 }
 
-const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
+export const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
   amount,
   currency = 'JPY',
   onSuccess,
@@ -64,7 +65,8 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
   reservationId,
   metadata,
   buttonStyle,
-  disabled = false
+  disabled = false,
+  setLoading
 }) => {
   const [{ isPending, isResolved, isRejected }] = usePayPalScriptReducer();
   const mountTimeStamp = useRef<string>(Date.now().toString());
@@ -72,6 +74,7 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
   const [isRetrying, setIsRetrying] = useState(false);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
+  const [cookieWarning, setCookieWarning] = useState<string | null>(null);
 
   // エラーハンドリング関数
   const handleError = useCallback((error: unknown, action: string) => {
@@ -123,6 +126,40 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
     if (onError) onError(errorInstance);
   }, [onError, reservationId, amount, currency]);
 
+  // サードパーティCookieの状態チェック
+  useEffect(() => {
+    // 環境表示（デバッグ用）
+    console.log('環境:', process.env.NODE_ENV);
+    console.log('PayPal環境:', 'production'); // 常に本番環境を使用
+    
+    // Cookieテスト
+    const checkCookies = async () => {
+      try {
+        document.cookie = "paypalCookieTest=1; SameSite=None; Secure";
+        
+        // Chromeブラウザ検出
+        const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
+        
+        if (isChrome) {
+          console.warn('Chromeブラウザが検出されました。サードパーティCookieに関する制限がある可能性があります。');
+          setCookieWarning('Chromeブラウザでは決済に問題が発生する場合があります。他のブラウザ(Safari、Firefoxなど)をご使用いただくか、Chromeの設定からサードパーティCookieを許可してください。');
+        }
+        
+        // Cookie確認
+        setTimeout(() => {
+          if (!document.cookie.includes('paypalCookieTest')) {
+            console.warn('Cookieが無効化されているか、ブロックされています');
+            setCookieWarning('ブラウザの設定でCookieが無効化されています。決済機能を使用するにはCookieを有効にしてください。');
+          }
+        }, 500);
+      } catch (error) {
+        console.error('Cookie確認中にエラーが発生しました:', error);
+      }
+    };
+    
+    checkCookies();
+  }, []);
+
   // 注文作成処理
   const createOrder = useCallback(async (_: unknown, actions: any) => {
     if (!actions?.order) {
@@ -130,6 +167,10 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
     }
 
     try {
+      setLoading?.(true);
+      console.log("createOrder開始:", { restaurantId: reservationId, amount, currency });
+      
+      // 本番環境では直接クライアントサイドで注文作成
       return await actions.order.create({
         intent: "CAPTURE", // 即時支払いを指定
         purchase_units: [{
@@ -138,7 +179,7 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
             value: typeof amount === 'number' ? amount.toString() : amount,
             currency_code: currency
           },
-          custom_id: reservationId,
+          custom_id: reservationId || undefined,
           ...(metadata ? { custom: JSON.stringify(metadata) } : {})
         }],
         application_context: {
@@ -153,9 +194,10 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
       });
     } catch (error) {
       handleError(error, 'createOrder');
+      setLoading?.(false);
       throw error;
     }
-  }, [amount, currency, paymentDescription, reservationId, metadata, handleError]);
+  }, [amount, currency, paymentDescription, reservationId, metadata, handleError, setLoading]);
 
   // 支払い承認処理
   const onApprove = useCallback(async (data: any, actions: any) => {
@@ -170,6 +212,7 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
       // 成功したらエラー情報とリトライカウンターをリセット
       setErrorDetails(null);
       retryCountRef.current = 0;
+      setLoading?.(false);
       return details;
     } catch (error) {
       // エラーの詳細情報を強化
@@ -180,16 +223,17 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
           : '支払い処理中に問題が発生しました。もう一度お試しください。';
       
       handleError(new Error(errorMessage), 'onApprove');
+      setLoading?.(false);
       throw error;
     }
-  }, [onSuccess, handleError]);
+  }, [onSuccess, handleError, setLoading]);
 
   const buttonOptions: PayPalButtonsComponentProps = {
     style: buttonStyle || {
-      layout: 'vertical',
-      color: 'gold',
-      shape: 'rect',
-      label: 'paypal'
+      layout: 'horizontal',
+      color: 'blue',
+      shape: 'pill',
+      label: 'pay'
     },
     disabled: disabled || isPending || isRetrying,
     forceReRender: [amount.toString(), currency, mountTimeStamp.current],
@@ -199,7 +243,9 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
     onCancel: () => {
       console.log('支払いがキャンセルされました');
       if (onCancel) onCancel();
-    }
+      setLoading?.(false);
+    },
+    fundingSource: undefined
   };
 
   // セッションエラーのクリア処理
@@ -230,6 +276,14 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
 
   // エラー表示のレンダリング
   const renderErrorState = () => {
+    // サードパーティCookieの問題かどうかを判断
+    const isCookieError = errorDetails?.type === 'SESSION_ERROR' || 
+                        (errorDetails?.message && 
+                         (errorDetails.message.toLowerCase().includes('cookie') || 
+                          errorDetails.message.toLowerCase().includes('third party') || 
+                          errorDetails.message.toLowerCase().includes('rejected') ||
+                          errorDetails.message.toLowerCase().includes('initiate_payment_reject')));
+
     return (
       <div className="border border-red-300 rounded p-4 bg-red-50 text-red-700 space-y-3">
         <div className="flex items-start">
@@ -239,6 +293,17 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
           <div className="ml-2">
             <h4 className="text-sm font-medium">決済処理中にエラーが発生しました</h4>
             <p className="text-xs mt-1">{errorDetails?.message || 'PayPalとの通信中に問題が発生しました。'}</p>
+            
+            {isCookieError && (
+              <div className="mt-2 text-xs p-2 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="font-semibold mb-1">サードパーティCookieの制限により決済ができません</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Chrome設定 &gt; プライバシーとセキュリティ からCookie設定を確認してください</li>
+                  <li>別のブラウザ（FirefoxやSafari）をお試しください</li>
+                  <li>お使いのブラウザでサードパーティCookieを一時的に許可してください</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex justify-center pt-2">
@@ -267,7 +332,13 @@ const PayPalCheckout: React.FC<PayPalCheckoutProps> = ({
   };
 
   return (
-    <div className="paypal-checkout-container">
+    <div className="w-full">
+      {cookieWarning && (
+        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+          <p className="font-medium">⚠️ ブラウザ互換性の警告</p>
+          <p className="text-sm">{cookieWarning}</p>
+        </div>
+      )}
       {/* エラー表示 */}
       {errorDetails && renderErrorState()}
       

@@ -5,9 +5,17 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 interface ReservationFormProps {
   restaurantId: string;
+  restaurantName: string;
+  restaurantImage: string;
+  businessHours: {
+    day: string;
+    open_time: string;
+    close_time: string;
+    is_closed: boolean;
+  }[];
 }
 
-export function ReservationForm({ restaurantId }: ReservationFormProps) {
+export function ReservationForm({ restaurantId, restaurantName, restaurantImage, businessHours }: ReservationFormProps) {
   const [name, setName] = useState("");
   const [guests, setGuests] = useState("2");
   const [date, setDate] = useState("");

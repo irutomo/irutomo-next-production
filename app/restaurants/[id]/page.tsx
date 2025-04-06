@@ -1,11 +1,12 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createServerComponentClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { Restaurant } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { RestaurantImageSlider } from '../../../components/restaurant/restaurant-image-slider';
 import { ReservationForm } from '../../../components/restaurant/reservation-form';
+import { Database } from '@/lib/database.types';
 
 // SVGコンポーネント
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -27,9 +28,27 @@ const MapPinIcon = ({ className }: { className?: string }) => (
 );
 
 type Props = {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
+
+// サーバーコンポーネント用のSupabaseクライアント
+async function createServerComponentClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase URL または Anon Key が設定されていません。');
+  }
+
+  // Supabaseクライアントを作成
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
 // 静的パスを生成
 export async function generateStaticParams() {
@@ -118,7 +137,7 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const id = (await params).id;
+  const id = params.id;
   const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
@@ -133,10 +152,13 @@ export async function generateMetadata(
   };
 }
 
-export default async function RestaurantPage({ params, searchParams }: Props) {
-  const id = (await params).id;
+export default async function RestaurantPage({ params }: Props) {
+  const id = params.id;
+  
+  // レストラン情報をDBから取得
   const restaurant = await getRestaurant(id);
   
+  // レストラン情報が見つからない場合は404ページにリダイレクト
   if (!restaurant) {
     notFound();
   }
@@ -250,9 +272,13 @@ export default async function RestaurantPage({ params, searchParams }: Props) {
         </div>
 
         {/* 予約フォーム */}
-        <div className="bg-white rounded-lg shadow-sm mx-4 mt-4 mb-12 p-4">
-          <h2 className="text-lg font-bold mb-4">予約</h2>
-          <ReservationForm restaurantId={restaurantData.id} />
+        <div className="mt-6 mx-4 mb-20">
+          <ReservationForm 
+            restaurantId={restaurantData.id} 
+            restaurantName={restaurantData.name}
+            restaurantImage={restaurantData.image}
+            businessHours={restaurantData.business_hours}
+          />
         </div>
       </div>
     </main>

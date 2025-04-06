@@ -37,9 +37,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen bg-gray-50">
         <ClerkProvider publishableKey={publishableKey} localization={jaJP}>
-          <div className="w-full mx-auto flex flex-col min-h-screen max-w-full sm:max-w-[600px] md:max-w-[768px] lg:max-w-[1024px] xl:max-w-[1280px]">
+          <div className="flex flex-col min-h-screen max-w-md mx-auto">
             <ClerkLoading>
               <div className="fixed inset-0 flex items-center justify-center">
                 <div className="w-16 h-16 border-t-4 border-b-4 border-orange-500 rounded-full animate-spin"></div>

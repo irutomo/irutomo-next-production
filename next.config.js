@@ -11,6 +11,8 @@ const nextConfig = {
       allowedOrigins: ['*'],
     },
   },
+  // パッケージのトランスパイル設定を追加
+  transpilePackages: ["@ant-design", "rc-util", "rc-pagination", "rc-picker", "rc-notification", "rc-tooltip", "rc-tree", "rc-table"],
   images: {
     remotePatterns: [
       {
@@ -31,6 +33,14 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'irutomo-trip.com',
       },
       {
@@ -38,6 +48,7 @@ const nextConfig = {
         hostname: 'qgqebyunvamzfaaaypmd.supabase.co',
       },
     ],
+    domains: ['images.unsplash.com'],
   },
 };
 

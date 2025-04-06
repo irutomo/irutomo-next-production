@@ -1,51 +1,73 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { createServerComponentClient } from '@/lib/supabase';
+import { notFound } from 'next/navigation';
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-// 擬似的なデータベース
-const restaurants = [
-  {
-    id: '1',
-    name: '熟成肉と本格炭火焼肉 又三郎',
-    photos: [
-      '/images/restaurants/restaurant1-1.jpg',
-      '/images/restaurants/restaurant1-2.jpg',
-      '/images/restaurants/restaurant1-3.jpg',
-      '/images/restaurants/restaurant1-4.jpg',
-      '/images/reviews/meat.jpg',
-      '/images/landing-page-image1.jpg',
-    ],
-  },
-  {
-    id: '2',
-    name: 'まほろば囲炉裏 心斎橋',
-    photos: [
-      '/images/restaurants/restaurant2-1.jpg',
-      '/images/restaurants/restaurant2-2.jpg',
-      '/images/reviews/oden.jpg',
-      '/images/landing-page-image2.jpg',
-    ],
-  },
-  {
-    id: '3',
-    name: '焼鳥YAMATO',
-    photos: [
-      '/images/restaurants/restaurant3-1.jpg',
-      '/images/reviews/yakitori.jpg',
-      '/images/landing-page-image3.jpg',
-    ],
-  },
-];
+// データベースから取得したレストラン情報の型
+type Restaurant = {
+  id: string;
+  name: string;
+  image_url?: string;
+  images?: string[];
+};
+
+// レストラン情報をSupabaseから取得する関数
+async function getRestaurant(id: string): Promise<Restaurant | null> {
+  try {
+    // UUIDフォーマットのバリデーション（簡易的なチェック）
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.error('無効なUUID形式:', id);
+      return null;
+    }
+
+    const supabase = await createServerComponentClient();
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('id, name, image_url, images')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('レストラン情報の取得エラー:', error);
+      return null;
+    }
+    
+    return data as Restaurant;
+  } catch (error) {
+    console.error('レストラン情報の取得中にエラーが発生しました:', error);
+    return null;
+  }
+}
 
 // 静的パスを生成
-export function generateStaticParams() {
-  return restaurants.map((restaurant) => ({
-    id: restaurant.id,
-  }));
+export async function generateStaticParams() {
+  try {
+    const supabase = await createServerComponentClient();
+    const { data, error } = await supabase.from('restaurants').select('id');
+    
+    if (error) {
+      console.error('レストランIDの取得エラー:', error);
+      return [];
+    }
+    
+    if (!data || data.length === 0) {
+      console.warn('レストランデータが見つかりません');
+      return [];
+    }
+    
+    return data.map((restaurant: { id: string }) => ({
+      id: restaurant.id,
+    }));
+  } catch (error) {
+    console.error('レストランIDの取得エラー:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata(
@@ -53,7 +75,7 @@ export async function generateMetadata(
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const paramsData = await params;
-  const restaurant = restaurants.find(r => r.id === paramsData.id);
+  const restaurant = await getRestaurant(paramsData.id);
   
   if (!restaurant) {
     return {
@@ -69,22 +91,31 @@ export async function generateMetadata(
 
 export default async function RestaurantPhotosPage({ params }: Props) {
   const paramsData = await params;
-  const restaurant = restaurants.find(r => r.id === paramsData.id);
+  const restaurant = await getRestaurant(paramsData.id);
   
   if (!restaurant) {
-    return (
-      <div className="py-16 text-center">
-        <h1 className="text-2xl font-bold">店舗が見つかりません</h1>
-        <p className="mt-4">指定された店舗は存在しないか、削除された可能性があります。</p>
-        <Link 
-          href="/restaurants" 
-          className="mt-8 inline-block bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-md transition-colors"
-        >
-          店舗一覧に戻る
-        </Link>
-      </div>
-    );
+    notFound();
   }
+
+  // 画像が存在しない場合はデフォルトの画像を表示
+  const photos = [];
+  
+  // images配列が存在し、配列であることを確認
+  if (restaurant.images && Array.isArray(restaurant.images) && restaurant.images.length > 0) {
+    photos.push(...restaurant.images);
+  } 
+  // image_urlが存在する場合は追加
+  else if (restaurant.image_url) {
+    photos.push(restaurant.image_url);
+  } 
+  // どちらも存在しない場合はデフォルト画像
+  else {
+    photos.push('/images/restaurants/placeholder.jpg');
+  }
+
+  const photoDescriptions = [
+    '店舗外観', '店内', '個室', 'カウンター席', '料理', '雰囲気'
+  ];
 
   return (
     <div className="py-8">
@@ -114,32 +145,32 @@ export default async function RestaurantPhotosPage({ params }: Props) {
         
         <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 p-6 mb-8">
           <h1 className="text-2xl font-bold mb-2">{restaurant.name}の写真</h1>
-          <p className="text-gray-600">全{restaurant.photos.length}枚の写真があります</p>
+          <p className="text-gray-600">全{photos.length}枚の写真があります</p>
         </div>
         
         {/* 写真グリッド */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {restaurant.photos.map((photo, index) => (
+          {photos.map((photo, index) => (
             <div 
               key={index} 
               className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
             >
               <div className="aspect-w-16 aspect-h-9 relative h-64">
-                {/* 実際の実装ではここに実際の画像のパスが入ります */}
-                <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-gray-500">画像 {index + 1}</p>
-                    <p className="text-gray-400 text-sm mt-1">{photo}</p>
-                  </div>
-                </div>
+                <Image
+                  src={photo}
+                  alt={`${restaurant.name}の写真 ${index + 1}`}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  quality={80}
+                  placeholder="blur"
+                  blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+                />
               </div>
               <div className="p-4">
                 <p className="text-gray-600">
-                  {index === 0 ? '店舗外観' : 
-                   index === 1 ? '店内' : 
-                   index === 2 ? '個室' : 
-                   index === 3 ? 'カウンター席' : 
-                   index === 4 ? '料理' : '雰囲気'}
+                  {index < photoDescriptions.length 
+                    ? photoDescriptions[index]
+                    : `写真 ${index + 1}`}
                 </p>
               </div>
             </div>

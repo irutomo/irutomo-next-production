@@ -2,26 +2,19 @@ import Link from 'next/link';
 
 export function HeroSection() {
   return (
-    <section className="py-16 bg-white">
-      <div className="container max-w-6xl mx-auto px-4 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-6 leading-tight">
-          <span className="text-primary-500 block">日本の電話番号がなくても</span>
-          <span className="text-primary-500 block">行きたいお店を予約可能！</span>
-        </h1>
-        
-        <p className="max-w-2xl mx-auto text-center text-gray-700 mb-8">
-          日本の人気店は電話予約のみの場合が多いです。IRUTOMOがあなたの美味しい店をサポートします。
-        </p>
-        
-        <div className="flex justify-center">
-          <Link 
-            href="/restaurants" 
-            className="bg-primary-500 hover:bg-primary-600 text-white font-medium px-8 py-3 rounded-md transition-colors"
-          >
-            今すぐ予約
-          </Link>
-        </div>
+    <div className="p-6 bg-gradient-to-br from-teal-400 to-yellow-500 rounded-2xl mx-4 my-6 text-white shadow-md">
+      <div className="flex items-center mb-4">
+        <span className="text-4xl mr-3">🎧</span>
+        <h2 className="text-2xl font-bold">
+          現地日本人から人気の食堂を簡単予約
+        </h2>
       </div>
-    </section>
+      <p className="text-sm opacity-90 mb-4">電話予約のみの人気店も私たちにお任せください！</p>
+      <Link href="/restaurants">
+        <button className="w-full bg-white text-teal-400 hover:bg-white/90 font-bold py-3 rounded-xl transform hover:scale-[1.02] transition-transform duration-200">
+          いますぐ予約する
+        </button>
+      </Link>
+    </div>
   );
 } 

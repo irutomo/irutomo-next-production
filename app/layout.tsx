@@ -10,11 +10,11 @@ import { koKR } from '@clerk/localizations';
 
 export const metadata: Metadata = {
   title: {
-    default: 'イルトモ - 韓国グルメ予約サービス',
-    template: '%s | イルトモ',
+    default: '이루토모 - 한국인을 위한 일본 식당 예약 서비스',
+    template: '%s | 이루토모',
   },
-  description: '韓国料理の美味しいお店を予約できるサービス。言葉の壁を超えて本場の韓国グルメを楽しもう！',
-  keywords: ['韓国料理', '予約', 'グルメ', 'レストラン'],
+  description: '한국인을 위한 일본 식당 예약 서비스. 일본 현지인이 추천하는 맛집을 쉽게 예약하세요!',
+  keywords: ['일본 식당', '예약', '맛집', '레스토랑', '일본 여행'],
 };
 
 export const viewport = {
@@ -28,7 +28,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Clerkの公開キーを環境変数から取得
+  // Clerk의 공개 키를 환경 변수에서 가져오기
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
   
   return (
@@ -40,11 +40,11 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen bg-gray-50">
-        {/* ClerkProvider を無効化 */}
+        {/* ClerkProvider 비활성화 */}
         {/* <ClerkProvider publishableKey={publishableKey} localization={koKR}> */}
           <LanguageProvider>
             <div className="flex flex-col min-h-screen max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
-              {/* ClerkLoading と ClerkLoaded も無効化 */}
+              {/* ClerkLoading 및 ClerkLoaded 비활성화 */}
               {/* <ClerkLoading>
                 <div className="fixed inset-0 flex items-center justify-center">
                   <div className="w-16 h-16 border-t-4 border-b-4 border-orange-500 rounded-full animate-spin"></div>

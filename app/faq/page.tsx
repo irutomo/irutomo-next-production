@@ -1,11 +1,22 @@
-import type { Metadata } from 'next';
-import FaqContent from './faq-content';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'よくある質問 - IRUTOMO',
-  description: 'IRUTOMOサービスに関するよくある質問と回答をご紹介します。予約方法、キャンセルポリシーなど、お客様からのご質問にお答えします。',
-};
+import FaqContent from './faq-content';
+import { useEffect } from 'react';
 
 export default function FaqPage() {
+  useEffect(() => {
+    const header = document.querySelector('.global-header');
+    if (header) {
+      header.classList.add('hidden');
+    }
+
+    return () => {
+      const header = document.querySelector('.global-header');
+      if (header) {
+        header.classList.remove('hidden');
+      }
+    };
+  }, []);
+
   return <FaqContent />;
 } 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BackHeader } from '@/components/ui/header';
 import { useLanguage } from '@/contexts/language-context';
+import { Card, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function HowToUseContent() {
   const { language } = useLanguage();
@@ -94,44 +95,44 @@ export default function HowToUseContent() {
   const currentContent = language === 'ja' ? content.ja : content.ko;
 
   return (
-    <main className="max-w-md mx-auto bg-[#F8F8F8] min-h-screen pb-20">
+    <main className="max-w-md mx-auto bg-background min-h-screen pb-20">
       {/* 共通ヘッダーコンポーネントを使用 */}
       <BackHeader title={currentContent.title} backUrl="/" />
 
       <div className="p-4 space-y-6">
         {/* About IRUTOMO */}
-        <div className="rounded-3xl overflow-hidden p-6 bg-purple-500 text-white">
-          <h2 className="text-xl font-bold mb-4">{currentContent.about.title}</h2>
-          <div className="space-y-4 text-sm leading-relaxed">
+        <Card variant="accent">
+          <CardTitle>{currentContent.about.title}</CardTitle>
+          <CardContent>
             {currentContent.about.description.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index} className="text-sm leading-relaxed">{paragraph}</p>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* How to Use */}
         <section>
-          <h2 className="text-xl font-bold mb-4">{currentContent.howToUse.title}</h2>
+          <h2 className="text-xl font-bold mb-4 text-text">{currentContent.howToUse.title}</h2>
           <div className="space-y-4">
             {currentContent.howToUse.steps.map((step, index) => (
-              <div key={index} className="rounded-3xl p-4 bg-white/50">
+              <Card key={index} className="bg-white/50 p-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
                     {step.number}
                   </div>
                   <div className="flex-grow">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">{step.icon}</span>
-                      <h3 className="font-bold">{step.title}</h3>
+                      <h3 className="font-bold text-text">{step.title}</h3>
                     </div>
                     <p className="text-sm text-gray-600">{step.description}</p>
                   </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </section>
       </div>
     </main>
   );
-} 
+}

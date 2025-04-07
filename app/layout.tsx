@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { GlobalHeader } from '@/components/ui/header';
 import { Footer } from '@/components/footer';
-import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
+// import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import { jaJP } from '@clerk/localizations';
 import { Toaster } from 'react-hot-toast';
 import { LanguageProvider } from '@/contexts/language-context';
@@ -40,19 +40,21 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen bg-gray-50">
-        <ClerkProvider publishableKey={publishableKey} localization={koKR}>
+        {/* ClerkProvider を無効化 */}
+        {/* <ClerkProvider publishableKey={publishableKey} localization={koKR}> */}
           <LanguageProvider>
             <div className="flex flex-col min-h-screen max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
-              <ClerkLoading>
+              {/* ClerkLoading と ClerkLoaded も無効化 */}
+              {/* <ClerkLoading>
                 <div className="fixed inset-0 flex items-center justify-center">
                   <div className="w-16 h-16 border-t-4 border-b-4 border-orange-500 rounded-full animate-spin"></div>
                 </div>
               </ClerkLoading>
-              <ClerkLoaded>
+              <ClerkLoaded> */}
                 <GlobalHeader />
                 <main className="flex-grow">{children}</main>
                 <Footer />
-              </ClerkLoaded>
+              {/* </ClerkLoaded> */}
             </div>
             <Toaster 
               position="top-center"
@@ -72,8 +74,8 @@ export default function RootLayout({
               }}
             />
           </LanguageProvider>
-        </ClerkProvider>
+        {/* </ClerkProvider> */}
       </body>
     </html>
   );
-} 
+}

@@ -1,8 +1,11 @@
+'use client';
+
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createServerComponentClient } from '@/lib/supabase';
 import { Restaurant } from '@/lib/types';
+import { useLanguage } from '@/contexts/language-context';
 // アイコンをSVGで直接実装して依存性を削減
 
 export const metadata: Metadata = {
@@ -57,6 +60,29 @@ async function getRestaurants(): Promise<Restaurant[]> {
   }
 }
 
+// 多言語対応のテキスト
+const translations = {
+  ko: {
+    title: '맛집 목록',
+    backToHome: '홈으로 돌아가기',
+    all: '전체',
+    popular: '인기',
+    notFound: '맛집 정보를 찾을 수 없습니다.',
+    reserve: '예약하기',
+    map: '지도'
+  },
+  ja: {
+    title: 'レストラン一覧',
+    backToHome: 'ホームに戻る',
+    all: 'すべて',
+    popular: '人気',
+    notFound: 'レストラン情報が見つかりませんでした。',
+    reserve: '予約する',
+    map: '地図'
+  }
+};
+
+// レストランデータ取得とページコンポーネント
 export default async function RestaurantsPage() {
   // Supabaseからレストラン情報を取得
   const restaurants = await getRestaurants();
@@ -67,6 +93,17 @@ export default async function RestaurantsPage() {
     tags: restaurant.cuisine ? [restaurant.cuisine] : [],
     location: restaurant.location || '未設定'
   }));
+  
+  // クライアントコンポーネントをラップしてデータを渡す
+  return <RestaurantsClient restaurants={enhancedRestaurants} />;
+}
+
+// クライアントコンポーネント
+'use client';
+
+function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
+  const { language } = useLanguage();
+  const t = translations[language];
   
   return (
     <main className="max-w-md mx-auto min-h-screen bg-gray-50 pb-20">
@@ -84,7 +121,7 @@ export default async function RestaurantsPage() {
           </Link>
         </div>
         <div className="flex items-center">
-          <h1 className="text-lg font-bold mr-2">レストラン一覧</h1>
+          <h1 className="text-lg font-bold mr-2">{t.title}</h1>
           <Link href="/" className="ml-auto">
             <button className="p-2 rounded-md hover:bg-gray-100 transition-colors">
               <ArrowLeftIcon />
@@ -97,7 +134,7 @@ export default async function RestaurantsPage() {
       <div className="bg-white shadow-sm p-4 mb-4">
         <div className="flex space-x-2 overflow-x-auto pb-2">
           <button className="px-4 py-2 rounded-md bg-[#00CBB3] text-white font-medium whitespace-nowrap">
-            すべて
+            {t.all}
           </button>
           <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
             大阪
@@ -110,13 +147,13 @@ export default async function RestaurantsPage() {
           </button>
         </div>
       </div>
-
-      {/* レストランリスト */}
+      
+      {/* レストランカード */}
       <section className="px-4">
-        <div className="space-y-4 mb-6">
-          {enhancedRestaurants.length > 0 ? (
-            enhancedRestaurants.map((restaurant) => (
-              <div key={restaurant.id} className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-transform hover:scale-[1.02]">
+        <div className="grid grid-cols-1 gap-4">
+          {restaurants.length > 0 ? (
+            restaurants.map((restaurant) => (
+              <div key={restaurant.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
                 <div className="relative h-48">
                   <Image
                     src={restaurant.image_url || '/images/restaurants/placeholder.jpg'}
@@ -134,7 +171,7 @@ export default async function RestaurantsPage() {
                   {/* 人気バッジ (評価が4.5以上の場合) */}
                   {restaurant.rating && restaurant.rating >= 4.5 && (
                     <div className="absolute top-3 left-3 bg-[#FFA500] px-3 py-1 rounded-full text-xs text-white font-bold">
-                      人気
+                      {t.popular}
                     </div>
                   )}
                 </div>
@@ -167,7 +204,7 @@ export default async function RestaurantsPage() {
                       href={`/restaurants/${restaurant.id}`}
                       className="px-4 py-2 bg-[#FFA500] text-white rounded-md font-medium hover:bg-[#FFA500]/90 transition-colors"
                     >
-                      予約する
+                      {t.reserve}
                     </Link>
                     <Link 
                       href={restaurant.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}`}
@@ -180,7 +217,7 @@ export default async function RestaurantsPage() {
                         <polyline points="15 3 21 3 21 9"/>
                         <line x1="10" y1="14" x2="21" y2="3"/>
                       </svg>
-                      地図
+                      {t.map}
                     </Link>
                   </div>
                 </div>
@@ -188,11 +225,11 @@ export default async function RestaurantsPage() {
             ))
           ) : (
             <div className="py-10 text-center bg-white rounded-lg border border-gray-200">
-              <p className="text-gray-500">レストラン情報が見つかりませんでした。</p>
+              <p className="text-gray-500">{t.notFound}</p>
             </div>
           )}
         </div>
       </section>
     </main>
   );
-} 
+}

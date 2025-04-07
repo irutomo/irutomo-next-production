@@ -21,15 +21,15 @@ export function CtaBanner() {
   
   return (
     <section className="px-4 mb-8">
-      <div className="p-6 bg-gradient-to-br from-teal-400 to-yellow-500 text-white shadow-md rounded-lg">
+      <div className="p-6 bg-gradient-to-br from-primary to-secondary text-white shadow-md rounded-lg">
         <h2 className="text-xl font-bold mb-3">{content[language].title}</h2>
         <p className="text-sm mb-4">{content[language].description}</p>
         <Link href="/request">
-          <button className="w-full bg-white text-teal-400 hover:bg-white/90 font-bold py-3 rounded-xl transform hover:scale-[1.02] transition-transform duration-200">
+          <button className="w-full bg-white text-primary hover:bg-white/90 font-bold py-3 rounded-xl transform hover:scale-[1.02] transition-transform duration-200">
             {content[language].buttonText}
           </button>
         </Link>
       </div>
     </section>
   );
-} 
+}

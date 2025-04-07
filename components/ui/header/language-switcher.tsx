@@ -1,9 +1,16 @@
 'use client';
 
 import { useLanguage } from '@/contexts/language-context';
+import { usePathname } from 'next/navigation';
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
+  const pathname = usePathname();
+  
+  // ホーム画面（'/'）以外では表示しない
+  if (pathname !== '/') {
+    return null;
+  }
   
   return (
     <div className="flex items-center">
@@ -23,4 +30,4 @@ export function LanguageSwitcher() {
       </button>
     </div>
   );
-} 
+}

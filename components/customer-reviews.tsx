@@ -87,7 +87,7 @@ export function CustomerReviews() {
 
   return (
     <section className="px-4 mb-8">
-      <h2 className="text-lg font-bold flex items-center mb-4">
+      <h2 className="text-lg font-bold flex items-center mb-4 text-text">
         <span className="text-xl mr-2">💬</span>
         {content[language].title}
       </h2>
@@ -99,9 +99,9 @@ export function CustomerReviews() {
                 {review.initial}
               </div>
               <div>
-                <p className="font-bold">{review.name}</p>
-                <p className="text-xs text-gray-500">{review.location}</p>
-                <p className="text-xs text-gray-500">{review.date}</p>
+                <p className="font-bold text-text">{review.name}</p>
+                <p className="text-xs text-text/60">{review.location}</p>
+                <p className="text-xs text-text/60">{review.date}</p>
               </div>
             </div>
             <div className="flex mb-2">
@@ -117,11 +117,11 @@ export function CustomerReviews() {
                 </svg>
               ))}
             </div>
-            <p className="text-sm">{review.text}</p>
-            <p className="text-xs text-gray-500">{review.restaurant}</p>
+            <p className="text-sm text-text">{review.text}</p>
+            <p className="text-xs text-text/60">{review.restaurant}</p>
           </div>
         ))}
       </div>
     </section>
   );
-} 
+}

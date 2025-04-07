@@ -71,20 +71,20 @@ export default function ServicePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* ページタイトル */}
       <div className="bg-white py-8 border-b">
         <div className="container max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center">サービス紹介</h1>
+          <h1 className="text-3xl font-bold text-center text-text">サービス紹介</h1>
         </div>
       </div>
 
       {/* IRUTOMOとは？ */}
       <section className="py-12">
         <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-primary-500 mb-8">IRUTOMOとは？</h2>
+          <h2 className="text-2xl font-bold text-primary mb-8">IRUTOMOとは？</h2>
           
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4 text-text">
             <p>IRUTOMOは韓国人のための日本旅行サービスです。食事予約サービスは日本電話番号がなくても、日本の電話番号が必要なくても、簡単に日本現地人から人気のあるレストランを予約することができます。"日本の友達（일본친구）"という意味の通り、IRUTOMOは、あなたの日本旅行でより日本のリアルを感じる体験を提供しています。食事予約だけではなく、日本の友達ガイドに日本の日常を案内してもらえるガイドサービスも提供しています。</p>
             
             <p>主なサービス地域は大阪、京都、奈良、神戸など関西地域を中心に運営されており、徐々に東京などの他の地域にも拡大する予定です。</p>
@@ -95,13 +95,13 @@ export default function ServicePage() {
       {/* サービスの特徴 */}
       <section className="py-12 bg-gray-50">
         <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-primary-500 mb-8">サービスの特徴</h2>
+          <h2 className="text-2xl font-bold text-primary mb-8">サービスの特徴</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {features.map((feature, index) => (
               <div key={index} className="bg-white rounded-lg shadow-sm p-6 flex items-start">
                 <div className="mr-4">
-                  <div className="bg-primary-50 rounded-full p-3 w-14 h-14 flex items-center justify-center">
+                  <div className="bg-primary/10 rounded-full p-3 w-14 h-14 flex items-center justify-center">
                     <Image 
                       src={feature.icon} 
                       alt={feature.title} 
@@ -111,8 +111,8 @@ export default function ServicePage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm">{feature.description}</p>
+                  <h3 className="font-bold text-lg mb-2 text-text">{feature.title}</h3>
+                  <p className="text-text/80 text-sm">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -123,19 +123,19 @@ export default function ServicePage() {
       {/* 利用方法 */}
       <section className="py-12">
         <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-primary-500 mb-8">利用方法</h2>
+          <h2 className="text-2xl font-bold text-primary mb-8">利用方法</h2>
           
           <div className="space-y-6">
             {usageSteps.map((step, index) => (
               <div key={index} className="flex">
                 <div className="mr-4">
-                  <div className="bg-primary-100 rounded-full w-12 h-12 flex items-center justify-center">
-                    <span className="text-primary-500 text-lg font-bold">{step.number}</span>
+                  <div className="bg-primary/20 rounded-full w-12 h-12 flex items-center justify-center">
+                    <span className="text-primary text-lg font-bold">{step.number}</span>
                   </div>
                 </div>
                 <div className="pt-1">
-                  <h3 className="font-bold text-lg mb-1">{step.title}</h3>
-                  <p className="text-gray-600 text-sm">{step.description}</p>
+                  <h3 className="font-bold text-lg mb-1 text-text">{step.title}</h3>
+                  <p className="text-text/80 text-sm">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -144,16 +144,16 @@ export default function ServicePage() {
       </section>
 
       {/* よくある質問 */}
-      <section className="py-12 bg-primary-50">
+      <section className="py-12 bg-primary/10">
         <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-primary-500 mb-8">よくある質問</h2>
+          <h2 className="text-2xl font-bold text-primary mb-8">よくある質問</h2>
           
           <div className="bg-white rounded-lg p-8 shadow-md">
             <div className="space-y-8">
               {faqs.map((faq, index) => (
                 <div key={index} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
-                  <h3 className="font-bold text-lg mb-3">{faq.question}</h3>
-                  <p className="text-gray-600">{faq.answer}</p>
+                  <h3 className="font-bold text-lg mb-3 text-text">{faq.question}</h3>
+                  <p className="text-text/80">{faq.answer}</p>
                 </div>
               ))}
             </div>
@@ -162,4 +162,4 @@ export default function ServicePage() {
       </section>
     </div>
   );
-} 
+}

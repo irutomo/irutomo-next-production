@@ -77,7 +77,7 @@ export function PopularRestaurants() {
   return (
     <section className="px-4 mb-8">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold flex items-center">
+        <h2 className="text-lg font-bold flex items-center text-text">
           <span className="text-xl mr-2">🔥</span>
           {content[language].title}
         </h2>

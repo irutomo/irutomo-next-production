@@ -7,7 +7,7 @@ import { CtaBanner } from '@/components/cta-banner';
 
 export default function Home() {
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-background">
       <HeroSection />
       <CategoryButtons />
       
@@ -26,4 +26,4 @@ export default function Home() {
       <CtaBanner />
     </div>
   );
-} 
+}

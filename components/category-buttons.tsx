@@ -19,7 +19,7 @@ export function CategoryButtons() {
       howToUse: '예약 방법',
       japanInfo: '일본 정보',
       guide: '가이드',
-      faq: '자주 묻는 질문'
+      faq: 'FAQ'
     }
   };
   
@@ -41,17 +41,17 @@ export function CategoryButtons() {
             <div className="bg-white w-14 h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center mx-auto mb-2 md:mb-3 shadow-md hover:bg-teal-50 transition-colors transform hover:scale-[1.02] transition-transform duration-200">
               <span className="text-2xl md:text-3xl lg:text-4xl">{category.icon}</span>
             </div>
-            <p className="text-xs md:text-sm lg:text-base">{category.name}</p>
+            <p className="text-xs md:text-sm lg:text-base text-text" data-component-name="CategoryButtons">{category.name}</p>
           </a>
         ) : (
           <Link key={index} href={category.href} className="text-center focus:outline-none">
             <div className="bg-white w-14 h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center mx-auto mb-2 md:mb-3 shadow-md hover:bg-teal-50 transition-colors transform hover:scale-[1.02] transition-transform duration-200">
               <span className="text-2xl md:text-3xl lg:text-4xl">{category.icon}</span>
             </div>
-            <p className="text-xs md:text-sm lg:text-base">{category.name}</p>
+            <p className="text-xs md:text-sm lg:text-base text-text" data-component-name="CategoryButtons">{category.name}</p>
           </Link>
         )
       ))}
     </div>
   );
-} 
+}

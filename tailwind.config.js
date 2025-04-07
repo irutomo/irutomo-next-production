@@ -7,24 +7,60 @@ module.exports = {
   ],
   theme: {
   	extend: {
+      fontFamily: {
+        sans: ['Noto Sans KR', 'sans-serif'],
+      },
   		colors: {
-  			primary: {
-  				'50': '#fff7ed',
-  				'100': '#ffedd5',
-  				'200': '#fed7aa',
-  				'300': '#fdba74',
-  				'400': '#fb923c',
-  				'500': '#f97316',
-  				'600': '#ea580c',
-  				'700': '#c2410c',
-  				'800': '#9a3412',
-  				'900': '#7c2d12',
-  				'950': '#431407',
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
+        // 仕様書に基づいたカラーパレット
+        primary: {
+          DEFAULT: '#00CBB3', // ティール
+          light: '#4FDECB',
+          dark: '#00A08E',
+          '50': '#e6f9f7',
+          '100': '#ccf3ef',
+          '200': '#99e8df',
+          '300': '#66dcce',
+          '400': '#33d0be',
+          '500': '#00CBB3',
+          '600': '#00a28f',
+          '700': '#00796b',
+          '800': '#005148',
+          '900': '#002824',
+        },
+        secondary: {
+          DEFAULT: '#FFA500', // オレンジ
+          light: '#FFB733',
+          dark: '#CC8400',
+          '50': '#fff8e6',
+          '100': '#fff1cc',
+          '200': '#ffe299',
+          '300': '#ffd466',
+          '400': '#ffc533',
+          '500': '#FFA500',
+          '600': '#cc8400',
+          '700': '#996300',
+          '800': '#664200',
+          '900': '#332100',
+        },
+        accent: {
+          DEFAULT: '#E64DFF', // パープル
+          light: '#EC7AFF',
+          dark: '#C41ED9',
+          '50': '#fce6ff',
+          '100': '#f9ccff',
+          '200': '#f399ff',
+          '300': '#ed66ff',
+          '400': '#e733ff',
+          '500': '#E64DFF',
+          '600': '#b83ecc',
+          '700': '#8a2e99',
+          '800': '#5c1f66',
+          '900': '#2e0f33',
+        },
+        background: '#F8F8F8', // ライトグレー
+        text: '#002233', // ダークグレー
+        
+        // UIコンポーネント用
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
@@ -33,17 +69,9 @@ module.exports = {
   				DEFAULT: 'hsl(var(--popover))',
   				foreground: 'hsl(var(--popover-foreground))'
   			},
-  			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
   				foreground: 'hsl(var(--muted-foreground))'
-  			},
-  			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
   			},
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
@@ -52,13 +80,6 @@ module.exports = {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
-  			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
-  			}
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

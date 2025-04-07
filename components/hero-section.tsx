@@ -20,7 +20,7 @@ export function HeroSection() {
   };
 
   return (
-    <div className="p-6 md:p-8 lg:p-10 bg-gradient-to-br from-teal-400 to-yellow-500 rounded-2xl mx-4 md:mx-6 lg:mx-8 my-6 md:my-8 text-white shadow-md md:max-w-3xl md:mx-auto lg:max-w-4xl xl:max-w-5xl">
+    <div className="p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-4 md:mx-6 lg:mx-8 my-6 md:my-8 text-white shadow-md md:max-w-3xl md:mx-auto lg:max-w-4xl xl:max-w-5xl">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div className="mb-6 md:mb-0 md:mr-8 md:flex-1">
           <div className="flex items-center mb-4">
@@ -34,7 +34,7 @@ export function HeroSection() {
         
         <div className="md:flex-shrink-0 md:w-1/3">
           <Link href="/restaurants">
-            <button className="w-full bg-white text-teal-400 hover:bg-white/90 font-bold py-3 md:py-4 rounded-xl transform hover:scale-[1.02] transition-transform duration-200">
+            <button className="w-full bg-white text-primary hover:bg-white/90 font-bold py-3 md:py-4 rounded-xl transform hover:scale-[1.02] transition-transform duration-200">
               {content[language].buttonText}
             </button>
           </Link>
@@ -42,4 +42,4 @@ export function HeroSection() {
       </div>
     </div>
   );
-} 
+}

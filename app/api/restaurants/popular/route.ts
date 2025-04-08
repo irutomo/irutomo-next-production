@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       .from('restaurants')
       .select('*')
       .order('rating', { ascending: false })
-      .limit(6);
+      .limit(3);
 
     if (error) {
       console.error('クエリエラー:', error);

@@ -191,6 +191,72 @@ const publicRoutes = [
   2. 決済処理 (`/api/paypal/capture-order/`)
   3. 必要に応じて払い戻し処理 (`/api/paypal/refund/`)
 
+#### PayPal設定ファイルの使用方法
+
+`paypalConfig.ts`を作成し、PayPalの設定を集中管理します:
+
+```typescript
+// PayPal設定
+export const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'sb';
+export const PAYPAL_MODE = process.env.NODE_ENV === 'production' ? 'live' : 'sandbox';
+export const PAYMENT_AMOUNT = 1000; // 手数料1000円
+
+export const paypalConfig = {
+  clientId: PAYPAL_CLIENT_ID,
+  currency: 'JPY',
+  intent: 'capture',
+  components: 'buttons',
+  disableFunding: 'paylater,venmo,card',
+};
+```
+
+PayPalScriptProviderの実装例:
+
+```tsx
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { paypalConfig, PAYMENT_AMOUNT } from './paypalConfig';
+
+// コンポーネント内
+<PayPalScriptProvider options={paypalConfig}>
+  <PayPalButtons 
+    style={{ layout: "vertical" }}
+    createOrder={(data, actions) => {
+      return actions.order.create({
+        intent: "CAPTURE",
+        purchase_units: [
+          {
+            amount: {
+              currency_code: "JPY",
+              value: PAYMENT_AMOUNT.toString()
+            },
+            description: `${formData.restaurantName || "食堂"} - ${formData.numberOfPeople || "1"}名様`
+          }
+        ],
+        application_context: {
+          shipping_preference: "NO_SHIPPING"
+        }
+      });
+    }}
+    onApprove={(data, actions) => {
+      // 支払い完了処理
+      return actions.order.capture().then((details) => {
+        // 成功時の処理
+        setIsSubmitted(true);
+      });
+    }}
+    onError={(err) => {
+      // エラー処理
+      setPaymentError("決済処理中にエラーが発生しました");
+    }}
+  />
+</PayPalScriptProvider>
+```
+
+PayPal決済機能の実装に関する重要な注意点:
+- スクリプト読み込み状態の監視と適切なローディング表示の実装
+- エラーハンドリングの実装（ネットワークエラー、ユーザーキャンセル、PayPalの内部エラーなど）
+- 決済成功時のユーザーフローの設計（確認画面表示、データベース更新など）
+
 ## 5. デプロイプロセス
 
 1. コードレビュー

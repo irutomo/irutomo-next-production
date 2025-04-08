@@ -125,8 +125,75 @@ project/
      - スクリプト読み込み状態の管理
      - ローディング表示
      - エラーハンドリングの強化
-   - 決済成功時のモーダル表示
+     - 決済成功時のモーダル表示
    - 韓国語/日本語切り替え機能
+
+   **PayPal決済実装**:
+   - ファイル構成:
+     - `app/request/paypalConfig.ts` - PayPalの設定を集中管理
+     - `app/request/request-content.tsx` - PayPalボタンとフォームの実装
+
+   ```typescript
+   // paypalConfig.ts
+   export const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'sb';
+   export const PAYPAL_MODE = process.env.NODE_ENV === 'production' ? 'live' : 'sandbox';
+   export const PAYMENT_AMOUNT = 1000; // 手数料1000円
+
+   export const paypalConfig = {
+     clientId: PAYPAL_CLIENT_ID,
+     currency: 'JPY',
+     intent: 'capture',
+     components: 'buttons',
+     disableFunding: 'paylater,venmo,card',
+   };
+   ```
+
+   ```tsx
+   // request-content.tsx 内のPayPal実装部分
+   import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+   import { paypalConfig, PAYMENT_AMOUNT } from './paypalConfig';
+
+   // コンポーネント内
+   <PayPalScriptProvider options={paypalConfig}>
+     <PayPalButtons 
+       style={{ layout: "vertical" }}
+       createOrder={(data, actions) => {
+         return actions.order.create({
+           intent: "CAPTURE",
+           purchase_units: [
+             {
+               amount: {
+                 currency_code: "JPY",
+                 value: PAYMENT_AMOUNT.toString()
+               },
+               description: `${formData.restaurantName || "食堂"} - ${formData.numberOfPeople || "1"}名様`
+             }
+           ],
+           application_context: {
+             shipping_preference: "NO_SHIPPING"
+           }
+         });
+       }}
+       onApprove={(data, actions) => {
+         if (!actions.order) {
+           console.error("PayPal actions.orderが利用できません");
+           return Promise.reject("PayPal actions.order not available");
+         }
+         
+         return actions.order.capture().then((details) => {
+           console.log("決済が完了しました:", details);
+           // 成功した場合、成功モーダルを表示
+           setIsSubmitted(true);
+           setPaymentError(null);
+         });
+       }}
+       onError={(err) => {
+         console.error("PayPal決済エラー:", err);
+         setPaymentError(t.paymentError);
+       }}
+     />
+   </PayPalScriptProvider>
+   ```
 
 10. **管理者返金ページ** (`/app/admin/refund/page.tsx`)
     - 管理者認証機能

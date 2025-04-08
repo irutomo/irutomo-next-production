@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { StarIcon } from 'lucide-react';
-import { Restaurant } from '@/types/restaurant';
 import { useLanguage } from '@/contexts/language-context';
+import { Restaurant } from '@/types/restaurant';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -81,12 +80,34 @@ function getRestaurantImageUrl(restaurant: Restaurant): string {
   return '/images/restaurants/placeholder.jpg';
 }
 
+// SVGコンポーネント
+const StarIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const MapPinIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+    <circle cx="12" cy="10" r="3"/>
+  </svg>
+);
+
+const ExternalLinkIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+    <polyline points="15 3 21 3 21 9"/>
+    <line x1="10" y1="14" x2="21" y2="3"/>
+  </svg>
+);
+
 export default function PopularRestaurants() {
   const { language } = useLanguage();
   
   const content = {
     ja: {
-      title: '人気店舗',
+      title: '🔥人気店舗',
       viewMore: 'もっと見る',
       popular: '人気店',
       viewDetails: '詳細を見る',
@@ -98,7 +119,7 @@ export default function PopularRestaurants() {
       dataError: 'データの取得に失敗しました。しばらくしてから再試行してください。'
     },
     ko: {
-      title: '인기 맛집',
+      title: '🔥인기 맛집',
       viewMore: '더보기',
       popular: '인기 맛집',
       viewDetails: '상세보기',
@@ -137,9 +158,9 @@ export default function PopularRestaurants() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">人気のレストラン</h2>
+        <h2 className="text-xl font-bold text-gray-900">🔥人気のレストラン</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <Card key={i} className="overflow-hidden bg-white">
               <CardContent className="p-4">
                 <Skeleton className="h-4 w-3/4 mb-2" />
@@ -166,11 +187,11 @@ export default function PopularRestaurants() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">人気のレストラン</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <h2 className="text-xl font-bold text-gray-900">{content[language].title}</h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 px-3">
         {restaurants.map((restaurant) => (
           <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`} className="block">
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 bg-white">
+            <div className="bg-white rounded-md overflow-hidden shadow-xs hover:shadow-md transition-shadow duration-200 border border-gray-100 flex flex-col h-full">
               <div className="relative h-48 w-full">
                 <Image
                   src={getRestaurantImageUrl(restaurant)}
@@ -180,20 +201,60 @@ export default function PopularRestaurants() {
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 {/* 評価バッジ */}
-                <div className="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full text-sm font-bold flex items-center">
-                  <span className="text-yellow-500">★</span>
-                  <span className="ml-1 text-gray-900">{restaurant.rating.toFixed(1)}</span>
+                <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded-full text-sm font-bold flex items-center">
+                  <StarIcon className="w-4 h-4 mr-1 text-yellow-500 fill-yellow-500" />
+                  <span className="text-gray-900">{restaurant.rating.toFixed(1)}</span>
                 </div>
+                
+                {/* 人気バッジ (評価が4.5以上の場合) */}
+                {restaurant.rating && restaurant.rating >= 4.5 && (
+                  <div className="absolute top-2 left-2 bg-[#FFA500] px-2 py-0.5 rounded-full text-xs text-white font-bold">
+                    {content[language].popular}
+                  </div>
+                )}
               </div>
-              <CardContent className="p-4">
-                <h3 className="font-bold text-lg mb-1 text-gray-900">{restaurant.name}</h3>
-                <div className="flex items-center">
-                  <div className="text-sm text-gray-500">
-                    {restaurant.location || '未設定'}
+              
+              <div className="p-1 flex-grow flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-sm mb-0.5 text-gray-900 truncate">{restaurant.name}</h3>
+                  <div className="flex items-center text-xs text-gray-500 mb-0.5">
+                    <MapPinIcon className="w-3 h-3 mr-0.5 flex-shrink-0" />
+                    <span className="truncate">{restaurant.location || '未設定'}</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-0.5 mb-1">
+                    {restaurant.cuisine && (
+                      <span className="bg-gray-100 text-gray-600 text-xs px-1 py-0.5 rounded">
+                        {restaurant.cuisine}
+                      </span>
+                    )}
+                    {restaurant.price_range && (
+                      <span className="bg-gray-100 text-gray-600 text-xs px-1 py-0.5 rounded">
+                        {restaurant.price_range}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                
+                <div className="flex gap-1 mt-1">
+                  <Link 
+                    href={`/restaurants/${restaurant.id}`}
+                    className="flex-grow px-2 py-1.5 bg-[#FFA500] text-white rounded-md text-xs sm:text-sm font-medium hover:bg-[#FFA500]/90 transition-colors"
+                  >
+                    {language === 'ko' ? '예약하기' : '予約する'}
+                  </Link>
+                  <Link 
+                    href={restaurant.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="px-2 py-1.5 border border-gray-200 rounded-md text-gray-700 text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center"
+                  >
+                    <ExternalLinkIcon className="w-3.5 h-3.5 mr-0.5" />
+                    {language === 'ko' ? '지도' : '地図'}
+                  </Link>
+                </div>
+              </div>
+            </div>
           </Link>
         ))}
       </div>

@@ -367,10 +367,15 @@ export default async function RestaurantPage({ params }: Props) {
             ))}
           </div>
           
-          <h2 className="font-bold mb-2">食堂POINT👀</h2>
-          <p className="text-sm text-gray-700 mb-3">
-            {restaurantData.description}
-          </p>
+          <div className="border-t border-gray-100 pt-3 mt-3">
+            <h2 className="font-bold mb-2 text-[#FFA500] flex items-center">
+              <span className="mr-1">👀</span>
+              食堂POINT
+            </h2>
+            <p className="text-sm text-gray-700 mb-3 bg-gray-50 p-2 rounded">
+              {restaurantData.description}
+            </p>
+          </div>
           
           <a 
             href={restaurantData.google_maps_link} 

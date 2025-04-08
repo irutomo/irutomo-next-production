@@ -324,73 +324,50 @@ export default function RequestContent() {
             
             {/* PayPalボタン */}
             <div className="mt-6">
-              <PayPalScriptProvider options={{
-                clientId: PAYPAL_CLIENT_ID,
-                currency: "JPY",
-                intent: "capture",
-                components: "buttons",
-                disableFunding: "paylater,venmo,card"
-              }}>
-                {scriptLoaded ? (
-                  <PayPalButtons
-                    style={{ 
-                      layout: "vertical",
-                      color: "gold",
-                      shape: "rect",
-                      label: "pay"
-                    }}
-                    createOrder={(data, actions) => {
-                      console.log("createOrder関数が呼び出されました");
-                      if (!actions.order) {
-                        console.error("PayPal actions.orderが利用できません");
-                        return Promise.reject("PayPal actions.order not available");
-                      }
-                      
-                      return actions.order.create({
-                        intent: "CAPTURE",
-                        purchase_units: [
-                          {
-                            amount: {
-                              currency_code: "JPY",
-                              value: PAYMENT_AMOUNT.toString()
-                            },
-                            description: `${formData.restaurantName || "食堂"} - ${formData.numberOfPeople || "1"}名様`
-                          }
-                        ],
-                        application_context: {
-                          shipping_preference: "NO_SHIPPING"
+              <PayPalScriptProvider options={paypalConfig}>
+                <PayPalButtons 
+                  style={{ layout: "vertical" }}
+                  disabled={false}
+                  fundingSource={undefined}
+                  createOrder={(data, actions) => {
+                    return actions.order.create({
+                      intent: "CAPTURE",
+                      purchase_units: [
+                        {
+                          amount: {
+                            currency_code: "JPY",
+                            value: PAYMENT_AMOUNT.toString()
+                          },
+                          description: `${formData.restaurantName || "食堂"} - ${formData.numberOfPeople || "1"}名様`
                         }
-                      });
-                    }}
-                    onApprove={(data, actions) => {
-                      console.log("onApprove関数が呼び出されました", data);
-                      if (!actions.order) {
-                        console.error("PayPal actions.orderが利用できません");
-                        return Promise.reject("PayPal actions.order not available");
+                      ],
+                      application_context: {
+                        shipping_preference: "NO_SHIPPING"
                       }
-                      
-                      return actions.order.capture().then(function(details) {
-                        console.log("決済が完了しました:", details);
-                        // 安全なアクセスのためのnullishチェック
-                        const payerName = details.payer?.name?.given_name || "お客様";
-                        console.log("Transaction completed by: " + payerName);
-                        console.log("Transaction ID: " + details.id);
-                        // 成功した場合、成功モーダルを表示
-                        setIsSubmitted(true);
-                        setPaymentError(null);
-                      });
-                    }}
-                    onError={(err) => {
-                      console.error("PayPal決済エラー:", err);
-                      setPaymentError(t.paymentError);
-                    }}
-                  />
-                ) : (
-                  <div className="p-4 text-center">
-                    <p className="text-gray-500 mb-2">{t.loading}</p>
-                    <div className="w-8 h-8 border-t-2 border-b-2 border-orange-500 rounded-full animate-spin mx-auto"></div>
-                  </div>
-                )}
+                    });
+                  }}
+                  onApprove={(data, actions) => {
+                    if (!actions.order) {
+                      console.error("PayPal actions.orderが利用できません");
+                      return Promise.reject("PayPal actions.order not available");
+                    }
+                    
+                    return actions.order.capture().then((details) => {
+                      console.log("決済が完了しました:", details);
+                      // 安全なアクセスのためのnullishチェック
+                      const payerName = details.payer?.name?.given_name || "お客様";
+                      console.log("Transaction completed by: " + payerName);
+                      console.log("Transaction ID: " + details.id);
+                      // 成功した場合、成功モーダルを表示
+                      setIsSubmitted(true);
+                      setPaymentError(null);
+                    });
+                  }}
+                  onError={(err) => {
+                    console.error("PayPal決済エラー:", err);
+                    setPaymentError(t.paymentError);
+                  }}
+                />
               </PayPalScriptProvider>
               
               {paymentError && (

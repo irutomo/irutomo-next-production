@@ -15,7 +15,7 @@ export function BackHeader({ title, backUrl = '/' }: BackHeaderProps) {
       <Link href={backUrl} className="text-gray-600 mr-4">
         <ArrowLeft className="h-6 w-6" />
       </Link>
-      <h1 className="text-xl font-bold text-orange-500">{title}</h1>
+      <h1 className="text-xl font-bold text-[#FFA500]">{title}</h1>
       <div className="ml-auto flex items-center">
         <LanguageSwitcher />
       </div>

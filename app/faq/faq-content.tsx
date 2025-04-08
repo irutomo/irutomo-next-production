@@ -6,17 +6,6 @@ import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { useLanguage } from '@/contexts/language-context';
 
-// 言語切り替えボタン用のスタイル
-const languageButtonStyle = {
-  active: {
-    opacity: 1,
-    transform: 'scale(1.2)',
-  },
-  inactive: {
-    opacity: 0.5,
-  }
-};
-
 // 言語データの定義
 const translations = {
   ko: {
@@ -95,12 +84,7 @@ const translations = {
 
 export default function FaqContent() {
   // 言語コンテキストから言語設定を取得
-  const { language, setLanguage } = useLanguage();
-  
-  // 言語切り替え関数
-  const toggleLanguage = () => {
-    setLanguage(language === 'ko' ? 'ja' : 'ko');
-  };
+  const { language } = useLanguage();
   
   // 現在の言語のテキストを取得
   const t = translations[language];
@@ -113,25 +97,6 @@ export default function FaqContent() {
           <ArrowLeft className="h-6 w-6 text-gray-600" />
         </Link>
         <h1 className="text-xl font-bold text-[#FFA500]">{t.pageTitle}</h1>
-        <div className="ml-auto flex items-center">
-          {/* 言語切り替えボタン */}
-          <button 
-            onClick={() => setLanguage('ko')} 
-            className={`language-button mr-2 ${language === 'ko' ? 'active' : ''}`}
-            aria-label="한국어로 전환"
-            style={language === 'ko' ? languageButtonStyle.active : languageButtonStyle.inactive}
-          >
-            <span className="text-xl">🇰🇷</span>
-          </button>
-          <button 
-            onClick={() => setLanguage('ja')} 
-            className={`language-button ${language === 'ja' ? 'active' : ''}`}
-            aria-label="日本語に切り替え"
-            style={language === 'ja' ? languageButtonStyle.active : languageButtonStyle.inactive}
-          >
-            <span className="text-xl">🇯🇵</span>
-          </button>
-        </div>
       </header>
 
       <div className="p-4 space-y-6">

@@ -1,17 +1,11 @@
 'use client';
 
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createServerComponentClient } from '@/lib/supabase';
 import { Restaurant } from '@/lib/types';
 import { useLanguage } from '@/contexts/language-context';
 // アイコンをSVGで直接実装して依存性を削減
-
-export const metadata: Metadata = {
-  title: 'レストラン一覧 | IRUTOMO - 日本の飲食店予約サービス',
-  description: 'IRUTOMOに登録されている飲食店の一覧です。様々なジャンルのレストランから選ぶことができます。',
-};
 
 type LocationFilter = '全て' | '大阪' | '東京' | '京都';
 
@@ -99,8 +93,6 @@ export default async function RestaurantsPage() {
 }
 
 // クライアントコンポーネント
-'use client';
-
 function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
   const { language } = useLanguage();
   const t = translations[language];

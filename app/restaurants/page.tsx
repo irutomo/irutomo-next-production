@@ -5,9 +5,15 @@ import Link from 'next/link';
 import { createServerComponentClient } from '@/lib/supabase';
 import { Restaurant } from '@/lib/types';
 import { useLanguage } from '@/contexts/language-context';
+import React, { useState, useEffect } from 'react';
 // アイコンをSVGで直接実装して依存性を削減
 
 type LocationFilter = '全て' | '大阪' | '東京' | '京都';
+
+// 拡張されたレストラン型の定義
+type EnhancedRestaurant = Restaurant & {
+  tags: string[];
+};
 
 // SVGコンポーネント
 const ArrowLeftIcon = () => (
@@ -33,7 +39,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 // レストラン情報をSupabaseから取得する関数
-async function getRestaurants(): Promise<Restaurant[]> {
+async function getRestaurants() {
   try {
     const supabase = await createServerComponentClient();
     
@@ -76,76 +82,147 @@ const translations = {
   }
 };
 
-// レストランデータ取得とページコンポーネント
-export default async function RestaurantsPage() {
-  // Supabaseからレストラン情報を取得
-  const restaurants = await getRestaurants();
-  
-  // カテゴリタグを持つレストランを準備
-  const enhancedRestaurants = restaurants.map(restaurant => ({
-    ...restaurant,
-    tags: restaurant.cuisine ? [restaurant.cuisine] : [],
-    location: restaurant.location || '未設定'
-  }));
-  
-  // クライアントコンポーネントをラップしてデータを渡す
-  return <RestaurantsClient restaurants={enhancedRestaurants} />;
-}
+// フォールバック用のダミーレストランデータ
+const FALLBACK_RESTAURANTS: EnhancedRestaurant[] = [
+  {
+    id: 'dummy-1',
+    name: '鉄鍋餃子 餃子の山崎',
+    korean_name: '철판 만두 만두의 야마자키',
+    cuisine: '居酒屋',
+    location: '大阪北区',
+    rating: 4.4,
+    price_range: '¥¥',
+    image_url: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=400',
+    address: '大阪府大阪市北区',
+    description: '鉄鍋で焼き上げる絶品餃子とビールが楽しめる居酒屋です。',
+    tags: ['居酒屋', '餃子']
+  },
+  {
+    id: 'dummy-2',
+    name: 'おでん酒場 湯あみ',
+    korean_name: '오뎅 술집 유아미',
+    cuisine: '居酒屋',
+    location: '大阪北区',
+    rating: 4.2,
+    price_range: '¥¥',
+    image_url: 'https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?auto=format&fit=crop&w=400',
+    address: '大阪府大阪市北区',
+    description: '季節の具材を使った本格おでんとお酒が楽しめる隠れ家的な居酒屋です。',
+    tags: ['居酒屋', 'おでん']
+  },
+  {
+    id: 'dummy-3',
+    name: '炭火焼鳥 コクレ',
+    korean_name: '숯불구이 코쿠레',
+    cuisine: '居酒屋',
+    location: '大阪福島',
+    rating: 4.4,
+    price_range: '¥¥',
+    image_url: 'https://images.unsplash.com/photo-1591684080176-bb2b73f9ec68?auto=format&fit=crop&w=400',
+    address: '大阪府大阪市福島区',
+    description: '備長炭で丁寧に焼き上げる絶品焼き鳥と季節の日本酒が楽しめるお店です。',
+    tags: ['居酒屋', '焼き鳥']
+  }
+];
 
-// クライアントコンポーネント
-function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
+// クライアントコンポーネントとしてページを再実装
+export default function RestaurantsPage() {
+  // グローバルヘッダーを非表示にする
+  useEffect(() => {
+    const header = document.querySelector('.global-header');
+    if (header) {
+      header.classList.add('hidden');
+    }
+
+    return () => {
+      const header = document.querySelector('.global-header');
+      if (header) {
+        header.classList.remove('hidden');
+      }
+    };
+  }, []);
+
+  // 言語設定を取得
   const { language } = useLanguage();
   const t = translations[language];
   
+  // レストランデータを状態として管理
+  const [restaurants, setRestaurants] = useState<EnhancedRestaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // サーバーからデータを取得
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const data = await getRestaurants();
+        if (!data || data.length === 0) {
+          setRestaurants(FALLBACK_RESTAURANTS);
+        } else {
+          // カテゴリタグを持つレストランを準備
+          const enhancedRestaurants = data.map(restaurant => ({
+            ...restaurant,
+            tags: restaurant.cuisine ? [restaurant.cuisine] : [],
+            location: restaurant.location || '未設定'
+          }));
+          setRestaurants(enhancedRestaurants as EnhancedRestaurant[]);
+        }
+      } catch (error) {
+        console.error('データ取得エラー:', error);
+        setRestaurants(FALLBACK_RESTAURANTS);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, []);
+  
+  // ローディング中の表示
+  if (loading) {
+    return (
+      <main className="max-w-md mx-auto bg-background min-h-screen flex items-center justify-center">
+        <div className="w-16 h-16 border-t-4 border-[#00CBB3] rounded-full animate-spin"></div>
+      </main>
+    );
+  }
+  
   return (
-    <main className="max-w-md mx-auto min-h-screen bg-gray-50 pb-20">
-      {/* ヘッダー */}
-      <header className="sticky top-0 z-10 bg-white shadow-sm px-4 py-3 flex items-center">
-        <div className="flex items-center flex-1">
-          <Link href="/" className="mr-2">
-            <Image 
-              src="/irulogo-hidariue.svg" 
-              alt="IRUTOMO" 
-              width={100} 
-              height={20} 
-              priority
-            />
-          </Link>
-        </div>
-        <div className="flex items-center">
-          <h1 className="text-lg font-bold mr-2">{t.title}</h1>
-          <Link href="/" className="ml-auto">
-            <button className="p-2 rounded-md hover:bg-gray-100 transition-colors">
-              <ArrowLeftIcon />
-            </button>
-          </Link>
-        </div>
-      </header>
+    <main className="max-w-md mx-auto bg-background pb-20">
+      {/* ホームに戻るリンク */}
+      <div className="p-4">
+        <Link href="/" className="text-gray-600 hover:text-[#00CBB3] transition-colors flex items-center">
+          <ArrowLeftIcon />
+          <span className="ml-1">{t.backToHome}</span>
+        </Link>
+      </div>
 
       {/* フィルター */}
-      <div className="bg-white shadow-sm p-4 mb-4">
-        <div className="flex space-x-2 overflow-x-auto pb-2">
-          <button className="px-4 py-2 rounded-md bg-[#00CBB3] text-white font-medium whitespace-nowrap">
-            {t.all}
-          </button>
-          <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
-            大阪
-          </button>
-          <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
-            東京
-          </button>
-          <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
-            京都
-          </button>
+      <div className="p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+          <div className="flex space-x-2 overflow-x-auto pb-2 -mx-1 px-1">
+            <button className="px-4 py-2 rounded-md bg-[#00CBB3] text-white font-medium whitespace-nowrap shadow-sm">
+              {t.all}
+            </button>
+            <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50 transition-colors">
+              大阪
+            </button>
+            <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50 transition-colors">
+              東京
+            </button>
+            <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50 transition-colors">
+              京都
+            </button>
+          </div>
         </div>
       </div>
       
       {/* レストランカード */}
-      <section className="px-4">
-        <div className="grid grid-cols-1 gap-4">
+      <section className="p-4">
+        <div className="grid grid-cols-1 gap-4 pb-8">
           {restaurants.length > 0 ? (
             restaurants.map((restaurant) => (
-              <div key={restaurant.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
+              <div key={restaurant.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow transition-shadow duration-200 border border-gray-100">
                 <div className="relative h-48">
                   <Image
                     src={restaurant.image_url || '/images/restaurants/placeholder.jpg'}
@@ -169,7 +246,9 @@ function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
+                  <h3 className="font-bold text-lg mb-1">
+                    {language === 'ko' && restaurant.korean_name ? restaurant.korean_name : restaurant.name}
+                  </h3>
                   <div className="flex items-center text-sm text-gray-500 mb-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -194,7 +273,7 @@ function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
                   <div className="flex gap-2">
                     <Link 
                       href={`/restaurants/${restaurant.id}`}
-                      className="px-4 py-2 bg-[#FFA500] text-white rounded-md font-medium hover:bg-[#FFA500]/90 transition-colors"
+                      className="px-4 py-2 bg-[#FFA500] text-white rounded-md font-medium hover:bg-[#FFA500]/90 transition-colors flex-1 text-center"
                     >
                       {t.reserve}
                     </Link>
@@ -202,7 +281,7 @@ function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
                       href={restaurant.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}`}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="px-4 py-2 border border-gray-200 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center"
+                      className="px-4 py-2 border border-gray-200 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>

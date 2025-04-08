@@ -5,21 +5,26 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from './database.types';
 
-// サーバーサイドでのSupabaseクライアント (認証済み)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+// サーバーサイド用のSupabaseクライアント
 export const createServerSupabaseClient = async () => {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+  const { getToken } = auth();
   
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase URL または Service Key が設定されていません。');
-  }
-  
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
+    global: {
+      headers: {
+        Authorization: `Bearer ${await getToken({ template: "supabase" })}`
+      }
+    }
   });
+
+  return supabase;
 };
 
 // サーバーコンポーネント用のSupabaseクライアント
@@ -40,14 +45,15 @@ export const createServerComponentClient = async () => {
   });
 };
 
-// クライアントサイドでのSupabaseクライアント
+// クライアントサイド用のSupabaseクライアント
 export const createBrowserSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase URL または Anon Key が設定されていません。');
-  }
-  
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
-}; 
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+};
+
+// デフォルトのクライアント（認証なし）
+export const supabase = createClient(supabaseUrl, supabaseAnonKey); 

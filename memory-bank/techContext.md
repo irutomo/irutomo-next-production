@@ -1,442 +1,355 @@
-# 技術コンテキスト - irutomo222レストラン予約システム
+# テクノロジーコンテキスト - irutomo222レストラン予約システム
 
-## 使用技術一覧
+## 技術スタック
 
 ### フロントエンド
-- **フレームワーク**: Next.js 15.2（App Router）
-- **言語**: TypeScript 5.2+
-- **UIライブラリ**: React 19
-- **スタイリング**: Tailwind CSS 3.4+
-- **UIコンポーネント**: Shadcn UI
-- **アイコン**: Lucide Icons
-- **フォーム**: React Hook Form
-- **バリデーション**: Zod
-- **日付処理**: date-fns
-- **国際化**: next-intl
-- **アニメーション**: Framer Motion
+- ✅ **フレームワーク**: Next.js 15.2 (App Router)
+- ✅ **言語**: TypeScript 5.4
+- ✅ **UIライブラリ**: React 19
+- ✅ **スタイリング**: Tailwind CSS 4.0
+- ✅ **UIコンポーネント**: Shadcn UI (TailwindベースのヘッドレスUIコンポーネント)
+- ✅ **フォーム管理**: React Hook Form + Zod
+- ✅ **データ取得・状態管理**: TanStack Query (クライアント側) + Server Components (サーバー側)
+- ✅ **アニメーション**: Framer Motion
+- ✅ **国際化**: next-intl
+- ✅ **日付/時間処理**: date-fns
+- ✅ **アイコン**: Lucide Icons
+- ✅ **地図表示**: Mapbox
+- ✅ **チャート**: Recharts
 
 ### バックエンド
-- **サーバーサイド実装**: Next.js Server Components, Server Actions
-- **API**: Next.js Route Handlers
-- **データベース**: Supabase (PostgreSQL)
-- **認証**: Clerk (Supabaseと連携)
-- **決済処理**: PayPal API (Server Actions)
-- **画像処理**: next/image, Cloudinary
-- **エラーハンドリング**: Next.js エラーバウンダリ
-- **セキュリティ**: Helmet, CSP設定
+- ✅ **データベース**: Supabase (PostgreSQL)
+- ✅ **認証**: Clerk
+- ✅ **API**: Next.js Server Actions & API Routes
+- ✅ **ファイルストレージ**: Supabase Storage
+- ✅ **決済処理**: PayPal API
+- ✅ **画像最適化**: Next.js Image Optimization
 
 ### 開発ツール
-- **パッケージ管理**: npm
-- **ビルドツール**: Turbopack (開発環境), webpack (本番環境)
-- **リンター/フォーマッター**: ESLint, Prettier
-- **バージョン管理**: Git, GitHub
-- **CI/CD**: GitHub Actions, Vercel Deployments
-
-### テスト
-- **ユニットテスト**: Vitest
-- **コンポーネントテスト**: Vitest, Testing Library
-- **E2Eテスト**: Playwright
-- **APIテスト**: Insomnia
+- ✅ **パッケージ管理**: npm
+- ✅ **コード品質**: ESLint, Prettier
+- ✅ **Git管理**: GitHub
+- ✅ **CI/CD**: GitHub Actions, Vercel
+- ✅ **テスト**: Vitest, Testing Library, Playwright
+- ✅ **開発サーバー**: Next.js + Turbopack
+- ✅ **アクセシビリティ**: axe-core
 
 ### デプロイ
-- **ホスティング**: Vercel
-- **エッジネットワーク**: Vercel Edge Network
-- **監視**: Vercel Analytics
-- **ログ**: Vercel Logs
+- ✅ **ホスティング**: Vercel
+- ✅ **コンテンツ配信**: Vercel Edge Network
+- ✅ **分析**: Vercel Analytics
+- ✅ **モニタリング**: Sentry
 
-## 主要な技術実装
+## Next.js 15.2 - 主要な更新点と利用機能
 
-### Next.js 15.2 App Router
+### 新機能の活用
 
-```typescript
-// app/restaurants/[id]/page.tsx
-export default async function RestaurantPage({ params }: { params: { id: string } }) {
-  const restaurant = await getRestaurantById(params.id);
-  
-  return (
-    <Suspense fallback={<RestaurantSkeleton />}>
-      <RestaurantDetails restaurant={restaurant} />
-      <Suspense fallback={<ReservationFormSkeleton />}>
-        <ReservationForm restaurantId={params.id} />
-      </Suspense>
-    </Suspense>
-  );
-}
+1. **App Router (ページルーター完全移行済)**
+   - ✅ サーバーコンポーネントをフル活用
+   - ✅ レイアウト、テンプレート、ローディングUI
+   - ✅ 静的/動的レンダリングの最適な組み合わせ
+   - ✅ メタデータAPI活用
+   - ✅ Streaming SSR
+   - ✅ Parallel Routes
+   - ✅ Intercepting Routes
 
-// ストリーミングメタデータの実装例
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const restaurant = await getRestaurantById(params.id);
-  
-  return {
-    title: `${restaurant.name} - irutomo222予約`,
-    description: restaurant.description,
-    openGraph: {
-      images: [{ url: restaurant.imageUrl }],
-    },
-  };
-}
-```
+2. **Server Components**
+   - ✅ バンドルサイズの削減
+   - ✅ データベースへの直接アクセス
+   - ✅ バックエンドリソースへの安全なアクセス
+   - ✅ APIレイヤーの削減
 
-### Clerk-Supabase認証連携
+3. **Server Actions**
+   - ✅ フォーム処理
+   - ✅ データベーストランザクション
+   - ✅ ミューテーション処理
+   - ✅ Progressive Enhancement
 
-認証方式をJWTからセッショントークン方式に移行し、より安全で効率的な認証フローを実現しています。
+4. **高度なルーティング**
+   - ✅ パラレルルート - 複数ビューの同時表示
+   - ✅ インターセプトルート - モーダル/スライドオーバー
+   - ✅ ルートグループ - 論理的なルート分割
 
-```typescript
-// middleware.ts
-import { authMiddleware } from "@clerk/nextjs";
- 
-export default authMiddleware({
-  publicRoutes: [
-    "/",
-    "/restaurants",
-    "/restaurants/(.*)",
-    "/api/webhook/(.*)",
-    "/service",
-    "/reviews",
-  ],
-  ignoredRoutes: [
-    "/api/webhook/(.*)"
-  ]
-});
- 
-export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
-};
+5. **新パフォーマンス機能**
+   - ✅ 部分プリレンダリング (PPR) - 評価中
+   - ✅ View Transition API - アニメーションに活用
+   - ✅ Turbopack開発サーバー - 高速HMR
+   - ✅ メタデータのストリーミング
 
-// SupabaseとClerkの連携例
-// utils/supabase.ts
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { currentUser } from '@clerk/nextjs/server';
+### セキュリティ強化
+- ✅ CSP強化対応
+- ✅ セキュアヘッダー対応
+- ✅ 信頼性の高い環境変数処理
 
-export async function createAuthenticatedSupabaseClient() {
-  const user = await currentUser();
-  const cookieStore = cookies();
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          cookieStore.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-  
-  // Clerkユーザー情報をSupabaseセッションにセット
-  if (user) {
-    const { data } = await supabase.auth.setSession({
-      access_token: user.id,
-      refresh_token: '',
-    });
-  }
-  
-  return supabase;
-}
-```
+## Clerk認証の活用
 
-### Server Actions
+### 最新の認証フロー
+- ✅ Clerk認証システム (v5)
+- ✅ セッショントークン認証（JWTテンプレート方式から移行）
+  - 2025年4月1日より、JWTテンプレート方式は公式に非推奨化
+- ✅ Clerkダッシュボードの「Connect with Supabase」機能を使用
+- ✅ RLS (Row Level Security)との完全統合
+- ✅ Server Action内での認証チェック
+- ✅ バックグラウンドトークンリフレッシュ
 
-フォーム処理や決済処理など、セキュリティが重要な処理をServer Actionsで実装しています。
+### 実装パターン
+- ✅ 個々のコンポーネントでのアクセス制御
+- ✅ ミドルウェアによるルート保護
+- ✅ サーバーコンポーネントでのユーザー情報アクセス
+- ✅ クライアントコンポーネントでのユーザー情報アクセス
+- ✅ トークンキャッシュとパフォーマンス最適化
 
-```typescript
-// app/reservations/actions.ts
-'use server'
+## Supabaseの活用
 
-import { createAuthenticatedSupabaseClient } from '@/utils/supabase';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { z } from 'zod';
+### データベース機能
+- ✅ PostgreSQLデータベース
+- ✅ RLS（Row Level Security）ポリシー
+- ✅ 外部キー制約
+- ✅ サーバーサイドでの直接クエリ
 
-const reservationSchema = z.object({
-  restaurantId: z.string(),
-  date: z.string(),
-  time: z.string(),
-  partySize: z.number().min(1).max(20),
-  specialRequests: z.string().optional(),
-});
+### ストレージ
+- ✅ レビュー画像保存
+- ✅ レストラン画像保存
+- ✅ RLSによるアクセス制御
+- ✅ 画像変換とサイズ最適化
 
-export async function createReservation(formData: FormData) {
-  const supabase = await createAuthenticatedSupabaseClient();
-  
-  try {
-    const validated = reservationSchema.parse({
-      restaurantId: formData.get('restaurantId'),
-      date: formData.get('date'),
-      time: formData.get('time'),
-      partySize: Number(formData.get('partySize')),
-      specialRequests: formData.get('specialRequests') || '',
-    });
-    
-    const { data, error } = await supabase
-      .from('reservations')
-      .insert([validated])
-      .select()
-      .single();
-      
-    if (error) throw error;
-    
-    revalidatePath('/reservations');
-    redirect(`/reservations/${data.id}/confirmation`);
-  } catch (error) {
-    console.error('Reservation creation failed:', error);
-    return { error: '予約の作成に失敗しました。もう一度お試しください。' };
-  }
-}
-```
+### サーバーアクションでの活用
+- ✅ セッション検証
+- ✅ トランザクション
+- ✅ 型安全なデータアクセス
+- ✅ エラーハンドリング
 
-### PayPal統合
+## PayPal統合
 
-PayPalの支払い処理をServer Actionsを使って安全に実装しています。
+### 実装状況
+- ✅ PayPal APIとの統合
+- ✅ 公式React SDK (@paypal/react-paypal-js)
+- ✅ サンドボックス環境設定
+- ✅ 予約金支払いフロー
 
-```typescript
-// app/payment/actions.ts
-'use server'
+### セキュリティ対策
+- ✅ Server Actionsによる安全な決済処理
+- ✅ トランザクション検証
+- ✅ エラー処理とリカバリー
+- ✅ セッション管理の最適化
 
-import { z } from 'zod';
-import { createAuthenticatedSupabaseClient } from '@/utils/supabase';
-import { PayPalSDK } from '@/lib/paypal/sdk';
-import { headers } from 'next/headers';
+### 機能
+- ✅ 予約時のデポジット支払い
+- ✅ 複数通貨対応
+- ✅ モバイル最適化表示
+- ✅ 支払い完了通知
 
-const paymentSchema = z.object({
-  reservationId: z.string(),
-  paymentId: z.string(),
-  amount: z.number().positive(),
-});
+## Tailwind CSSの活用
 
-export async function processPayment(formData: FormData) {
-  const supabase = await createAuthenticatedSupabaseClient();
-  
-  try {
-    const validated = paymentSchema.parse({
-      reservationId: formData.get('reservationId'),
-      paymentId: formData.get('paymentId'),
-      amount: parseFloat(formData.get('amount') as string),
-    });
-    
-    // PayPal APIを使用して支払いを処理
-    const paypalSdk = new PayPalSDK(process.env.PAYPAL_CLIENT_ID!, process.env.PAYPAL_CLIENT_SECRET!);
-    const paymentResult = await paypalSdk.capturePayment(validated.paymentId);
-    
-    if (paymentResult.status === 'COMPLETED') {
-      // 支払い情報をデータベースに保存
-      const { data, error } = await supabase
-        .from('payments')
-        .insert([{
-          reservation_id: validated.reservationId,
-          payment_id: validated.paymentId,
-          amount: validated.amount,
-          status: 'completed',
-          payment_method: 'paypal',
-          transaction_data: paymentResult,
-        }])
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      // 予約ステータスを更新
-      await supabase
-        .from('reservations')
-        .update({ payment_status: 'paid' })
-        .eq('id', validated.reservationId);
-      
-      return { success: true, paymentId: validated.paymentId };
-    } else {
-      throw new Error('Payment not completed');
-    }
-  } catch (error) {
-    console.error('Payment processing failed:', error);
-    return { error: '支払い処理に失敗しました。もう一度お試しください。' };
-  }
-}
-```
+### 使用スタイリング手法
+- ✅ ユーティリティファーストアプローチ
+- ✅ カスタムテーマ設定
+- ✅ ダークモードサポート
+- ✅ コンポーネント固有のスタイリング
+- ✅ レスポンシブデザイン
 
-### ストリーミングUIとSuspense
+### 拡張機能
+- ✅ tailwindcss-animate（アニメーション）
+- ✅ @tailwindcss/forms（フォーム要素）
+- ✅ @tailwindcss/typography（コンテンツスタイリング）
+- ✅ Autoprefixer
 
-段階的なコンテンツ表示とユーザー体験向上のために、ストリーミングUIとSuspenseを積極的に活用しています。
+## Shadcn UIの活用
 
-```tsx
-// app/page.tsx
-import { Suspense } from 'react';
-import Hero from '@/components/home/Hero';
-import FeaturedRestaurants from '@/components/home/FeaturedRestaurants';
-import PopularCuisines from '@/components/home/PopularCuisines';
-import RecentReviews from '@/components/home/RecentReviews';
-import { FeaturedRestaurantsSkeleton, PopularCuisinesSkeleton, RecentReviewsSkeleton } from '@/components/skeletons';
+### コンポーネント使用状況
+- ✅ 基本UIコンポーネント（Button, Input, Card等）
+- ✅ フォームコンポーネント（Form, Select, Checkbox等）
+- ✅ ナビゲーションコンポーネント（Tabs, Pagination等）
+- ✅ フィードバックコンポーネント（Toast, Alert等）
+- ✅ オーバーレイコンポーネント（Dialog, Sheet等）
 
-export default function HomePage() {
-  return (
-    <main>
-      <Hero />
-      
-      <section className="py-12">
-        <h2 className="text-2xl font-bold mb-6">注目のレストラン</h2>
-        <Suspense fallback={<FeaturedRestaurantsSkeleton />}>
-          <FeaturedRestaurants />
-        </Suspense>
-      </section>
-      
-      <section className="py-12 bg-gray-50">
-        <h2 className="text-2xl font-bold mb-6">人気のジャンル</h2>
-        <Suspense fallback={<PopularCuisinesSkeleton />}>
-          <PopularCuisines />
-        </Suspense>
-      </section>
-      
-      <section className="py-12">
-        <h2 className="text-2xl font-bold mb-6">最新のレビュー</h2>
-        <Suspense fallback={<RecentReviewsSkeleton />}>
-          <RecentReviews />
-        </Suspense>
-      </section>
-    </main>
-  );
-}
-```
+### カスタマイズ
+- ✅ カラースキームのブランド調整
+- ✅ アニメーションのカスタマイズ
+- ✅ コンポーネント拡張
+- ✅ アクセシビリティの強化
 
-### レスポンシブデザイン
+## テスト戦略
 
-モバイルからデスクトップまで、様々なデバイスに対応したレスポンシブデザインを実装しています。
+### 単体テスト
+- ✅ Vitest + React Testing Library
+- ✅ コンポーネントのテスト
+- ✅ ユーティリティ関数のテスト
+- ✅ カスタムフックのテスト
 
-```tsx
-// components/layout/Header.tsx
-import { useState } from 'react';
-import Link from 'next/link';
-import { UserButton } from '@clerk/nextjs';
-import { Menu, X } from 'lucide-react';
+### 統合テスト
+- ✅ Server Actionsのテスト
+- ✅ APIルートのテスト
+- ✅ データフローのテスト
 
-export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
-  return (
-    <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="font-bold text-xl">irutomo222</Link>
-        
-        {/* デスクトップナビゲーション */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link href="/restaurants" className="hover:text-primary transition-colors">レストラン</Link>
-          <Link href="/reservations" className="hover:text-primary transition-colors">予約確認</Link>
-          <Link href="/reviews" className="hover:text-primary transition-colors">レビュー</Link>
-          <Link href="/service" className="hover:text-primary transition-colors">サービス紹介</Link>
-          <UserButton afterSignOutUrl="/" />
-        </nav>
-        
-        {/* モバイルメニューボタン */}
-        <button 
-          className="md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label={isMenuOpen ? 'メニューを閉じる' : 'メニューを開く'}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-      
-      {/* モバイルナビゲーション */}
-      {isMenuOpen && (
-        <nav className="md:hidden bg-white p-4 shadow-lg">
-          <div className="flex flex-col gap-4">
-            <Link href="/restaurants" className="hover:text-primary transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-              レストラン
-            </Link>
-            <Link href="/reservations" className="hover:text-primary transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-              予約確認
-            </Link>
-            <Link href="/reviews" className="hover:text-primary transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-              レビュー
-            </Link>
-            <Link href="/service" className="hover:text-primary transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-              サービス紹介
-            </Link>
-            <div className="py-2">
-              <UserButton afterSignOutUrl="/" />
-            </div>
-          </div>
-        </nav>
-      )}
-    </header>
-  );
-}
-```
+### E2Eテスト
+- ✅ Playwrightによるエンドツーエンドテスト
+- ✅ 主要ユーザーフローのテスト
+- ✅ クロスブラウザテスト
 
-## テスト・運用環境
+## データフェッチ戦略
 
-### テスト環境
-- Vitestによるユニットテストとコンポーネントテスト
-- Playwrightによるエンドツーエンドテスト
-- PayPalサンドボックス環境でのテスト
+### サーバーサイド
+- ✅ Server Componentsでの直接データフェッチ
+- ✅ Supabase Clientを使用した型安全なクエリ
+- ✅ キャッシュとリバリデーション
 
-### 運用環境
-- Vercel Production環境（メイン環境）
-- Vercel Preview環境（PR確認用）
-- Vercel Analytics（パフォーマンスモニタリング）
+### クライアントサイド
+- ✅ TanStack Query
+- ✅ 最適なキャッシュ戦略
+- ✅ SWRパターン（Stale-While-Revalidate）
+- ✅ 楽観的UI更新
 
-## 重要な技術的実装
+## サーバーアクション活用
 
-### Clerk-Supabase認証統合
-- セッショントークン方式の採用（旧JWT方式からの移行）
-- App RouterミドルウェアでのRouteごとのアクセス制御
-- Supabase RLSポリシーとClerkユーザーIDの連携
+### セキュリティ
+- ✅ CSRFトークン自動保護
+- ✅ サーバーサイドバリデーション
+- ✅ 認証チェック
+- ✅ エラーハンドリング
 
-### PayPal決済処理
-- 公式React SDKの使用（クライアントサイド）
-- Server Actionsでの安全な決済処理（サーバーサイド）
-- トランザクション処理と整合性確保のロジック
+### パフォーマンス
+- ✅ サーバーサイドのみで実行される重い処理
+- ✅ キャッシュの再検証
+- ✅ 楽観的UI更新との連携
 
-### Next.js 15.2最適化
-- ストリーミングメタデータによるページロード高速化
-- コンポーネントの適切な分割（Server/Client）
-- 永続的キャッシュの活用によるデータフェッチの最適化
-- Turbopackの試験的導入
+### フォーム処理
+- ✅ React Hook Formとの連携
+- ✅ バリデーションエラーのクライアントへの返却
+- ✅ マルチステップフォームでの状態保持
+- ✅ 進行状況の表示
 
-### セキュリティ実装
-- CSPヘッダーの最適化（特にClerkとPayPal対応）
-- Server Actionsを活用した安全なデータ処理
-- エラーオブジェクトのサニタイズ
+## パフォーマンス最適化
 
-### 環境変数管理
-- 本番環境とローカル環境での.env設定
-- Vercelでの環境変数管理
-- 認証情報とAPIキーの安全な管理
+### 画像最適化
+- ✅ next/imageによる自動最適化
+- ✅ 遅延ロード
+- ✅ WebPフォーマットの活用
+- ✅ 適切なサイズでの提供
 
-### エラーハンドリング
-- グローバルエラーバウンダリの実装
-- 構造化されたエラーレスポンス
-- ユーザーフレンドリーなエラーメッセージ表示
-- デバッグモードの切り替え機能
+### コード最適化
+- ✅ バンドルサイズの最小化
+- ✅ コード分割
+- ✅ 動的インポート
+- ✅ 未使用コードの削除（ツリーシェイキング）
 
-## 技術的な課題と解決策
+### レンダリング最適化
+- ✅ 適切なレンダリング戦略の選択
+- ✅ ストリーミングによるプログレッシブレンダリング
+- ✅ React.memo、useMemo、useCallbackの適切な使用
+- ✅ 不要な再レンダリングの回避
 
-### 課題1: クライアント/サーバーコンポーネントの適切な分離
-- **解決策**: コンポーネント設計時にデータ取得と表示を明確に分離し、サーバーコンポーネントでデータを取得して、クライアントコンポーネントにpropsとして渡す設計パターンを採用。
+### キャッシュ戦略
+- ✅ ISRキャッシュ
+- ✅ ルートセグメントごとのキャッシュ制御
+- ✅ 動的レンダリングとキャッシングの組み合わせ
+- ✅ キャッシュタグによる選択的再検証
 
-### 課題2: 認証トークンの更新とセッション管理
-- **解決策**: セッショントークン方式の採用と、バックグラウンドでのトークンリフレッシュメカニズムの実装によりシームレスな認証体験を提供。
+## アクセシビリティ対応
 
-### 課題3: モバイル対応とレスポンシブデザイン
-- **解決策**: モバイルファーストアプローチと、Tailwind CSSのブレークポイントを活用した段階的なレイアウト変更。ハンバーガーメニューとサイドバーの実装で使いやすさを向上。
+### 実装状況
+- ✅ スクリーンリーダー対応
+- ✅ キーボードナビゲーション
+- ✅ 色コントラスト対応
+- ✅ フォーカス管理
+- ✅ ARIA属性の適切な使用
 
-### 課題4: パフォーマンス最適化
-- **解決策**: Next.jsのコンポーネント最適化、画像最適化、フォント最適化の活用。Lighthouse、Web Vitalsに基づく継続的な改善。
+### テスト
+- ✅ axe-coreによる自動テスト
+- ✅ キーボードナビゲーションテスト
+- ✅ スクリーンリーダーテスト
+- ✅ カラーコントラストチェック
 
-### 課題5: PayPalサンドボックス環境でのセッション問題
-- **解決策**: 決済フロー内でセッション状態を明示的に管理し、エラーハンドリングと再試行メカニズムを強化。
+## レスポンシブデザイン
 
-## 参考リソースとドキュメント
+### 実装アプローチ
+- ✅ モバイルファーストデザイン
+- ✅ Tailwindブレイクポイントの活用
+- ✅ コンテナクエリの使用
+- ✅ メディアクエリのカスタマイズ
 
-- [Next.js 15.2ドキュメント](https://nextjs.org/docs)
-- [React 19ドキュメント](https://react.dev/)
-- [Clerk認証ドキュメント](https://clerk.dev/docs)
-- [Supabase公式ガイド](https://supabase.io/docs)
-- [PayPal開発者ドキュメント](https://developer.paypal.com/docs)
-- [Vercelデプロイメントドキュメント](https://vercel.com/docs)
-- [社内設計ドキュメント](https://docs.example.com/design)（社内リンク） 
+### テスト
+- ✅ 複数デバイスサイズでのテスト
+- ✅ ブラウザ互換性テスト
+- ✅ 実機でのテスト
+- ✅ レスポンシブデザインツールでの検証
+
+## 国際化（i18n）
+
+### 実装状況
+- ✅ next-intlによる翻訳管理
+- ✅ 日本語・英語対応
+- ✅ 日付、時間、通貨のローカライズ
+- ✅ メッセージの多言語化
+
+### 機能
+- ✅ 言語切り替え
+- ✅ URLベースの言語指定
+- ✅ ブラウザ言語検出
+- ✅ フォールバック言語設定
+
+## 開発環境とツール
+
+### 開発環境
+- ✅ Next.js開発サーバー + Turbopack
+- ✅ ホットモジュールリプレイスメント（HMR）
+- ✅ ESLint + Prettierの統合
+- ✅ TypeScriptタイプチェック
+
+### デバッグツール
+- ✅ Next.jsデバッグモード
+- ✅ React Developer Tools
+- ✅ Chrome DevTools
+- ✅ Supabaseダッシュボード
+
+### コード品質
+- ✅ TypeScript厳格モード
+- ✅ ESLintカスタムルール
+- ✅ CIでの自動チェック
+- ✅ コードレビュープロセス
+
+## デプロイプロセス
+
+### 環境
+- ✅ 開発環境（開発者ローカル）
+- ✅ テスト環境（PRごとのプレビュー）
+- ✅ ステージング環境
+- ✅ 本番環境
+
+### CI/CD
+- ✅ GitHub Actionsによる自動化
+- ✅ テスト自動実行
+- ✅ Vercelへの自動デプロイ
+- ✅ デプロイ前後のチェック
+
+### モニタリング
+- ✅ Vercel Analyticsによるパフォーマンスモニタリング
+- ✅ Sentryによるエラートラッキング
+- ✅ ログ収集と分析
+- ✅ アラート設定
+
+## 今後検討中の技術
+
+### 追加検討技術
+- AWS S3への画像保存移行
+- Server-Sent Events (SSE)によるリアルタイム通知
+- SVGアニメーションの強化
+- PWA対応
+
+### パフォーマンス向上
+- 部分プリレンダリング (PPR)の本格導入
+- サーバーコンポーネントの最適化
+- Edge Runtimeの活用
+- オンデマンドISR
+
+### ツール強化
+- Storybookの導入
+- APIドキュメント自動生成
+- パフォーマンスモニタリングの強化
+- A/Bテスト基盤
+
+### セキュリティ強化
+- セキュリティスキャンの自動化
+- 認証フローの継続的強化
+- CSPポリシーの継続的改善
+- セキュリティトレーニングとレビュー 

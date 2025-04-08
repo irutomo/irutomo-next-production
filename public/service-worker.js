@@ -10,7 +10,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/iru-logo.svg',
+  '/irulogo-hidariue.svg',
   '/images/landing-page-image1.jpg',
   '/images/landing-page-image2.jpg',
   '/images/landing-page-image3.jpg',

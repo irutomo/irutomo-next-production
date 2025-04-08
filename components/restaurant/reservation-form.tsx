@@ -154,16 +154,18 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   return (
     <>
       <form>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">予約情報入力</h3>
+        
         {/* 予約者名 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             予約者名 <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`w-full p-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
+            className={`w-full p-2 border rounded-md text-gray-900 ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
             required
           />
           {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -171,13 +173,13 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* 人数 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             人数 <span className="text-red-500">*</span>
           </label>
           <select
             value={guests}
             onChange={(e) => setGuests(e.target.value)}
-            className="w-full p-2 border border-gray-200 rounded-md"
+            className="w-full p-2 border border-gray-200 rounded-md text-gray-900"
             required
           >
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
@@ -188,7 +190,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* 日付 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             日付 <span className="text-red-500">*</span>
           </label>
           <input
@@ -196,7 +198,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
             value={date}
             onChange={(e) => setDate(e.target.value)}
             min={today}
-            className={`w-full p-2 border rounded-md ${errors.date ? 'border-red-500' : 'border-gray-200'}`}
+            className={`w-full p-2 border rounded-md text-gray-900 ${errors.date ? 'border-red-500' : 'border-gray-200'}`}
             required
           />
           {errors.date && <p className="mt-1 text-sm text-red-500">{errors.date}</p>}
@@ -204,13 +206,13 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* 時間 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             時間 <span className="text-red-500">*</span>
           </label>
           <select
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className={`w-full p-2 border rounded-md ${errors.time ? 'border-red-500' : 'border-gray-200'}`}
+            className={`w-full p-2 border rounded-md text-gray-900 ${errors.time ? 'border-red-500' : 'border-gray-200'}`}
             required
           >
             <option value="">-- 時間 --</option>
@@ -223,7 +225,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* 電話番号 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             電話番号 <span className="text-red-500">*</span>
           </label>
           <input
@@ -231,7 +233,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             pattern="[0-9]+"
-            className={`w-full p-2 border rounded-md ${errors.phone ? 'border-red-500' : 'border-gray-200'}`}
+            className={`w-full p-2 border rounded-md text-gray-900 ${errors.phone ? 'border-red-500' : 'border-gray-200'}`}
             required
           />
           {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
@@ -239,14 +241,14 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* メールアドレス */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             メールアドレス <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`w-full p-2 border rounded-md ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
+            className={`w-full p-2 border rounded-md text-gray-900 ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
             required
           />
           {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
@@ -254,13 +256,13 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* 追加リクエスト */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             追加リクエスト <span className="text-gray-400 text-xs">(任意)</span>
           </label>
           <textarea
             value={request}
             onChange={(e) => setRequest(e.target.value)}
-            className="w-full p-2 border border-gray-200 rounded-md h-20 resize-y"
+            className="w-full p-2 border border-gray-200 rounded-md h-20 resize-y text-gray-900"
           ></textarea>
         </div>
         

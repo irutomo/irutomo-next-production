@@ -8,7 +8,7 @@ import RequestCommentModal from './RequestCommentModal';
 import PaymentModal from './PaymentModal';
 import { PayPalOrderDetails } from './PayPalCheckout';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/app/hooks/useToast';
 import { PayPalCheckout } from './PayPalCheckout';
 import { toast } from 'react-toastify';
 

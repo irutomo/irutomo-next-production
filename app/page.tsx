@@ -1,6 +1,6 @@
 import { HeroSection } from '@/components/hero-section';
 import { CategoryButtons } from '@/components/category-buttons';
-import { PopularRestaurants } from '@/components/popular-restaurants';
+import PopularRestaurants from '@/components/popular-restaurants';
 import { ServiceFeatures } from '@/components/service-features';
 import { CustomerReviews } from '@/components/customer-reviews';
 import { CtaBanner } from '@/components/cta-banner';

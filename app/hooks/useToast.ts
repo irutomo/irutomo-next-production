@@ -1,19 +1,19 @@
 'use client';
 
+import { toast, ToastOptions, TypeOptions } from 'react-toastify';
 import { useCallback } from 'react';
-import { toast } from 'react-toastify';
 
 // 使用可能なトーストタイプ
-type ToastType = 'success' | 'error' | 'info' | 'warning';
+type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 /**
- * トースト通知を表示するためのカスタムフック
- * @returns トースト通知関数
+ * Toastを表示するためのカスタムフック
+ * react-toastifyを使用
  */
-const useToast = () => {
+export const useToast = () => {
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const options = {
-      position: toast.POSITION.TOP_CENTER,
+    const options: ToastOptions = {
+      position: 'top-center',
       autoClose: 5000,
       hideProgressBar: false,
       closeOnClick: true,
@@ -25,20 +25,17 @@ const useToast = () => {
       case 'success':
         toast.success(message, options);
         break;
-      case 'error':
-        toast.error(message, options);
-        break;
       case 'warning':
         toast.warning(message, options);
         break;
-      case 'info':
+      case 'error':
+        toast.error(message, options);
+        break;
       default:
         toast.info(message, options);
         break;
     }
   }, []);
 
-  return showToast;
-};
-
-export default useToast; 
+  return { showToast };
+}; 

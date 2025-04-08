@@ -3,35 +3,43 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createServerComponentClient } from '@/lib/supabase';
 import { StarIcon } from 'lucide-react';
-import { Restaurant } from '@/lib/types';
+import { Restaurant } from '@/types/restaurant';
 import { useLanguage } from '@/contexts/language-context';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// レストラン情報をSupabaseから取得する関数
+// レストラン情報をAPIエンドポイントから取得する関数
 async function getPopularRestaurants(): Promise<Restaurant[]> {
   try {
-    const supabase = await createServerComponentClient();
+    // APIリクエスト
+    const response = await fetch('/api/restaurants/popular', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      }
+    });
     
-    const { data, error } = await supabase
-      .from('restaurants')
-      .select('*')
-      .order('rating', { ascending: false })
-      .limit(3);
-    
-    if (error) {
-      console.error('レストラン情報の取得エラー:', error);
-      return [];
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
     
-    return data || [];
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message || 'APIエラーが発生しました');
+    }
+    
+    // 新しいAPIレスポンス形式に対応
+    return result.data || [];
   } catch (error) {
     console.error('レストラン情報の取得中にエラーが発生しました:', error);
-    return [];
+    throw error;
   }
 }
 
-export function PopularRestaurants() {
+export default function PopularRestaurants() {
   const { language } = useLanguage();
   
   const content = {
@@ -41,7 +49,11 @@ export function PopularRestaurants() {
       popular: '人気店',
       viewDetails: '詳細を見る',
       notFound: 'レストラン情報が見つかりませんでした。',
-      location: '未設定'
+      location: '未設定',
+      error: 'エラーが発生しました。再読み込みしてください。',
+      retry: '再試行',
+      connectionError: 'サーバーに接続できません。ネットワーク接続を確認してください。',
+      dataError: 'データの取得に失敗しました。しばらくしてから再試行してください。'
     },
     ko: {
       title: '인기 맛집',
@@ -49,114 +61,84 @@ export function PopularRestaurants() {
       popular: '인기 맛집',
       viewDetails: '상세보기',
       notFound: '레스토랑 정보를 찾을 수 없습니다.',
-      location: '미설정'
+      location: '미설정',
+      error: '오류가 발생했습니다. 다시 로드하십시오.',
+      retry: '다시 시도',
+      connectionError: '서버에 연결할 수 없습니다. 네트워크 연결을 확인하세요.',
+      dataError: '데이터를 가져 오지 못했습니다. 잠시 후 다시 시도하십시오.'
     }
   };
 
   // 非同期データフェッチのためのステート
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // コンポーネントマウント時にデータを取得
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    async function fetchData() {
+    const fetchPopularRestaurants = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
+        setError(null);
         const data = await getPopularRestaurants();
         setRestaurants(data);
-      } catch (error) {
-        console.error('Error fetching restaurants:', error);
+      } catch (err) {
+        console.error('人気レストラン取得エラー:', err);
+        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    }
-    
-    fetchData();
+    };
+
+    fetchPopularRestaurants();
   }, []);
-  
-  return (
-    <section className="px-4 mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold flex items-center text-text">
-          <span className="text-xl mr-2">🔥</span>
-          {content[language].title}
-        </h2>
-        <Link href="/restaurants">
-          <button className="text-sm text-yellow-500 font-medium flex items-center">
-            {content[language].viewMore}
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </Link>
-      </div>
+
+  if (loading) {
+    return (
       <div className="space-y-4">
-        {isLoading ? (
-          <div className="py-10 text-center bg-white rounded-lg border border-gray-200">
-            <div className="w-8 h-8 border-t-4 border-yellow-500 border-solid rounded-full animate-spin mx-auto"></div>
-          </div>
-        ) : restaurants.length > 0 ? (
-          restaurants.map((restaurant) => (
-            <div key={restaurant.id} className="overflow-hidden shadow-md rounded-lg bg-white transform hover:scale-[1.02] transition-transform duration-200">
-              <div className="relative h-48">
-                <Image
-                  src={restaurant.image_url || '/images/restaurants/placeholder.jpg'}
-                  alt={restaurant.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw"
-                />
-                <div className="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full text-sm font-bold flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-500 mr-1 fill-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  {restaurant.rating?.toFixed(1) || '0.0'}
-                </div>
-                {restaurant.rating && restaurant.rating >= 4.5 && (
-                  <div className="absolute top-3 left-3 bg-yellow-500 px-3 py-1 rounded-full text-xs font-bold text-white">
-                    {content[language].popular}
-                  </div>
-                )}
-              </div>
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold">{restaurant.name}</h3>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {restaurant.location || content[language].location}
-                  </div>
-                </div>
-                <div className="flex gap-2 mb-3">
-                  {restaurant.cuisine && (
-                    <span className="text-xs bg-teal-50 text-teal-500 px-2 py-1 rounded-full">
-                      {restaurant.cuisine}
-                    </span>
-                  )}
-                  {restaurant.category && (
-                    <span className="text-xs bg-teal-50 text-teal-500 px-2 py-1 rounded-full">
-                      {restaurant.category}
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Link href={`/restaurants/${restaurant.id}`}>
-                    <button className="w-full bg-yellow-500 hover:bg-yellow-400 text-white py-2 px-4 rounded-lg">
-                      {content[language].viewDetails}
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="py-10 text-center bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500">{content[language].notFound}</p>
-          </div>
-        )}
+        <h2 className="text-2xl font-bold text-gray-900">人気のレストラン</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="overflow-hidden bg-white">
+              <CardContent className="p-4">
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        <p>エラーが発生しました: {error}</p>
+      </div>
+    );
+  }
+
+  if (restaurants.length === 0) {
+    return <p className="text-gray-500">レストランが見つかりませんでした。</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-gray-900">人気のレストラン</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {restaurants.map((restaurant) => (
+          <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`} className="block">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 bg-white">
+              <CardContent className="p-4">
+                <h3 className="font-bold text-lg mb-1 text-gray-900">{restaurant.name}</h3>
+                <div className="flex items-center text-yellow-500">
+                  <span className="text-gray-900 font-medium">★ {restaurant.rating.toFixed(1)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 } 

@@ -10,12 +10,12 @@ export function HeroSection() {
     ja: {
       title: '現地日本人から人気の食堂を簡単予約',
       description: '日本現地人が選んだ食堂のセレクトショップ！',
-      buttonText: 'いますぐ予約する'
+      buttonText: 'ホットな食堂を探す'
     },
     ko: {
       title: '현지 일본인이 추천하는 인기 맛집 간편 예약',
-      description: '전화 예약만 가능한 인기 맛집도 저희에게 맡겨주세요!',
-      buttonText: '지금 예약하기'
+      description: '전화 예약만 가능한 고급인기 맛집도 저희에게 맡겨주세요!',
+      buttonText: '핫 식당 찾기'
     }
   };
 

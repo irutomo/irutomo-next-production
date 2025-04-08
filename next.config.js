@@ -47,8 +47,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'qgqebyunvamzfaaaypmd.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'irutomo222yoyaku.core.coresv.com',
+      },
     ],
-    domains: ['images.unsplash.com'],
   },
 };
 

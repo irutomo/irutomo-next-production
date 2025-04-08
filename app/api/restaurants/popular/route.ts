@@ -72,9 +72,43 @@ export async function GET(req: NextRequest) {
     }
 
     console.log('データ取得成功:', restaurants.length, '件');
+    
+    // レストランデータを処理して画像URLを正規化
+    const processedRestaurants = restaurants.map(restaurant => {
+      // imagesがJSON文字列の場合はパースする
+      if (restaurant.images && typeof restaurant.images === 'string' && 
+          (restaurant.images.startsWith('[') || restaurant.images.startsWith('{'))) {
+        try {
+          restaurant.images = JSON.parse(restaurant.images);
+        } catch (e) {
+          console.warn(`画像JSONのパースに失敗: ${e}`);
+        }
+      }
+      return restaurant;
+    });
+    
+    // デバッグ: 画像URLをログに出力
+    if (processedRestaurants && processedRestaurants.length > 0) {
+      console.log('レストラン画像情報:');
+      processedRestaurants.forEach((restaurant, index) => {
+        console.log(`[${index}] ${restaurant.name}: ${restaurant.image_url || 'なし'}`);
+        if (restaurant.images) {
+          console.log(`  画像情報: ${typeof restaurant.images}`);
+          if (Array.isArray(restaurant.images)) {
+            console.log(`  画像配列: ${restaurant.images.length}枚`);
+            restaurant.images.forEach((img: string, i: number) => console.log(`    [${i}] ${img}`));
+          } else if (typeof restaurant.images === 'string') {
+            console.log(`  画像文字列: ${restaurant.images}`);
+          } else {
+            console.log(`  画像オブジェクト: ${JSON.stringify(restaurant.images)}`);
+          }
+        }
+      });
+    }
+    
     return NextResponse.json({
       success: true,
-      data: restaurants
+      data: processedRestaurants
     });
     
   } catch (error) {

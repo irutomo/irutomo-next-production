@@ -61,31 +61,7 @@ export default function RestaurantsClient({ restaurants }: { restaurants: Restau
   const t = translations[language];
   
   return (
-    <main className="min-h-screen bg-gray-50 pb-20">
-      {/* ヘッダー */}
-      <header className="sticky top-0 z-10 bg-white shadow-sm px-4 py-3 flex items-center">
-        <div className="flex items-center flex-1">
-          <Link href="/" className="mr-2">
-            <Image 
-              src="/irulogo-hidariue.svg" 
-              alt="IRUTOMO" 
-              width={100} 
-              height={20} 
-              priority
-              className="h-6 w-auto"
-            />
-          </Link>
-        </div>
-        <div className="flex items-center">
-          <h1 className="text-lg font-bold mr-2 text-gray-900">{t.title}</h1>
-          <Link href="/" className="ml-auto">
-            <button className="p-2 rounded-md hover:bg-gray-100 transition-colors">
-              <ArrowLeftIcon />
-            </button>
-          </Link>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* コンテナサイズをモバイルに固定 (スクリーンショットの見た目を維持) */}
         <div className="sm:max-w-md mx-auto lg:max-w-full">
@@ -186,6 +162,6 @@ export default function RestaurantsClient({ restaurants }: { restaurants: Restau
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 } 

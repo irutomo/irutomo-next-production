@@ -39,6 +39,48 @@ async function getPopularRestaurants(): Promise<Restaurant[]> {
   }
 }
 
+// 画像URLを取得する関数
+function getRestaurantImageUrl(restaurant: Restaurant): string {
+  // Unsplashの画像はエラーが発生するため、代替画像を使用
+  function useAlternativeIfUnsplash(url: string): string {
+    if (url.includes('unsplash.com')) {
+      return '/images/restaurants/placeholder.jpg';
+    }
+    return url;
+  }
+
+  // まずimage_urlをチェック
+  if (restaurant.image_url) {
+    return useAlternativeIfUnsplash(restaurant.image_url);
+  }
+  
+  // imagesプロパティがある場合
+  if (restaurant.images) {
+    // 配列の場合は最初の要素を使用
+    if (Array.isArray(restaurant.images) && restaurant.images.length > 0) {
+      return useAlternativeIfUnsplash(restaurant.images[0]);
+    }
+    // 文字列の場合でJSON形式ならパースを試みる
+    if (typeof restaurant.images === 'string') {
+      if (restaurant.images.startsWith('[') || restaurant.images.startsWith('{')) {
+        try {
+          const parsedImages = JSON.parse(restaurant.images);
+          if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+            return useAlternativeIfUnsplash(parsedImages[0]);
+          }
+        } catch (e) {
+          console.warn('画像JSONのパースに失敗:', e);
+        }
+      }
+      // 単純な文字列の場合はそのまま使用
+      return useAlternativeIfUnsplash(restaurant.images);
+    }
+  }
+  
+  // フォールバック: プレースホルダー画像を返す
+  return '/images/restaurants/placeholder.jpg';
+}
+
 export default function PopularRestaurants() {
   const { language } = useLanguage();
   
@@ -129,10 +171,26 @@ export default function PopularRestaurants() {
         {restaurants.map((restaurant) => (
           <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`} className="block">
             <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 bg-white">
+              <div className="relative h-48 w-full">
+                <Image
+                  src={getRestaurantImageUrl(restaurant)}
+                  alt={restaurant.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+                {/* 評価バッジ */}
+                <div className="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full text-sm font-bold flex items-center">
+                  <span className="text-yellow-500">★</span>
+                  <span className="ml-1 text-gray-900">{restaurant.rating.toFixed(1)}</span>
+                </div>
+              </div>
               <CardContent className="p-4">
                 <h3 className="font-bold text-lg mb-1 text-gray-900">{restaurant.name}</h3>
-                <div className="flex items-center text-yellow-500">
-                  <span className="text-gray-900 font-medium">★ {restaurant.rating.toFixed(1)}</span>
+                <div className="flex items-center">
+                  <div className="text-sm text-gray-500">
+                    {restaurant.location || '未設定'}
+                  </div>
                 </div>
               </CardContent>
             </Card>

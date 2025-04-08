@@ -9,7 +9,7 @@ export function HeroSection() {
   const content = {
     ja: {
       title: '現地日本人から人気の食堂を簡単予約',
-      description: '電話予約のみの人気店も私たちにお任せください！',
+      description: '日本現地人が選んだ食堂のセレクトショップ！',
       buttonText: 'いますぐ予約する'
     },
     ko: {
@@ -29,7 +29,7 @@ export function HeroSection() {
               {content[language].title}
             </h2>
           </div>
-          <p className="text-sm md:text-base lg:text-lg opacity-90 mb-4 md:mb-6">{content[language].description}</p>
+          <p className="text-base md:text-lg lg:text-xl opacity-90 mb-4 md:mb-6">{content[language].description}</p>
         </div>
         
         <div className="md:flex-shrink-0 md:w-1/3">

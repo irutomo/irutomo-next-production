@@ -48,7 +48,6 @@ const nextConfig = {
     ],
     domains: ['qgqebyunvamzfaaaypmd.supabase.co'],
   },
-  swcMinify: true,
 };
 
 module.exports = nextConfig; 

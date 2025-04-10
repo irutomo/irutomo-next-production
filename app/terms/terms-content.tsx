@@ -59,7 +59,7 @@ export default function TermsContent() {
       note: '購入時、予約確定後にメールとマイページを通じて予約内容およびバウチャー（該当する場合）を確認できます。'
     },
     ko: {
-      title: '특정상거래법에 따른 표기',
+      title: '특정상거래법',
       sections: [
         {
           label: '판매업자:',
@@ -67,7 +67,7 @@ export default function TermsContent() {
         },
         {
           label: '대표자:',
-          value: '專齊夏暉'
+          value: 'NATSUKI SENSAI'
         },
         {
           label: '소재지/주소:',
@@ -114,17 +114,16 @@ export default function TermsContent() {
 
   return (
     <main className="max-w-md mx-auto pb-20">
-      {/* 共通ヘッダーコンポーネントを使用 */}
       <BackHeader title={currentContent.title} backUrl="/" />
-
+      
       <div className="p-4">
-        <div className="bg-white/50 rounded-lg p-6 shadow-sm">
+        <div className="bg-white rounded-lg p-6 shadow-sm">
           <div className="max-w-none">
-            <h2 className="text-xl font-bold mb-4">{currentContent.title}</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-900">{currentContent.title}</h2>
             
             <div className="space-y-4">
               {currentContent.sections.map((section, index) => (
-                <div key={index}>
+                <div key={index} className="text-gray-900">
                   <p className="font-bold">{section.label}</p>
                   {section.value && <p>{section.value}</p>}
                   {section.list && (
@@ -138,7 +137,7 @@ export default function TermsContent() {
               ))}
               
               <div className="mt-4">
-                <p>{currentContent.note}</p>
+                <p className="text-gray-900">{currentContent.note}</p>
               </div>
             </div>
           </div>

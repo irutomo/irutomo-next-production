@@ -251,47 +251,48 @@ export default function PrivacyPolicyContent() {
   const currentContent = language === 'ja' ? content.ja : content.ko;
 
   return (
-    <div className="max-w-md mx-auto bg-[#F8F8F8] min-h-screen pb-20">
-      {/* 共通ヘッダーコンポーネントを使用 */}
+    <main className="max-w-md mx-auto pb-20">
       <BackHeader title={currentContent.title} backUrl="/" />
-
+      
       <div className="p-4">
-        <div className="card p-6 bg-white/50 rounded-lg shadow-sm">
-          <div className="prose">
-            <h2 className="text-xl font-bold mb-4">{currentContent.title}</h2>
+        <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="max-w-none">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">{currentContent.title}</h2>
             
-            {currentContent.content.map((item, index) => {
-              switch (item.type) {
-                case 'paragraph':
-                  return <p key={index} className="mb-4 text-gray-600">{item.text}</p>;
-                case 'heading':
-                  return <h3 key={index} className="text-lg font-bold mt-6 mb-2">{item.text}</h3>;
-                case 'list':
-                  if (item.ordered && item.items) {
-                    return (
-                      <ol key={index} className="list-decimal list-inside mb-4 ml-4">
-                        {item.items.map((listItem, i) => (
-                          <li key={i} className="mb-2 text-gray-600">{listItem}</li>
-                        ))}
-                      </ol>
-                    );
-                  } else if (item.items) {
-                    return (
-                      <ul key={index} className="list-disc list-inside mb-4 ml-4">
-                        {item.items.map((listItem, i) => (
-                          <li key={i} className="mb-2 text-gray-600">{listItem}</li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  return null;
-                default:
-                  return null;
-              }
-            })}
+            <div className="space-y-4">
+              {currentContent.content.map((item, index) => {
+                switch (item.type) {
+                  case 'paragraph':
+                    return <p key={index} className="mb-4 text-gray-700">{item.text}</p>;
+                  case 'heading':
+                    return <h3 key={index} className="text-lg font-bold mt-6 mb-2 text-gray-900">{item.text}</h3>;
+                  case 'list':
+                    if (item.ordered && item.items) {
+                      return (
+                        <ol key={index} className="list-decimal list-inside mb-4 ml-4">
+                          {item.items.map((listItem, i) => (
+                            <li key={i} className="mb-2 text-gray-700">{listItem}</li>
+                          ))}
+                        </ol>
+                      );
+                    } else if (item.items) {
+                      return (
+                        <ul key={index} className="list-disc list-inside mb-4 ml-4">
+                          {item.items.map((listItem, i) => (
+                            <li key={i} className="mb-2 text-gray-700">{listItem}</li>
+                          ))}
+                        </ul>
+                      );
+                    }
+                    return null;
+                  default:
+                    return null;
+                }
+              })}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 } 

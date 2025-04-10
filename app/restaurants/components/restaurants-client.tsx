@@ -54,13 +54,13 @@ export default function RestaurantsClient({ restaurants }: { restaurants: Restau
               {t.all}
             </button>
             <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
-              大阪
+              osaka
             </button>
             <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
-              東京
+              tokyo
             </button>
             <button className="px-4 py-2 rounded-md border border-gray-200 text-gray-700 font-medium whitespace-nowrap hover:bg-gray-50">
-              京都
+              kyoto
             </button>
           </div>
         </div>

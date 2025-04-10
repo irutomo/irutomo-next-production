@@ -1,101 +1,84 @@
 # Vercelデプロイ手順
 
+このドキュメントでは、irutomo-nextjsアプリケーションをVercelにデプロイする手順を説明します。
+
 ## 前提条件
-- Vercelアカウント
-- Gitリポジトリ（GitHub, GitLab, Bitbucketいずれか）へのアクセス権
+
+- GitHubアカウント
+- Vercelアカウント（GitHubアカウントでサインアップ可能）
+- 正しく設定されたGitの認証情報
 
 ## デプロイ手順
 
-### 1. Vercelへのプロジェクトインポート
+1. **GitHubリポジトリの確認**
+   - 最新の変更がすべてコミットされ、GitHubにプッシュされていることを確認します
+   - Gitユーザー情報が正しく設定されていることを確認します:
+     ```bash
+     git config --local user.name "あなたのGitHubユーザー名"
+     git config --local user.email "あなたのGitHubメールアドレス"
+     ```
 
-1. [Vercelダッシュボード](https://vercel.com/dashboard)にログインする
-2. 「Add New...」→「Project」をクリックする
-3. リポジトリのインポート画面で、対象のリポジトリを選択する
-4. 以下の設定を確認/入力する：
-   - **Framework Preset**: Next.js
-   - **Root Directory**: ./（変更不要）
-   - **Build and Output Settings**: 
-     - **Build Command**: `next build`（デフォルト）
-     - **Output Directory**: `.next`（デフォルト）
-     - **Install Command**: `npm install`（デフォルト）
-   - **Environment Variables**: 後述の手順で設定
+2. **Vercelにログイン**
+   - [Vercel](https://vercel.com)にアクセスし、GitHubアカウントでログインします
 
-### 2. 環境変数の設定
+3. **新規プロジェクトの作成**
+   - 「New Project」をクリックします
+   - GitHubリポジトリ「irutomo-nextjs-ver」を選択します
 
-#### 方法1: ダッシュボードから手動で設定
+4. **プロジェクト設定**
+   - フレームワークプリセット: Next.js
+   - ビルドコマンド: デフォルト（`next build`）
+   - 出力ディレクトリ: デフォルト（`.next`）
+   - 環境変数: 必要に応じて設定（Supabase接続情報など）
 
-1. デプロイ設定画面の「Environment Variables」セクションで以下の環境変数を設定する：
-   - `NODE_ENV`: production
-   - `NEXT_PUBLIC_SUPABASE_URL`: https://qgqebyunvamzfaaaypmd.supabase.co
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFncWVieXVudmFtemZhYWF5cG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwNDA5NzcsImV4cCI6MjA1NzYxNjk3N30.PFK6UtIZ1UxteygEr3NwGEiVQryBF0yhiVVTPXlGyIo
-   - `SUPABASE_SERVICE_ROLE_KEY`: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFncWVieXVudmFtemZhYWFhcG1kIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMDQ4NDI1NCwiZXhwIjoyMDI2MDYwMjU0fQ.RvlqA9qj-dUMegS9KwVKRLUyUl-ll1J1jw9pu8UOsRo
-   - （以下、.env.productionファイルに記載の他の環境変数も同様に設定する）
+5. **デプロイ**
+   - 「Deploy」ボタンをクリックしてデプロイを開始します
+   - デプロイが完了すると、プロジェクトURLが表示されます
 
-2. シークレットキーなどの機密情報には、「Sensitive」オプションをチェックする
+## 更新のデプロイ
 
-#### 方法2: JSONファイルからインポート
+コードを更新した場合は、以下の手順でデプロイできます:
 
-1. 作成済みの `vercel-env.json` ファイルを使用する
-2. Vercelダッシュボードのプロジェクト設定画面で「Environment Variables」タブを選択
-3. 「Import」ボタンをクリックし、`vercel-env.json` ファイルをアップロード
+1. ローカルで変更を加えてコミットします
+   ```bash
+   git add .
+   git commit -m "変更内容の説明"
+   ```
 
-### 3. デプロイ実行
+2. GitHubにプッシュします
+   ```bash
+   git push origin main
+   ```
 
-1. 設定が完了したら「Deploy」ボタンをクリックしてデプロイを開始する
-2. デプロイが完了するまで待機する（通常5〜10分程度）
-
-### 4. ドメイン設定
-
-1. デプロイ完了後、Vercelダッシュボードでプロジェクトを選択する
-2. 「Settings」→「Domains」タブを選択する
-3. 「Add」ボタンをクリックして、カスタムドメイン「irutomo-trip.com」を追加する
-4. ドメインの検証と設定手順に従って設定を完了する：
-   - ドメインレジストラでのDNS設定
-   - または、Vercelのネームサーバーへの変更
-
-### 5. デプロイ後の確認事項
-
-1. サイトの動作確認
-   - 各ページの表示
-   - 認証機能（Supabase認証）
-   - 予約フロー
-   - 決済処理
-   
-2. エラー確認
-   - Vercelダッシュボードの「Logs」セクションでエラーログを確認
-   - 「Function Logs」でサーバーサイド関数のログを確認
-
-3. パフォーマンス確認
-   - 「Analytics」タブでCore Web Vitalsなどのパフォーマンス指標を確認
-
-## 環境変数の更新方法
-
-デプロイ後に環境変数を更新する場合：
-
-1. Vercelダッシュボードでプロジェクトを選択
-2. 「Settings」→「Environment Variables」タブを選択
-3. 更新したい環境変数を編集または新しい環境変数を追加
-4. 変更を保存し、「Redeploy」ボタンをクリックして再デプロイ
+3. Vercelが自動的に新しいデプロイを開始します
 
 ## トラブルシューティング
 
-### 環境変数が反映されない
-- 環境変数を追加した後は、必ず再デプロイを行う
-- 環境変数が正しい環境（Production/Preview/Development）に設定されているか確認
+### コミット作者情報エラー
 
-### ビルドエラー
-- ビルドログを確認して具体的なエラーを特定
-- package.jsonのdependenciesが正しいか確認
-- Node.jsバージョンの互換性を確認
+「A commit author is required」というエラーが表示される場合:
 
-### デプロイ後のAPIエラー
-- Serverless関数のログを確認
-- APIエンドポイントが正しく設定されているか確認
-- CORSの設定が適切か確認
+1. Gitの設定を確認します
+   ```bash
+   git config --local --get user.name
+   git config --local --get user.email
+   ```
 
-### 認証関連の問題
-- Supabase認証設定が正しいか確認
-- 本番環境でのCORS設定を確認
+2. 設定が正しくない場合は、GitHubアカウントと一致するように更新します
+   ```bash
+   git config --local user.name "あなたのGitHubユーザー名"
+   git config --local user.email "あなたのGitHubメールアドレス"
+   ```
+
+3. 小さな変更を加えて新しくコミットし、プッシュします
+   ```bash
+   # 何か変更を加える
+   git add .
+   git commit -m "Fix: コミット作者情報を修正"
+   git push origin main
+   ```
+
+4. Vercelでもう一度デプロイを試みます
 
 ## 参考リソース
 

@@ -53,6 +53,8 @@ gh auth login
 
 Vercelを使用してデプロイします。詳細は `VERCEL_DEPLOYMENT.md` を参照してください。
 
+デプロイ時にコミット作者情報のエラーが発生した場合は、`VERCEL_DEPLOYMENT.md` のトラブルシューティングセクションを参照してください。
+
 ## 連絡先
 
 お問い合わせは公式サイト [irutomo-trip.com](https://irutomo-trip.com) までご連絡ください。 

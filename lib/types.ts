@@ -24,6 +24,7 @@ export type Restaurant = {
   image?: string | null
   rating?: number | null
   cuisine?: string | null
+  korean_cuisine?: string | null
   location?: string | null
   created_at?: string | null
   updated_at?: string | null

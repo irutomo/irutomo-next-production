@@ -13,7 +13,7 @@ function log(...args: any[]) {
 }
 
 // Supabaseセッション処理
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   
   try {
@@ -47,8 +47,38 @@ export function middleware(req: NextRequest) {
       }
     );
     
-    // Supabaseセッションのリフレッシュ
-    void supabase.auth.getSession();
+    // セッションの取得を待機する (awaitを追加)
+    const { data: { session } } = await supabase.auth.getSession();
+    log('セッション状態:', session ? 'セッションあり' : 'セッションなし');
+
+    // 管理者ページへのアクセスとセッション確認
+    if (path.startsWith('/admin') && !path.includes('/admin/login') && !path.includes('/admin/auth')) {
+      log('管理者ページへのアクセス確認');
+
+      if (!session) {
+        log('未認証ユーザー: ログインページへリダイレクト');
+        return NextResponse.redirect(new URL('/admin/login', req.url));
+      }
+
+      // 管理者権限チェック - 以下はオプションで、必要に応じて有効化
+      /* 
+      try {
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error || userData?.role !== 'admin') {
+          log('管理者権限なし: ログインページへリダイレクト');
+          return NextResponse.redirect(new URL('/admin/login?error=not_admin', req.url));
+        }
+      } catch (error) {
+        log('権限確認エラー:', error);
+        return NextResponse.redirect(new URL('/admin/login?error=permission_check_failed', req.url));
+      }
+      */
+    }
     
   } catch (error) {
     log('Supabaseセッション処理エラー:', error);

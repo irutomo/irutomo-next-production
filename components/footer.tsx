@@ -11,14 +11,16 @@ const translations = {
     companyInfo: '회사 정보',
     privacyPolicy: '개인정보 처리방침',
     commercialTransactionLaw: '특정상거래법에 기초한 표기',
-    allRightsReserved: '모든 권리 보유'
+    allRightsReserved: '모든 권리 보유',
+    login: '로그인'
   },
   ja: {
     tagline: '日本のリアルをもっと楽しく体験！\n日本旅行はIRUTOMO!',
     companyInfo: '会社情報',
     privacyPolicy: 'プライバシーポリシー',
     commercialTransactionLaw: '特定商取引法に基づく表記',
-    allRightsReserved: 'All rights reserved.'
+    allRightsReserved: 'All rights reserved.',
+    login: 'ログイン'
   }
 };
 
@@ -49,6 +51,14 @@ export function Footer() {
             <li>
               <Link href="/terms" className="text-xs md:text-sm text-gray-900 hover:text-primary-500">
                 {t.commercialTransactionLaw}
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/login" className="text-xs md:text-sm text-gray-900 hover:text-primary-500 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                {t.login}
               </Link>
             </li>
           </ul>

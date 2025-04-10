@@ -18,23 +18,9 @@ export function GlobalHeader() {
         </Link>
       </div>
       
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center">
         {/* 言語切り替えボタン */}
         <LanguageSwitcher />
-        
-        {/* ユーザーボタン - 常にログインボタンを表示 */}
-        {/* {isSignedIn ? (
-          <UserButton afterSignOutUrl="/" />
-        ) : ( */}
-          <Link href="/auth/sign-in">
-            <button className="flex items-center justify-center md:border md:border-gray-300 md:px-3 md:py-1 md:rounded-full md:hover:bg-gray-100 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-text/70 md:h-5 md:w-5 md:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="hidden md:inline">ログイン</span>
-            </button>
-          </Link>
-        {/* )} */}
       </div>
     </header>
   );

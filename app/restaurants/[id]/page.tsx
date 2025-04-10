@@ -263,7 +263,9 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const id = params.id;
+  // paramsをawaitする
+  const safeParams = await Promise.resolve(params);
+  const id = safeParams.id;
   const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
@@ -279,7 +281,9 @@ export async function generateMetadata(
 }
 
 export default async function RestaurantPage({ params }: Props) {
-  const id = params.id;
+  // paramsをawaitする
+  const safeParams = await Promise.resolve(params);
+  const id = safeParams.id;
   const cookieStore = await cookies();
   const language = cookieStore.get('language')?.value || 'ko';
 

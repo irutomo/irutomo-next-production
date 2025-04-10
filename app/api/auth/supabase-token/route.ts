@@ -102,33 +102,44 @@ interface TokenResult {
 
 // Presenter: HTTPリクエスト/レスポンスの処理
 export async function GET() {
-  console.log("GET /api/auth/supabase-token: リクエスト受信");
-  const controller = new SupabaseTokenController();
-  const result: TokenResult = await controller.getToken();
-
-  if (result.success) {
-    console.log("GET /api/auth/supabase-token: トークン取得成功");
-    return NextResponse.json({ token: result.token });
-  } else {
-    let statusCode = 500;
-    const errorMessage = result.error || "不明なエラーが発生しました";
-    console.error(`GET /api/auth/supabase-token: エラー発生 - ${errorMessage}`);
-
-    if (errorMessage.includes("未認証")) {
-      statusCode = 401;
-    } else if (errorMessage.includes("ユーザー情報")) {
-      statusCode = 401;
-    } else if (errorMessage.includes("トークンを取得できません")) {
-      statusCode = 500;
-    } else if (errorMessage.includes("トークン取得関数が見つかりません")) {
-      statusCode = 500;
-    } else if (errorMessage.includes("トークン取得エラー:")) {
-      statusCode = 500;
-      if (errorMessage.includes("rate limit")) {
-        statusCode = 429;
-      }
+  try {
+    // ログ出力を追加
+    console.log("Supabaseトークン取得API呼び出し開始");
+    
+    // 現在のユーザーを取得
+    const user = await currentUser();
+    
+    if (!user) {
+      console.log("認証されたユーザーが見つかりません");
+      return NextResponse.json(
+        { error: "認証されていません" },
+        { status: 401 }
+      );
     }
-
-    return NextResponse.json({ error: errorMessage }, { status: statusCode });
+    
+    console.log(`認証済みユーザー: ${user.id}`);
+    
+    // Clerkからカスタムトークンを生成（Supabase用）
+    // @ts-ignore TypeScript定義ファイルが更新されるまでIgnore
+    const token = await user.getToken({ template: "supabase" });
+    
+    if (!token) {
+      console.log("トークンの生成に失敗しました");
+      return NextResponse.json(
+        { error: "トークンの生成に失敗しました" },
+        { status: 500 }
+      );
+    }
+    
+    console.log("Supabaseトークン生成成功");
+    
+    // トークンをクライアントに返す
+    return NextResponse.json({ token });
+  } catch (error) {
+    console.error("Supabaseトークン取得エラー:", error);
+    return NextResponse.json(
+      { error: "トークン取得中にエラーが発生しました" },
+      { status: 500 }
+    );
   }
 } 

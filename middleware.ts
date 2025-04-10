@@ -1,52 +1,28 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { clerkMiddleware, createClerkClient } from '@clerk/nextjs/server';
 
-// 公開ルート（認証なしでアクセス可能）
-const publicRoutes = [
-  '/',
-  '/service',
-  '/restaurants',
-  '/restaurants/(.*)',
-  '/reviews',
-  '/write-review',
-  '/sign-in',
-  '/sign-in/(.*)',
-  '/sign-up',
-  '/sign-up/(.*)',
-  '/auth/sign-in',
-  '/auth/sign-in/(.*)',
-  '/auth/sign-up',
-  '/auth/sign-up/(.*)',
-  '/auth/callback',
-  '/auth/callback/(.*)',
-  '/api/(.*)',
-  '/about',
-  '/privacy',
-  '/terms',
-  '/faq',
-  '/how-to-use',
-  '/privacy-policy',
-];
+// デバッグモードの設定
+const DEBUG = process.env.NODE_ENV === 'development';
 
-// 指定されたパスが公開ルートかどうかチェックする関数
-function isPublicRoute(path: string): boolean {
-  return publicRoutes.some(route => {
-    if (route.endsWith('(.*)')) {
-      const baseRoute = route.replace('(.*)', '');
-      return path.startsWith(baseRoute);
-    }
-    return path === route;
-  });
+// ログ出力用ヘルパー関数
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[MIDDLEWARE]', ...args);
+  }
 }
 
-// メインミドルウェア関数
-export async function middleware(req: NextRequest) {
+// Supabaseセッション処理
+export function middleware(req: NextRequest) {
   const res = NextResponse.next();
   
-  // Supabaseセッションを処理
   try {
+    // リクエストURLを取得
+    const url = new URL(req.url);
+    const path = url.pathname;
+    log(`リクエストパス: ${path}`);
+    
+    // Supabaseクライアントの作成
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -71,24 +47,17 @@ export async function middleware(req: NextRequest) {
       }
     );
     
-    // Supabaseセッションのリフレッシュ（サーバーコンポーネント用に必須）
-    await supabase.auth.getSession();
+    // Supabaseセッションのリフレッシュ
+    void supabase.auth.getSession();
+    
   } catch (error) {
-    console.error('Supabaseセッション処理エラー:', error);
+    log('Supabaseセッション処理エラー:', error);
   }
-  
-  // 公開ルートの場合は認証チェックをスキップ
-  if (isPublicRoute(req.nextUrl.pathname)) {
-    return res;
-  }
-  
-  // 非公開ルートでClerk認証チェック
-  // 実際の処理はClerkミドルウェアと連携して行う
   
   return res;
 }
 
-// すべてのルートに適用
+// ミドルウェア設定
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files

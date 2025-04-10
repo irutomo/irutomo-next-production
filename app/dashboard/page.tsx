@@ -250,99 +250,96 @@ export default async function DashboardPage() {
         </div>
       </div>
       
-      {/* 予約・レビュー履歴 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* 予約履歴 */}
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">予約履歴</h3>
-            <Link 
-              href="/dashboard/reservations" 
-              className="text-sm text-primary-600 hover:text-primary-700"
-            >
-              すべて見る
-            </Link>
-          </div>
-          
-          {reservations && reservations.length > 0 ? (
-            <div className="space-y-4">
-              {reservations.map((reservation) => (
-                <div key={reservation.id} className="border-b pb-4 last:border-0 last:pb-0">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">
-                        {reservation.restaurant?.name || "不明なレストラン"}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        {new Date(reservation.date).toLocaleDateString('ja-JP')} {reservation.time}
-                        {' • '}{reservation.guests}名
-                      </p>
-                    </div>
-                    <div>
-                      <span 
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          reservation.status === 'confirmed' 
-                            ? 'bg-green-100 text-green-800' 
-                            : reservation.status === 'pending' 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {reservation.status === 'confirmed' ? '予約確定' 
-                          : reservation.status === 'pending' ? '確認待ち' 
-                          : 'キャンセル'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-6">最近の予約はありません</p>
-          )}
+      {/* 予約履歴セクション */}
+      <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">最近の予約</h2>
+          <Link 
+            href="/dashboard/reservations" 
+            className="text-sm text-primary-600 hover:underline"
+          >
+            全ての予約を見る
+          </Link>
         </div>
         
-        {/* レビュー履歴 */}
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">レビュー履歴</h3>
-            <Link 
-              href="/dashboard/reviews" 
-              className="text-sm text-primary-600 hover:text-primary-700"
-            >
-              すべて見る
-            </Link>
-          </div>
-          
-          {reviews && reviews.length > 0 ? (
-            <div className="space-y-4">
-              {reviews.map((review) => (
-                <div key={review.id} className="border-b pb-4 last:border-0 last:pb-0">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <h4 className="font-medium">
-                        {review.restaurant?.name || review.restaurant_name || "不明なレストラン"}
-                      </h4>
-                      <div className="flex items-center text-yellow-400 mb-1">
-                        {[...Array(5)].map((_, i) => (
-                          <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{review.content}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(review.created_at).toLocaleDateString('ja-JP')}
-                      </p>
-                    </div>
+        {reservations && reservations.length > 0 ? (
+          <div className="space-y-4">
+            {reservations.map((reservation) => (
+              <div key={reservation.id} className="border-b pb-4 last:border-0 last:pb-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">
+                      {reservation.restaurant?.name || "不明なレストラン"}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {new Date(reservation.date).toLocaleDateString('ja-JP')} {reservation.time}
+                      {' • '}{reservation.guests}名
+                    </p>
+                  </div>
+                  <div>
+                    <span 
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        reservation.status === 'confirmed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : reservation.status === 'pending' 
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {reservation.status === 'confirmed' ? '予約確定' 
+                        : reservation.status === 'pending' ? '確認待ち' 
+                        : 'キャンセル'}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-6">投稿したレビューはありません</p>
-          )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-6">最近の予約はありません</p>
+        )}
+      </div>
+      
+      {/* レビュー履歴 */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold">レビュー履歴</h3>
+          <Link 
+            href="/dashboard/reviews" 
+            className="text-sm text-primary-600 hover:text-primary-700"
+          >
+            すべて見る
+          </Link>
         </div>
+        
+        {reviews && reviews.length > 0 ? (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div key={review.id} className="border-b pb-4 last:border-0 last:pb-0">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <h4 className="font-medium">
+                      {review.restaurant?.name || review.restaurant_name || "不明なレストラン"}
+                    </h4>
+                    <div className="flex items-center text-yellow-400 mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2">{review.content}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(review.created_at).toLocaleDateString('ja-JP')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-6">投稿したレビューはありません</p>
+        )}
       </div>
       
       {/* お気に入りレストラン */}

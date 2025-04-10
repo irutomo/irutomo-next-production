@@ -189,6 +189,17 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
       
       if (!response.ok) {
         console.error('支払い処理エラーレスポンス:', responseData);
+        // PayPal支払いが成功したがデータベース保存に失敗した場合の特別なエラーメッセージ
+        if (responseData.message && responseData.message.includes('支払いは完了しました')) {
+          setOrderId(data.orderID);
+          setPaypalError(
+            language === 'ko' 
+              ? '결제는 완료되었으나 예약 정보 저장에 실패했습니다. 주문 ID를 기록해 두십시오: ' + data.orderID 
+              : '支払いは完了しましたが、予約情報の保存に失敗しました。注文IDをメモしておいてください: ' + data.orderID
+          );
+          // 管理者への通知処理をここに追加する（オプション）
+          return;
+        }
         throw new Error(responseData.message || '支払いの処理に失敗しました');
       }
       

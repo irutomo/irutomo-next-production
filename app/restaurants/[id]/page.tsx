@@ -159,7 +159,7 @@ async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
         name: language === 'ko' ? data.korean_name || data.name : data.name,
         description: language === 'ko' ? data.korean_description || data.description : data.description,
         address: language === 'ko' ? data.korean_address || data.address : data.address,
-        cuisine: language === 'ko' ? data.korean_cuisine || data.cuisine : data.cuisine,
+        cuisine: data.cuisine,
       } as DatabaseRestaurant;
     } catch (dbError) {
       console.error('データベース接続エラー:', dbError);

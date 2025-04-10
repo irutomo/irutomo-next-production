@@ -42,7 +42,8 @@
   ],
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://qgqebyunvamzfaaaypmd.supabase.co",
-    "NEXT_PUBLIC_APP_NAME": "IRUTOMO reserve - 本番環境"
+    "NEXT_PUBLIC_APP_NAME": "IRUTOMO reserve - 本番環境",
+    "NODE_ENV": "production"
   },
   "installCommand": "npm install --legacy-peer-deps"
 }

@@ -6,6 +6,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   console.log('人気レストランAPIリクエスト処理開始');
   
+  // 言語設定を取得
+  const language = req.cookies.get('language')?.value || 'ja';
+  console.log('言語設定:', language);
+  
   // 環境変数のチェック
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
     console.error('環境変数エラー: NEXT_PUBLIC_SUPABASE_URL が設定されていません');
@@ -73,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     console.log('データ取得成功:', restaurants.length, '件');
     
-    // レストランデータを処理して画像URLを正規化
+    // レストランデータを処理して画像URLを正規化し、言語に応じた情報を設定
     const processedRestaurants = restaurants.map(restaurant => {
       // imagesがJSON文字列の場合はパースする
       if (restaurant.images && typeof restaurant.images === 'string' && 
@@ -84,6 +88,17 @@ export async function GET(req: NextRequest) {
           console.warn(`画像JSONのパースに失敗: ${e}`);
         }
       }
+
+      // 言語に応じた情報を設定
+      if (language === 'ko') {
+        return {
+          ...restaurant,
+          name: restaurant.korean_name || restaurant.name,
+          description: restaurant.korean_description || restaurant.description,
+          address: restaurant.korean_address || restaurant.address,
+        };
+      }
+      
       return restaurant;
     });
     

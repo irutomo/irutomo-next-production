@@ -91,6 +91,10 @@ export async function generateStaticParams() {
 type DatabaseRestaurant = Partial<Restaurant> & {
   id: string;
   name: string;
+  korean_name?: string;
+  korean_description?: string;
+  korean_address?: string;
+  korean_cuisine?: string;
   image_url?: string;
   images?: string[];
   description?: string;
@@ -128,6 +132,11 @@ async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
 
     try {
       const supabase = await createServerComponentClient();
+      
+      // 言語設定を取得（デフォルトを'ko'に設定）
+      const cookieStore = await cookies();
+      const language = cookieStore.get('language')?.value || 'ko';
+      
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
@@ -144,7 +153,14 @@ async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
         return getFallbackRestaurant(id);
       }
       
-      return data as DatabaseRestaurant;
+      // 言語に応じた情報を返す
+      return {
+        ...data,
+        name: language === 'ko' ? data.korean_name || data.name : data.name,
+        description: language === 'ko' ? data.korean_description || data.description : data.description,
+        address: language === 'ko' ? data.korean_address || data.address : data.address,
+        cuisine: language === 'ko' ? data.korean_cuisine || data.cuisine : data.cuisine,
+      } as DatabaseRestaurant;
     } catch (dbError) {
       console.error('データベース接続エラー:', dbError);
       return getFallbackRestaurant(id);
@@ -264,59 +280,40 @@ export async function generateMetadata(
 
 export default async function RestaurantPage({ params }: Props) {
   const id = params.id;
-  
-  // レストラン情報をDBから取得（エラー時もダミーデータが返るため常にnullではない）
+  const cookieStore = await cookies();
+  const language = cookieStore.get('language')?.value || 'ko';
+
+  // レストラン情報を取得
   const restaurant = await getRestaurant(id);
-  
-  // getFallbackRestaurant関数が常に値を返すので、restaurantはnullにならない
-  // TypeScriptのエラーを防ぐための安全策としてのnullチェック
   if (!restaurant) {
-    // これは実行されないはずだが、TypeScriptの型チェックを満たすために必要
-    return (
-      <main>
-        <div className="max-w-md mx-auto p-4">
-          <Link href="/restaurants" className="text-blue-500">
-            ← レストラン一覧に戻る
-          </Link>
-          <p className="mt-10 text-center">レストラン情報を読み込めませんでした。</p>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
-  // イメージURLの処理
-  let restaurantImages: string[] = [];
-  
-  // restaurant.imagesが配列の場合
-  if (Array.isArray(restaurant.images) && restaurant.images.length > 0) {
-    restaurantImages = restaurant.images;
-  } 
-  // restaurant.image_urlが有効な場合
-  else if (restaurant.image_url) {
-    restaurantImages = [restaurant.image_url];
-  } 
-  // デフォルト画像を使用
-  else {
-    restaurantImages = ['/images/restaurants/placeholder.jpg'];
-  }
+  // 画像の配列を準備
+  const restaurantImages = restaurant.images 
+    ? (typeof restaurant.images === 'string' ? JSON.parse(restaurant.images) : restaurant.images)
+    : [restaurant.image_url || '/images/restaurants/placeholder.jpg'];
 
   // 実際のレストランデータを使用
   const restaurantData = {
     id: restaurant.id,
-    name: restaurant.name,
-    korean_name: restaurant.korean_name,
-    address: restaurant.address || '住所情報がありません',
-    category: restaurant.cuisine || 'カテゴリなし',
+    name: language === 'ko' ? restaurant.korean_name || restaurant.name : restaurant.name,
+    address: language === 'ko' 
+      ? restaurant.korean_address || restaurant.address || '주소 정보가 없습니다' 
+      : restaurant.address || '住所情報がありません',
+    category: restaurant.cuisine || (language === 'ko' ? '카테고리 없음' : 'カテゴリなし'),
     tags: restaurant.cuisine ? [restaurant.cuisine] : [],
     rating: restaurant.rating || 0,
     image: restaurant.image_url || '/images/restaurants/placeholder.jpg',
     images: restaurantImages,
-    description: restaurant.description || 'このレストランの詳細情報はまだありません。',
-    phone: restaurant.phone_number || restaurant.phone || '電話番号情報がありません',
-    price_range: restaurant.price_range || '価格情報がありません',
+    description: language === 'ko'
+      ? restaurant.korean_description || restaurant.description || '이 레스토랑의 상세 정보가 아직 없습니다'
+      : restaurant.description || 'このレストランの詳細情報はまだありません',
+    phone: restaurant.phone_number || restaurant.phone || (language === 'ko' ? '전화번호 정보가 없습니다' : '電話番号情報がありません'),
+    price_range: restaurant.price_range || (language === 'ko' ? '가격 정보가 없습니다' : '価格情報がありません'),
     website: restaurant.website || '#',
     google_maps_link: restaurant.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}`,
-    opening_hours: restaurant.opening_hours || '営業時間情報がありません',
+    opening_hours: restaurant.opening_hours || (language === 'ko' ? '영업시간 정보가 없습니다' : '営業時間情報がありません'),
     business_hours: restaurant.business_hours || []
   };
 
@@ -327,7 +324,7 @@ export default async function RestaurantPage({ params }: Props) {
 
   // 人気タグを追加 (評価が4.5以上)
   if (restaurant.rating && restaurant.rating >= 4.5) {
-    restaurantData.tags.push('人気');
+    restaurantData.tags.push(language === 'ko' ? '인기' : '人気');
   }
 
   return (
@@ -339,7 +336,7 @@ export default async function RestaurantPage({ params }: Props) {
             <svg className="mr-1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            食堂一覧に戻る
+            {language === 'ko' ? '맛집 리스트로 돌아가기' : '食堂一覧に戻る'}
           </Link>
         </div>
 
@@ -350,7 +347,7 @@ export default async function RestaurantPage({ params }: Props) {
 
         {/* レストラン情報 */}
         <div className="bg-white rounded-lg shadow-sm mx-4 mt-4 p-4">
-          <h1 className="text-xl font-bold mb-2">
+          <h1 className="text-xl font-bold mb-2 bg-white/80 backdrop-blur-sm p-2 rounded text-gray-900">
             {restaurantData.name}
           </h1>
           
@@ -370,7 +367,7 @@ export default async function RestaurantPage({ params }: Props) {
           <div className="border-t border-gray-100 pt-3 mt-3">
             <h2 className="font-bold mb-2 text-[#FFA500] flex items-center">
               <span className="mr-1">👀</span>
-              食堂POINT
+              {language === 'ko' ? '맛집 POINT' : '食堂POINT'}
             </h2>
             <p className="text-sm text-gray-700 mb-3 bg-gray-50 p-2 rounded">
               {restaurantData.description}

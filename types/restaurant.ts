@@ -1,6 +1,10 @@
 export interface Restaurant {
   id: string;
   name: string;
+  korean_name?: string;
+  korean_description?: string;
+  korean_address?: string;
+  korean_cuisine?: string;
   rating: number;
   description?: string;
   image_url?: string;
@@ -12,5 +16,4 @@ export interface Restaurant {
   cuisine?: string;
   price_range?: string;
   google_maps_link?: string;
-  korean_name?: string;
 } 

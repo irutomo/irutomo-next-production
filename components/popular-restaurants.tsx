@@ -190,8 +190,8 @@ export default function PopularRestaurants() {
       <h2 className="text-xl font-bold text-gray-900">{content[language].title}</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 px-3">
         {restaurants.map((restaurant) => (
-          <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`} className="block">
-            <div className="bg-white rounded-md overflow-hidden shadow-xs hover:shadow-md transition-shadow duration-200 border border-gray-100 flex flex-col h-full">
+          <div key={restaurant.id} className="bg-white rounded-md overflow-hidden shadow-xs hover:shadow-md transition-shadow duration-200 border border-gray-100 flex flex-col h-full">
+            <Link href={`/restaurants/${restaurant.id}`} className="block">
               <div className="relative h-48 w-full">
                 <Image
                   src={getRestaurantImageUrl(restaurant)}
@@ -214,48 +214,54 @@ export default function PopularRestaurants() {
                 )}
               </div>
               
-              <div className="p-1 flex-grow flex flex-col justify-between">
+              <div className="p-4 flex-grow flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-sm mb-0.5 text-gray-900 truncate">{restaurant.name}</h3>
-                  <div className="flex items-center text-xs text-gray-500 mb-0.5">
-                    <MapPinIcon className="w-3 h-3 mr-0.5 flex-shrink-0" />
-                    <span className="truncate">{restaurant.location || '未設定'}</span>
+                  <h3 className="font-bold text-lg mb-1 text-gray-900">
+                    {language === 'ko' ? restaurant.korean_name || restaurant.name : restaurant.name}
+                  </h3>
+                  <div className="flex items-center text-sm text-gray-500 mb-2">
+                    <MapPinIcon className="w-4 h-4 mr-1" />
+                    <span className="truncate">
+                      {language === 'ko' 
+                        ? restaurant.korean_address || restaurant.location || restaurant.address?.split(',')[0] || content[language].location
+                        : restaurant.location || restaurant.address?.split(',')[0] || content[language].location
+                      }
+                    </span>
                   </div>
                   
-                  <div className="flex flex-wrap gap-0.5 mb-1">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     {restaurant.cuisine && (
-                      <span className="bg-gray-100 text-gray-600 text-xs px-1 py-0.5 rounded">
-                        {restaurant.cuisine}
+                      <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                        {language === 'ko' ? restaurant.korean_cuisine || restaurant.cuisine : restaurant.cuisine}
                       </span>
                     )}
                     {restaurant.price_range && (
-                      <span className="bg-gray-100 text-gray-600 text-xs px-1 py-0.5 rounded">
+                      <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
                         {restaurant.price_range}
                       </span>
                     )}
                   </div>
                 </div>
-                
-                <div className="flex gap-1 mt-1">
-                  <Link 
-                    href={`/restaurants/${restaurant.id}`}
-                    className="flex-grow px-2 py-1.5 bg-[#FFA500] text-white rounded-md text-xs sm:text-sm font-medium hover:bg-[#FFA500]/90 transition-colors"
-                  >
-                    {language === 'ko' ? '예약하기' : '予約する'}
-                  </Link>
-                  <Link 
-                    href={restaurant.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}`}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="px-2 py-1.5 border border-gray-200 rounded-md text-gray-700 text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center"
-                  >
-                    <ExternalLinkIcon className="w-3.5 h-3.5 mr-0.5" />
-                    {language === 'ko' ? '지도' : '地図'}
-                  </Link>
-                </div>
               </div>
+            </Link>
+            
+            <div className="flex gap-1 p-1">
+              <Link 
+                href={`/restaurants/${restaurant.id}`}
+                className="flex-grow px-2 py-1.5 bg-[#FFA500] text-white rounded-md text-xs sm:text-sm font-medium hover:bg-[#FFA500]/90 transition-colors"
+              >
+                {language === 'ko' ? '예약하기' : '予約する'}
+              </Link>
+              <a 
+                href={restaurant.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name)}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-2 py-1.5 border border-gray-200 rounded-md text-gray-700 text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center"
+              >
+                <ExternalLinkIcon className="w-4 h-4" />
+              </a>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

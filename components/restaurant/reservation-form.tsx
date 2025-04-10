@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 interface ReservationFormProps {
@@ -14,6 +14,22 @@ interface ReservationFormProps {
     is_closed: boolean;
   }[];
 }
+
+type Language = 'ko' | 'ja';
+
+type ValidationMessages = {
+  name: Record<Language, string>;
+  date: Record<Language, string>;
+  time: Record<Language, string>;
+  phone: {
+    required: Record<Language, string>;
+    format: Record<Language, string>;
+  };
+  email: {
+    required: Record<Language, string>;
+    format: Record<Language, string>;
+  };
+};
 
 export function ReservationForm({ restaurantId, restaurantName, restaurantImage, businessHours }: ReservationFormProps) {
   const [name, setName] = useState("");
@@ -29,6 +45,51 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   const [orderId, setOrderId] = useState<string | null>(null);
   const [reservationAmount] = useState("1000"); // 予約手数料1000円固定
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>('ko'); // デフォルトを韓国語に設定
+
+  useEffect(() => {
+    // クライアントサイドでCookieを読み取る
+    const cookies = document.cookie.split(';');
+    const languageCookie = cookies.find(cookie => cookie.trim().startsWith('language='));
+    const languageValue = languageCookie ? languageCookie.split('=')[1].trim() as Language : 'ko';
+    setLanguage(languageValue);
+  }, []);
+
+  // バリデーションメッセージを言語に応じて設定
+  const validationMessages: ValidationMessages = {
+    name: {
+      ko: '이름을 입력해주세요',
+      ja: 'お名前を入力してください'
+    },
+    date: {
+      ko: '날짜를 선택해주세요',
+      ja: '日付を選択してください'
+    },
+    time: {
+      ko: '시간을 선택해주세요',
+      ja: '時間を選択してください'
+    },
+    phone: {
+      required: {
+        ko: '전화번호를 입력해주세요',
+        ja: '電話番号を入力してください'
+      },
+      format: {
+        ko: '전화번호는 숫자만 입력해주세요',
+        ja: '電話番号は数字のみ入力してください'
+      }
+    },
+    email: {
+      required: {
+        ko: '이메일을 입력해주세요',
+        ja: 'メールアドレスを入力してください'
+      },
+      format: {
+        ko: '유효한 이메일을 입력해주세요',
+        ja: '有効なメールアドレスを入力してください'
+      }
+    }
+  };
 
   // PayPal初期化オプション
   const initialOptions = {
@@ -46,13 +107,13 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!name.trim()) newErrors.name = "お名前を入力してください";
-    if (!date) newErrors.date = "日付を選択してください";
-    if (!time) newErrors.time = "時間を選択してください";
-    if (!phone.trim()) newErrors.phone = "電話番号を入力してください";
-    if (!/^[0-9]+$/.test(phone)) newErrors.phone = "電話番号は数字のみ入力してください";
-    if (!email.trim()) newErrors.email = "メールアドレスを入力してください";
-    if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "有効なメールアドレスを入力してください";
+    if (!name.trim()) newErrors.name = validationMessages.name[language];
+    if (!date) newErrors.date = validationMessages.date[language];
+    if (!time) newErrors.time = validationMessages.time[language];
+    if (!phone.trim()) newErrors.phone = validationMessages.phone.required[language];
+    if (!/^[0-9]+$/.test(phone)) newErrors.phone = validationMessages.phone.format[language];
+    if (!email.trim()) newErrors.email = validationMessages.email.required[language];
+    if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = validationMessages.email.format[language];
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -154,12 +215,14 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   return (
     <>
       <form>
-        <h3 className="text-xl font-bold text-gray-800 mb-4">予約情報入力</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">
+          {language === 'ko' ? '예약 정보 입력' : '予約情報入力'}
+        </h3>
         
         {/* 予約者名 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            予約者名 <span className="text-red-500">*</span>
+            {language === 'ko' ? '예약자 이름' : '予約者名'} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -174,7 +237,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         {/* 人数 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            人数 <span className="text-red-500">*</span>
+            {language === 'ko' ? '인원' : '人数'} <span className="text-red-500">*</span>
           </label>
           <select
             value={guests}
@@ -183,7 +246,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
             required
           >
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-              <option key={num} value={num}>{num}</option>
+              <option key={num} value={num}>{num}{language === 'ko' ? '명' : '人'}</option>
             ))}
           </select>
         </div>
@@ -191,7 +254,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         {/* 日付 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            日付 <span className="text-red-500">*</span>
+            {language === 'ko' ? '날짜' : '日付'} <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
@@ -207,7 +270,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         {/* 時間 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            時間 <span className="text-red-500">*</span>
+            {language === 'ko' ? '시간' : '時間'} <span className="text-red-500">*</span>
           </label>
           <select
             value={time}
@@ -215,7 +278,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
             className={`w-full p-2 border rounded-md text-gray-900 ${errors.time ? 'border-red-500' : 'border-gray-200'}`}
             required
           >
-            <option value="">-- 時間 --</option>
+            <option value="">{language === 'ko' ? '-- 시간 --' : '-- 時間 --'}</option>
             {['17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'].map(t => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -226,7 +289,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         {/* 電話番号 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            電話番号 <span className="text-red-500">*</span>
+            {language === 'ko' ? '전화번호' : '電話番号'} <span className="text-red-500">*</span>
           </label>
           <input
             type="tel"
@@ -242,7 +305,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         {/* メールアドレス */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            メールアドレス <span className="text-red-500">*</span>
+            {language === 'ko' ? '이메일' : 'メールアドレス'} <span className="text-red-500">*</span>
           </label>
           <input
             type="email"

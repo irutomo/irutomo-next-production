@@ -96,8 +96,9 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "AX__ZB3M5gT4CkuFI9T8bXoyZYZPqsvVu7JilzrpPg2rzkOPqJ1kh8WbPdeFEVwp9lS4NzQDzfF_SSqv",
     currency: "JPY",
     intent: "capture",
-    components: "buttons",
-    debug: process.env.NODE_ENV !== "production",
+    components: "buttons,funding-eligibility",
+    disableFunding: "paylater,venmo",
+    locale: language === 'ko' ? 'ko_KR' : 'ja_JP'
   };
 
   // 今日の日付を取得しフォーマット (YYYY-MM-DD)
@@ -331,7 +332,9 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         
         {/* PayPal決済ボタン */}
         <div className="mb-4">
-          <p className="text-center mb-2 font-medium">代行手数料：{parseInt(reservationAmount).toLocaleString()}円</p>
+          <p className="text-sm text-gray-600">
+            {language === 'ko' ? '대행 수수료' : '代行手数料'}：<span className="text-black">{parseInt(reservationAmount).toLocaleString()}</span>{language === 'ko' ? '엔' : '円'}
+          </p>
           
           {paypalError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -341,14 +344,20 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
           
           <PayPalScriptProvider options={initialOptions}>
             <PayPalButtons
-              style={{ layout: 'vertical', shape: 'rect' }}
+              style={{ 
+                layout: "vertical",
+                shape: "rect",
+                label: "pay",
+                height: 40
+              }}
               disabled={isSubmitting}
-              forceReRender={[reservationAmount, initialOptions.currency]}
+              fundingSource={undefined}
+              forceReRender={[reservationAmount, initialOptions.currency, language]}
               createOrder={createOrder}
               onApprove={onApprove}
               onError={(err) => {
                 console.error('PayPalエラー:', err);
-                setPaypalError('お支払い処理中にエラーが発生しました。もう一度お試しください。');
+                setPaypalError(language === 'ko' ? '결제 중 오류가 발생했습니다. 다시 시도해 주세요.' : 'お支払い処理中にエラーが発生しました。もう一度お試しください。');
                 setIsSubmitting(false);
               }}
               onCancel={() => {

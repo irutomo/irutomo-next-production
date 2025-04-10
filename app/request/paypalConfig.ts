@@ -7,6 +7,6 @@ export const paypalConfig = {
   clientId: PAYPAL_CLIENT_ID,
   currency: 'JPY',
   intent: 'capture',
-  components: 'buttons',
-  disableFunding: 'paylater,venmo,card',
+  components: 'buttons,funding-eligibility',
+  disableFunding: 'paylater,venmo',
 }; 

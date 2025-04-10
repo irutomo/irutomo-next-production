@@ -77,6 +77,8 @@ interface FormData {
   numberOfPeople: string;
   email: string;
   notes: string;
+  date: string;
+  time: string;
 }
 
 // エラーの型定義
@@ -96,7 +98,9 @@ export default function RequestContent() {
     customerName: '',
     numberOfPeople: '',
     email: '',
-    notes: ''
+    notes: '',
+    date: '',
+    time: ''
   });
 
   // エラー状態を管理
@@ -134,7 +138,7 @@ export default function RequestContent() {
   }, []);
 
   // 入力値の変更処理
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -156,7 +160,7 @@ export default function RequestContent() {
     const newErrors: FormErrors = {};
     
     // 必須フィールドのチェック
-    const requiredFields = ['restaurantName', 'restaurantAddress', 'customerName', 'numberOfPeople', 'email'];
+    const requiredFields = ['restaurantName', 'restaurantAddress', 'customerName', 'numberOfPeople', 'email', 'date', 'time'];
     requiredFields.forEach(field => {
       if (!formData[field as keyof typeof formData].trim()) {
         newErrors[field] = t.required;
@@ -322,13 +326,63 @@ export default function RequestContent() {
               />
             </div>
             
+            {/* 日付入力 */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="date" className="text-sm font-medium text-gray-800">
+                {language === 'ko' ? '날짜' : '日付'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                min={new Date().toISOString().split('T')[0]}
+                className={`w-full h-10 px-3 rounded-md border text-gray-900 ${errors.date ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-100`}
+              />
+              {errors.date && (
+                <p className="text-xs text-red-500">{errors.date}</p>
+              )}
+            </div>
+            
+            {/* 時間入力 */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="time" className="text-sm font-medium text-gray-800">
+                {language === 'ko' ? '시간' : '時間'} <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="time"
+                name="time"
+                value={formData.time}
+                onChange={handleChange}
+                className={`w-full h-10 px-3 rounded-md border text-gray-900 ${errors.time ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-100`}
+              >
+                <option value="">{language === 'ko' ? '-- 시간 --' : '-- 時間 --'}</option>
+                {['17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              {errors.time && (
+                <p className="text-xs text-red-500">{errors.time}</p>
+              )}
+            </div>
+            
             {/* PayPalボタン */}
             <div className="mt-6">
-              <PayPalScriptProvider options={paypalConfig}>
+              <PayPalScriptProvider options={{
+                ...paypalConfig,
+                locale: language === 'ko' ? 'ko_KR' : 'ja_JP'
+              }}>
                 <PayPalButtons 
-                  style={{ layout: "vertical" }}
+                  style={{ 
+                    layout: "vertical",
+                    shape: "rect",
+                    label: "pay",
+                    height: 40
+                  }}
                   disabled={false}
                   fundingSource={undefined}
+                  forceReRender={[PAYMENT_AMOUNT, paypalConfig.currency, language]}
                   createOrder={(data, actions) => {
                     return actions.order.create({
                       intent: "CAPTURE",
@@ -354,11 +408,9 @@ export default function RequestContent() {
                     
                     return actions.order.capture().then((details) => {
                       console.log("決済が完了しました:", details);
-                      // 安全なアクセスのためのnullishチェック
                       const payerName = details.payer?.name?.given_name || "お客様";
                       console.log("Transaction completed by: " + payerName);
                       console.log("Transaction ID: " + details.id);
-                      // 成功した場合、成功モーダルを表示
                       setIsSubmitted(true);
                       setPaymentError(null);
                     });
@@ -376,7 +428,12 @@ export default function RequestContent() {
                 </div>
               )}
 
-              <p className="text-xs text-gray-500 mt-4 text-center">※上記ボタンから手数料¥{PAYMENT_AMOUNT}をお支払いください</p>
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                {language === 'ko' 
+                  ? `※위 버튼에서 수수료¥${PAYMENT_AMOUNT.toLocaleString()}를 결제해주세요.`
+                  : `※上のボタンから手数料¥${PAYMENT_AMOUNT.toLocaleString()}を決済してください。`
+                }
+              </p>
             </div>
           </form>
         </div>

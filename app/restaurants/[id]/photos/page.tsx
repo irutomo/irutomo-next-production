@@ -18,6 +18,30 @@ type Restaurant = {
   images?: string[];
 };
 
+// 画像URLを安全に処理する関数
+function getRestaurantImageUrl(url?: string): string {
+  if (!url) return '/images/restaurants/placeholder.jpg';
+  
+  // Unsplashの画像はエラーになることがあるため、代替画像を使用
+  if (url.includes('unsplash.com')) {
+    return '/images/restaurants/placeholder.jpg';
+  }
+  
+  // 相対パスの場合は絶対パスに変換
+  if (url.startsWith('/')) {
+    return url;
+  }
+  
+  // URLが有効かチェック
+  try {
+    new URL(url);
+    return url;
+  } catch (e) {
+    console.warn('無効な画像URL:', url);
+    return '/images/restaurants/placeholder.jpg';
+  }
+}
+
 // レストラン情報をSupabaseから取得する関数
 async function getRestaurant(id: string): Promise<Restaurant | null> {
   try {
@@ -107,22 +131,26 @@ export default async function RestaurantPhotosPage({ params }: Props) {
     notFound();
   }
 
-  // 画像が存在しない場合はデフォルトの画像を表示
-  const photos = [];
+  // 画像配列を準備
+  const photos: string[] = [];
   
-  // images配列が存在し、配列であることを確認
+  // imagesが配列の場合は追加
   if (restaurant.images && Array.isArray(restaurant.images) && restaurant.images.length > 0) {
-    photos.push(...restaurant.images);
+    // 各URLを安全に処理
+    photos.push(...restaurant.images.map(url => getRestaurantImageUrl(url)));
   } 
   // image_urlが存在する場合は追加
   else if (restaurant.image_url) {
-    photos.push(restaurant.image_url);
+    photos.push(getRestaurantImageUrl(restaurant.image_url));
   } 
   // どちらも存在しない場合はデフォルト画像
   else {
     photos.push('/images/restaurants/placeholder.jpg');
   }
 
+  // デバッグログ
+  console.log('レストラン写真URLs:', photos);
+  
   const photoDescriptions = [
     '店舗外観', '店内', '個室', 'カウンター席', '料理', '雰囲気'
   ];
@@ -172,6 +200,7 @@ export default async function RestaurantPhotosPage({ params }: Props) {
                   fill
                   style={{ objectFit: 'cover' }}
                   quality={80}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   placeholder="blur"
                   blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
                 />

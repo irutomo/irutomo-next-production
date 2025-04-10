@@ -21,8 +21,8 @@
   "description": "",
   "overrides": {
     "@testing-library/react": {
-      "react": "^19.0.0",
-      "react-dom": "^19.0.0"
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0"
     }
   },
   "dependencies": {
@@ -51,11 +51,11 @@
     "framer-motion": "^12.6.3",
     "hamburger-react": "^2.5.2",
     "lucide-react": "^0.487.0",
-    "next": "^15.2.0",
+    "next": "^14.1.0",
     "playwright": "^1.51.1",
     "postcss": "^8.4.36",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-toastify": "^11.0.5",

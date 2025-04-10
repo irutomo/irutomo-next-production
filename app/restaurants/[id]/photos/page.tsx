@@ -1,7 +1,7 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createServerComponentClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/app/lib/supabase';
 import { notFound } from 'next/navigation';
 
 type Props = {
@@ -26,7 +26,7 @@ async function getRestaurant(id: string): Promise<Restaurant | null> {
       return null;
     }
 
-    const supabase = await createServerComponentClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from('restaurants')
       .select('id, name, image_url, images')
@@ -48,7 +48,7 @@ async function getRestaurant(id: string): Promise<Restaurant | null> {
 // 静的パスを生成
 export async function generateStaticParams() {
   try {
-    const supabase = await createServerComponentClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase.from('restaurants').select('id');
     
     if (error) {

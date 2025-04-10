@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
 import { createServerSupabaseClient } from '@/app/lib/supabase-server';
+import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
+
+// 環境変数から接続情報を取得
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // 静的エクスポート設定
-export const dynamic = 'error';
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+// export const runtime = 'edge';
 
 export async function POST(request: Request) {
   try {
@@ -27,22 +32,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // 認証の確認（修正）
-    let userId = null;
-    try {
-      const authResult = auth();
-      // @ts-ignore auth()の戻り値型の問題を回避
-      userId = authResult.userId;
-    } catch (error) {
-      console.error('認証情報取得エラー:', error);
-    }
+    // 認証の確認（Supabaseを使用）
+    const cookieStore = cookies();
     
-    if (!userId) {
+    // Supabaseクライアントを初期化
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      global: {
+        headers: {
+          cookie: cookieStore.toString(),
+        },
+      },
+    });
+    
+    // 現在のセッション情報を取得
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    
+    if (authError || !session) {
+      console.error('認証情報取得エラー:', authError);
       return NextResponse.json(
         { success: false, message: '認証が必要です' },
         { status: 401 }
       );
     }
+    
+    const userId = session.user.id;
 
     // 環境変数の確認
     const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
@@ -121,10 +138,10 @@ export async function POST(request: Request) {
     const refundResult = await refundResponse.json();
     
     // Supabaseに予約情報を更新
-    const supabase = await createServerSupabaseClient();
+    const adminSupabase = await createServerSupabaseClient();
     
     // 予約テーブルのステータスを更新
-    const { error: reservationUpdateError } = await supabase
+    const { error: reservationUpdateError } = await adminSupabase
       .from('reservations')
       .update({
         payment_status: 'refunded',

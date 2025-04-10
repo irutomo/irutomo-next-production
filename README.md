@@ -36,4 +36,8 @@ npm run start
 
 ## デプロイ
 
-Vercelを使用してデプロイします。詳細は `VERCEL_DEPLOYMENT.md` を参照してください。 
+Vercelを使用してデプロイします。詳細は `VERCEL_DEPLOYMENT.md` を参照してください。
+
+## 連絡先
+
+お問い合わせは公式サイト [irutomo-trip.com](https://irutomo-trip.com) までご連絡ください。 

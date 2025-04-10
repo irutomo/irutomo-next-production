@@ -2,10 +2,10 @@
 
 ## アーキテクチャ概要
 
-irutomo222レストラン予約システムは、Next.js 15.2を基盤としたモダンなWebアプリケーションです。App Routerモデルを採用し、React Server Componentsとクライアントコンポーネントを効果的に組み合わせてパフォーマンスとユーザー体験を最適化しています。
+irutomo222レストラン予約システムは、Next.js 15.3.0を基盤としたモダンなWebアプリケーションです。App Routerモデルを採用し、React Server Componentsとクライアントコンポーネントを効果的に組み合わせてパフォーマンスとユーザー体験を最適化しています。
 
 ### アーキテクチャモデル
-- **フレームワーク**: Next.js 15.2, React 19
+- **フレームワーク**: Next.js 15.3.0, React 19
 - **UI**: React Server Components, クライアントコンポーネント
 - **データ層**: Supabase (PostgreSQL)
 - **外部サービス**: PayPal (決済), Channel.io (サポート)

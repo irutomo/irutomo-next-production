@@ -285,3 +285,25 @@
 - Google PayとApple Payの統合
 - 支払いステータスの一貫性を監視するシステムの実装
 - トランザクションの堅牢性のためのエラーリカバリー機能強化
+
+## 環境情報
+
+### 開発環境
+- Next.js 15.3.0を使用
+- 開発サーバーはPort 3001で実行（Port 3000が使用中のため）
+- 開発環境設定ファイル: .env.development.local, .env.local, .env.development, .env
+- 実験的機能: optimizeCss が有効化
+
+### データベース
+- Supabaseプロジェクト名: irutomo-kr
+- プロジェクトID: qgqebyunvamzfaaaypmd
+- リージョン: ap-northeast-2 (アジアパシフィック - ソウル)
+- ステータス: ACTIVE_HEALTHY
+- PostgreSQLバージョン: 15.8.1.044
+- データベースホスト: db.qgqebyunvamzfaaaypmd.supabase.co
+
+### デプロイ状況
+- Vercelでホスティング
+- 本番環境とプレビュー環境を設定
+- 自動デプロイパイプラインが実装済み
+- アナリティクスとエラーモニタリングが設定済み

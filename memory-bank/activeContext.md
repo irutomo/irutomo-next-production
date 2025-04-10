@@ -289,6 +289,21 @@
 - サービスロールキーの安全な管理と使用制限
 - クライアント側とサーバー側のセキュリティ境界の明確化
 
+## 環境情報
+
+### 開発環境
+- Next.js 15.3.0が使用されている
+- 開発サーバーはPort 3001で実行（Port 3000が使用中のため）
+- 開発環境は.env.development.local, .env.local, .env.development, .envファイルを使用
+- optimizeCss実験的機能が有効化されている
+
+### Supabaseプロジェクト
+- プロジェクト: irutomo-kr (ID: qgqebyunvamzfaaaypmd)
+- リージョン: ap-northeast-2 (アジアパシフィック - ソウル)
+- ステータス: ACTIVE_HEALTHY
+- PostgreSQLバージョン: 15.8.1.044
+- データベースホスト: db.qgqebyunvamzfaaaypmd.supabase.co
+
 ## 次のステップ
 
 ### 決済システムの堅牢性強化

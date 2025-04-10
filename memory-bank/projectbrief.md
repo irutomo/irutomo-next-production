@@ -20,7 +20,7 @@
 - サービス管理者
 
 ## 使用技術
-- フロントエンド: Next.js 15.2.4 (App Router), React 19.0.0, TypeScript 5.4.5, Tailwind CSS 3.4.1, Shadcn UI
+- フロントエンド: Next.js 15.3.0 (App Router), React 19.0.0, TypeScript 5.4.5, Tailwind CSS 3.4.1, Shadcn UI
 - バックエンド: Next.js (Server Components, Server Actions), Edge Runtime
 - データベース: Supabase 2.49.4 (PostgreSQL)
 - 認証: Clerk 6.12.12 (Supabaseと連携)

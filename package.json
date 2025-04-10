@@ -19,6 +19,12 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "overrides": {
+    "@testing-library/react": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    }
+  },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.8.2",
     "@radix-ui/react-avatar": "^1.1.3",

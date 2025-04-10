@@ -34,8 +34,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // PayPal APIエンドポイント
-    const paypalEndpoint = 'https://api-m.paypal.com';
+    // PayPal APIエンドポイント (環境に応じて切り替え)
+    const paypalEndpoint = process.env.NODE_ENV === 'production' 
+      ? 'https://api-m.paypal.com' 
+      : 'https://api-m.sandbox.paypal.com';
     
     console.log('PayPal APIエンドポイント:', paypalEndpoint);
 

@@ -3,26 +3,26 @@
 ## 技術スタック
 
 ### フロントエンド
-- ✅ **フレームワーク**: Next.js 15.2 (App Router)
-- ✅ **言語**: TypeScript 5.4
-- ✅ **UIライブラリ**: React 19
-- ✅ **スタイリング**: Tailwind CSS 4.0
+- ✅ **フレームワーク**: Next.js 15.2.4 (App Router)
+- ✅ **言語**: TypeScript 5.4.5
+- ✅ **UIライブラリ**: React 19.0.0
+- ✅ **スタイリング**: Tailwind CSS 3.4.1
 - ✅ **UIコンポーネント**: Shadcn UI (TailwindベースのヘッドレスUIコンポーネント)
 - ✅ **フォーム管理**: React Hook Form + Zod
 - ✅ **データ取得・状態管理**: TanStack Query (クライアント側) + Server Components (サーバー側)
-- ✅ **アニメーション**: Framer Motion
+- ✅ **アニメーション**: Framer Motion 12.6.3
 - ✅ **国際化**: next-intl
 - ✅ **日付/時間処理**: date-fns
-- ✅ **アイコン**: Lucide Icons
+- ✅ **アイコン**: Lucide Icons 0.487.0
 - ✅ **地図表示**: Mapbox
 - ✅ **チャート**: Recharts
 
 ### バックエンド
-- ✅ **データベース**: Supabase (PostgreSQL)
-- ✅ **認証**: Clerk
+- ✅ **データベース**: Supabase 2.49.4 (PostgreSQL)
+- ✅ **認証**: Clerk 6.12.12
 - ✅ **API**: Next.js Server Actions & API Routes
 - ✅ **ファイルストレージ**: Supabase Storage
-- ✅ **決済処理**: PayPal API
+- ✅ **決済処理**: PayPal API 8.8.2
 - ✅ **画像最適化**: Next.js Image Optimization
 
 ### 開発ツール
@@ -30,7 +30,7 @@
 - ✅ **コード品質**: ESLint, Prettier
 - ✅ **Git管理**: GitHub
 - ✅ **CI/CD**: GitHub Actions, Vercel
-- ✅ **テスト**: Vitest, Testing Library, Playwright
+- ✅ **テスト**: Vitest 1.3.1, Testing Library 14.3.1, Playwright
 - ✅ **開発サーバー**: Next.js + Turbopack
 - ✅ **アクセシビリティ**: axe-core
 
@@ -84,7 +84,7 @@
 ## Clerk認証の活用
 
 ### 最新の認証フロー
-- ✅ Clerk認証システム (v5)
+- ✅ Clerk認証システム (v6.12.12)
 - ✅ セッショントークン認証（JWTテンプレート方式から移行）
   - 2025年4月1日より、JWTテンプレート方式は公式に非推奨化
 - ✅ Clerkダッシュボードの「Connect with Supabase」機能を使用
@@ -123,7 +123,7 @@
 
 ### 実装状況
 - ✅ PayPal APIとの統合
-- ✅ 公式React SDK (@paypal/react-paypal-js)
+- ✅ 公式React SDK (@paypal/react-paypal-js 8.8.2)
 - ✅ サンドボックス環境設定
 - ✅ 予約金支払いフロー
 
@@ -172,7 +172,7 @@
 ## テスト戦略
 
 ### 単体テスト
-- ✅ Vitest + React Testing Library
+- ✅ Vitest 1.3.1 + React Testing Library 14.3.1
 - ✅ コンポーネントのテスト
 - ✅ ユーティリティ関数のテスト
 - ✅ カスタムフックのテスト

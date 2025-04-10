@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createServerSupabaseClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/app/lib/supabase-server';
 
 // 静的エクスポート設定
 export const dynamic = 'error';
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
     // 環境変数の確認
     const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+    const clientSecret = process.env.PAYPAL_CLIENT_SECRET || process.env.PAYPAL_SECRET_KEY;
 
     if (!clientId || !clientSecret) {
       console.error('PayPal認証情報が設定されていません');
@@ -56,8 +56,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // PayPal APIエンドポイント (環境に応じて切り替え)
+    const paypalEndpoint = process.env.NODE_ENV === 'production' 
+      ? 'https://api-m.paypal.com' 
+      : 'https://api-m.sandbox.paypal.com';
+    
+    console.log('PayPal APIエンドポイント (返金処理):', paypalEndpoint);
+
     // アクセストークンの取得
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch(`${paypalEndpoint}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -78,7 +85,7 @@ export async function POST(request: Request) {
     const accessToken = tokenData.access_token;
 
     // 返金処理の実行
-    const refundResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/payments/captures/${captureId}/refund`, {
+    const refundResponse = await fetch(`${paypalEndpoint}/v2/payments/captures/${captureId}/refund`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -20,19 +20,19 @@
 - サービス管理者
 
 ## 使用技術
-- フロントエンド: Next.js 15.2 (App Router), React 19, TypeScript, Tailwind CSS, Shadcn UI
+- フロントエンド: Next.js 15.2.4 (App Router), React 19.0.0, TypeScript 5.4.5, Tailwind CSS 3.4.1, Shadcn UI
 - バックエンド: Next.js (Server Components, Server Actions), Edge Runtime
-- データベース: Supabase (PostgreSQL)
-- 認証: Clerk (Supabaseと連携)
-- 決済: PayPal API
+- データベース: Supabase 2.49.4 (PostgreSQL)
+- 認証: Clerk 6.12.12 (Supabaseと連携)
+- 決済: PayPal API 8.8.2
 - デプロイ: Vercel
-- テスト: Vitest, Playwright
+- テスト: Vitest 1.3.1, Playwright
 
 ## 開発フェーズ
 現在は開発後期フェーズにあり、基本機能はほぼ実装完了。UI/UXの改善、パフォーマンス最適化、レビュー機能の完成、およびテスト拡充に注力している。
 
 ## 主な実装ポイント
-- Next.js 15.2のApp Routerを活用し、Server ComponentsとClient Componentsを適切に分離
+- Next.js 15.2.4のApp Routerを活用し、Server ComponentsとClient Componentsを適切に分離
 - 認証方式をJWTからセッショントークン方式に移行し、App Routerのミドルウェアで保護
 - Server Actionsを活用した安全なフォーム処理と決済処理
 - ストリーミングUIとサスペンスによる段階的なコンテンツ表示
@@ -49,7 +49,7 @@
    - 画像アップロード機能の実装
    - レビュー管理システムの構築
 
-2. **Next.js 15.2の機能完全活用** (〜7月中旬)
+2. **Next.js 15.2.4の機能完全活用** (〜7月中旬)
    - Turbopackの本格導入
    - React Compilerの評価と導入
    - パラレルルートとインターセプトルートの活用
@@ -76,4 +76,4 @@
 - ユーザー体験を最優先し、操作の簡単さと応答速度を重視
 - セキュリティとプライバシーを確保しつつ、使いやすさのバランスを取る
 - モバイルファーストのアプローチで、すべてのデバイスで最適な体験を提供
-- Next.js 15.2の最新機能を積極的に活用し、パフォーマンスとSEOを最適化 
+- Next.js 15.2.4の最新機能を積極的に活用し、パフォーマンスとSEOを最適化 

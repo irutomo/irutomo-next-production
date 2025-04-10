@@ -53,7 +53,7 @@
    - トークン保存方法をlocalStorageからhttpOnly Cookieに変更
 
 2. **フレームワーク**
-   - Next.js 15.2へのアップグレード
+   - Next.js 15.2.4へのアップグレード (最新版を確認)
    - React 19の安定版採用
 
 3. **支払い処理**
@@ -179,23 +179,21 @@
 ## 技術スタック
 
 ### フロントエンド
-- Next.js 15.2
+- Next.js 15.2.4
 - React 19
-- TypeScript 5.4
-- Tailwind CSS
+- TypeScript 5.4.5
+- Tailwind CSS 3.4.1
 - Radix UI
-- zustand (状態管理)
-- React Hook Form
-- Framer Motion (アニメーション)
+- Framer Motion 12.6.3 (アニメーション)
 
 ### バックエンド
 - Next.js Server Actions
 - Server Components
 - Edge API Routes
-- Clerk (認証)
+- Clerk 6.12.12 (認証)
 
 ### データベース
-- Supabase (PostgreSQL)
+- Supabase 2.49.4 (PostgreSQL)
 - Redis (キャッシュ)
 
 ### インフラ
@@ -205,7 +203,7 @@
 - GitHub Actions (CI/CD)
 
 ### テスト
-- Vitest (単体テスト)
+- Vitest 1.3.1 (単体テスト)
 - Playwright (E2E)
 - Lighthouse (パフォーマンス)
 

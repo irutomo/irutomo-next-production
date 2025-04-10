@@ -2,8 +2,12 @@
   "mcpServers": {
     "supabase": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://postgres.qgqebyunvamzfaaaypmd:irutomo-kr@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?sslaccept=accept_invalid_certs&readOnly=false"],
-      "permissions": ["read", "write"]
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_caab3ba99d599f329dd8973ec4a4007a0ba8913a"
+      ]
     }
   }
-} 
+}

@@ -7,7 +7,6 @@ import { notFound } from 'next/navigation';
 import { RestaurantImageSlider } from '../../../components/restaurant/restaurant-image-slider';
 import { ReservationForm } from '../../../components/restaurant/reservation-form';
 import { Database } from '@/lib/database.types';
-import { cookies } from 'next/headers';
 
 // SVGコンポーネント
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -28,9 +27,10 @@ const MapPinIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// 型定義を修正
 type Props = {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // サーバーコンポーネント用のSupabaseクライアント
@@ -133,9 +133,8 @@ async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
     try {
       const supabase = await createServerComponentClient();
       
-      // 言語設定を取得（デフォルトを'ko'に設定）
-      const cookieStore = await cookies();
-      const language = cookieStore.get('language')?.value || 'ko';
+      // 言語設定をハードコードで設定（デフォルトを'ko'に）
+      const language = 'ko';
       
       const { data, error } = await supabase
         .from('restaurants')
@@ -260,12 +259,11 @@ function getFallbackRestaurant(id: string): DatabaseRestaurant {
 }
 
 export async function generateMetadata(
-  { params }: Props,
+  { params }: { params: Promise<{ id: string }> },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   // paramsをawaitする
-  const safeParams = await Promise.resolve(params);
-  const id = safeParams.id;
+  const { id } = await params;
   const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
@@ -280,12 +278,11 @@ export async function generateMetadata(
   };
 }
 
-export default async function RestaurantPage({ params }: Props) {
+export default async function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
   // paramsをawaitする
-  const safeParams = await Promise.resolve(params);
-  const id = safeParams.id;
-  const cookieStore = await cookies();
-  const language = cookieStore.get('language')?.value || 'ko';
+  const { id } = await params;
+  // cookies の呼び出しを削除して、言語設定をハードコードする
+  const language = 'ko';
 
   // レストラン情報を取得
   const restaurant = await getRestaurant(id);

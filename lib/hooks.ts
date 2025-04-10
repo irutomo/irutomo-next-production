@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSupabaseClientWithToken } from './clerk';
+import { createBrowserClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // クライアントコンポーネントでSupabaseクライアントを使用するためのフック
@@ -12,7 +12,10 @@ export const useSupabaseClient = () => {
   const initSupabase = useCallback(async () => {
     try {
       setLoading(true);
-      const client = await getSupabaseClientWithToken();
+      const client = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
       setSupabase(client);
       setError(null);
     } catch (err) {

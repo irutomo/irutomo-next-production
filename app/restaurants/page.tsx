@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import RestaurantsClient from './components/restaurants-client';
 import { Restaurant } from '@/types/restaurant';
 import { Metadata } from 'next';
-import { cookies } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'レストラン一覧 | IRUTOMO',
@@ -11,17 +10,13 @@ export const metadata: Metadata = {
 };
 
 // レストラン情報をSupabaseから直接取得する関数
-async function getRestaurants() {
+async function getRestaurants(language: 'ja' | 'ko' = 'ja') {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     
     // 匿名キーでSupabaseクライアントを作成
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    
-    // 言語設定を取得
-    const cookieStore = await cookies();
-    const language = cookieStore.get('language')?.value || 'ja';
     
     const { data, error } = await supabase
       .from('restaurants')
@@ -48,9 +43,21 @@ async function getRestaurants() {
 }
 
 // サーバーコンポーネントとしてページを実装
-export default async function RestaurantsPage() {
+export default async function RestaurantsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Record<string, never>>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  // URLパラメータから言語設定を取得（例: /restaurants?lang=ko）
+  // 有効な値は'ja'または'ko'のみ、それ以外は'ja'を使用
+  const resolvedSearchParams = await searchParams;
+  const lang = resolvedSearchParams?.lang || '';
+  const language = (typeof lang === 'string' && lang === 'ko' ? 'ko' : 'ja') as 'ja' | 'ko';
+  
   // サーバーサイドでデータを取得
-  const restaurants = await getRestaurants();
+  const restaurants = await getRestaurants(language);
   
   return (
     <div className="min-h-screen bg-background">

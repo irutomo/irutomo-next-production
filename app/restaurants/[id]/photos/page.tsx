@@ -3,9 +3,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/app/lib/supabase';
 import { notFound } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // データベースから取得したレストラン情報の型
@@ -26,7 +28,11 @@ async function getRestaurant(id: string): Promise<Restaurant | null> {
       return null;
     }
 
-    const supabase = await createServerSupabaseClient();
+    // 直接Supabaseクライアントを作成して、cookiesを使用しない
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const { data, error } = await supabase
       .from('restaurants')
       .select('id, name, image_url, images')
@@ -48,7 +54,11 @@ async function getRestaurant(id: string): Promise<Restaurant | null> {
 // 静的パスを生成
 export async function generateStaticParams() {
   try {
-    const supabase = await createServerSupabaseClient();
+    // generateStaticParamsではcookies()を使用できないため、直接クライアントを作成
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const { data, error } = await supabase.from('restaurants').select('id');
     
     if (error) {
@@ -74,8 +84,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const paramsData = await params;
-  const restaurant = await getRestaurant(paramsData.id);
+  const { id } = await params;
+  const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
     return {
@@ -90,8 +100,8 @@ export async function generateMetadata(
 }
 
 export default async function RestaurantPhotosPage({ params }: Props) {
-  const paramsData = await params;
-  const restaurant = await getRestaurant(paramsData.id);
+  const { id } = await params;
+  const restaurant = await getRestaurant(id);
   
   if (!restaurant) {
     notFound();
@@ -122,7 +132,7 @@ export default async function RestaurantPhotosPage({ params }: Props) {
       <div className="container max-w-6xl mx-auto px-4">
         <div className="mb-8">
           <Link 
-            href={`/restaurants/${paramsData.id}`}
+            href={`/restaurants/${id}`}
             className="text-primary-500 hover:text-primary-700 flex items-center"
           >
             <svg
@@ -180,7 +190,7 @@ export default async function RestaurantPhotosPage({ params }: Props) {
         {/* 予約ボタン */}
         <div className="mt-12 text-center">
           <Link
-            href={`/reservation?restaurant=${paramsData.id}`}
+            href={`/reservation?restaurant=${id}`}
             className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3 rounded-md transition-colors inline-block font-medium"
           >
             この店舗を予約する

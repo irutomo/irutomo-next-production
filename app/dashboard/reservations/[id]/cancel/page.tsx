@@ -34,7 +34,8 @@ interface Reservation {
 export default async function CancelReservationPage({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   // Supabaseクライアントの初期化
   const supabase = await createServerSupabaseClient();
@@ -48,7 +49,7 @@ export default async function CancelReservationPage({
   }
   
   const userId = session.user.id;
-  const reservationId = params.id;
+  const { id: reservationId } = await params;
   
   // 予約詳細を取得
   const { data: reservation, error } = await supabase

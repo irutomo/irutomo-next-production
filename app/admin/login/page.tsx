@@ -4,11 +4,12 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import Image from 'next/image';
 import { FaCircleNotch } from 'react-icons/fa';
 
-export default function AdminLogin() {
+// SearchParamsを使用するコンポーネントを分離
+function LoginContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const router = useRouter();
@@ -229,5 +230,28 @@ export default function AdminLogin() {
         />
       </div>
     </div>
+  );
+}
+
+// ローディング表示用コンポーネント
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div className="flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-bold mb-4 text-center">読み込み中</h2>
+          <FaCircleNotch className="animate-spin text-4xl text-blue-500 mb-4" />
+          <p className="text-gray-600">ページを準備しています...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminLogin() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
   );
 } 

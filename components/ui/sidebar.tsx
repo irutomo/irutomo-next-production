@@ -10,11 +10,18 @@ import {
   Star,
   User,
   LogOut,
+  LogIn,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useUser, SignOutButton, SignInButton } from "@clerk/nextjs";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabaseクライアントの作成
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // サイドバーのアニメーション定義
 const sidebarVariants = {
@@ -46,7 +53,37 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = false }: SidebarProps) {
   const pathname = usePathname();
-  const { isSignedIn, user } = useUser();
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Supabaseからユーザー情報を取得
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setLoading(false);
+
+      // 認証状態の変更を監視
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setUser(session?.user || null);
+        }
+      );
+
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    };
+
+    getUser();
+  }, []);
+
+  // ログアウト処理
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
   return (
     <motion.div
@@ -73,24 +110,18 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
         </div>
 
         {/* ユーザー情報 */}
-        {isSignedIn && user && (
+        {!loading && user && (
           <div className="p-4 border-b">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                {user.imageUrl && (
-                  <Image
-                    src={user.imageUrl}
-                    alt={user.firstName || "User"}
-                    width={40}
-                    height={40}
-                    className="object-cover"
-                  />
-                )}
+                <div className="w-full h-full flex items-center justify-center bg-orange-100 text-orange-500">
+                  {user.email ? user.email.charAt(0).toUpperCase() : "U"}
+                </div>
               </div>
               <div>
-                <p className="font-medium">{user.firstName || user.username}</p>
+                <p className="font-medium">{user.user_metadata?.name || '会員'}</p>
                 <p className="text-xs text-gray-500 truncate max-w-[160px]">
-                  {user.emailAddresses[0]?.emailAddress}
+                  {user.email}
                 </p>
               </div>
             </div>
@@ -131,7 +162,7 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
               </SidebarItem>
 
               {/* ログイン後のみ表示される項目 */}
-              {isSignedIn && (
+              {user && (
                 <SidebarItem 
                   href="/dashboard" 
                   icon={<User className="w-5 h-5" />} 
@@ -146,20 +177,19 @@ export function Sidebar({ isOpen = false }: SidebarProps) {
 
         {/* サイドバーフッター */}
         <div className="p-4 border-t">
-          {isSignedIn ? (
-            <SignOutButton>
-              <button className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-red-500 hover:bg-red-50 transition">
-                <LogOut className="w-5 h-5" />
-                <span>ログアウト</span>
-              </button>
-            </SignOutButton>
+          {!loading && user ? (
+            <button 
+              onClick={handleSignOut}
+              className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-red-500 hover:bg-red-50 transition"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>ログアウト</span>
+            </button>
           ) : (
-            <SignInButton mode="modal">
-              <button className="flex items-center justify-center w-full px-4 py-2 rounded-md bg-orange-500 text-white hover:bg-orange-600 transition">
-                <User className="w-5 h-5 mr-2" />
-                <span>ログイン / 登録</span>
-              </button>
-            </SignInButton>
+            <Link href="/auth/sign-in" className="flex items-center justify-center w-full px-4 py-2 rounded-md bg-orange-500 text-white hover:bg-orange-600 transition">
+              <LogIn className="w-5 h-5 mr-2" />
+              <span>ログイン / 登録</span>
+            </Link>
           )}
         </div>
       </div>

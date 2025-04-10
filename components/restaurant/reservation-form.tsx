@@ -93,7 +93,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
 
   // PayPal初期化オプション
   const initialOptions = {
-    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "AX__ZB3M5gT4CkuFI9T8bXoyZYZPqsvVu7JilzrpPg2rzkOPqJ1kh8WbPdeFEVwp9lS4NzQDzfF_SSqv",
+    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
     currency: "JPY",
     intent: "capture",
     components: "buttons,funding-eligibility",

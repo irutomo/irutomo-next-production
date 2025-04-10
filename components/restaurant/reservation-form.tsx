@@ -46,6 +46,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   const [reservationAmount] = useState("1000"); // 予約手数料1000円固定
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>('ko'); // デフォルトを韓国語に設定
+  const [baseUrl, setBaseUrl] = useState<string>('');
 
   useEffect(() => {
     // クライアントサイドでCookieを読み取る
@@ -53,6 +54,10 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     const languageCookie = cookies.find(cookie => cookie.trim().startsWith('language='));
     const languageValue = languageCookie ? languageCookie.split('=')[1].trim() as Language : 'ko';
     setLanguage(languageValue);
+
+    // 現在のホストとポートを取得
+    const currentUrl = window.location.origin;
+    setBaseUrl(currentUrl);
   }, []);
 
   // バリデーションメッセージを言語に応じて設定
@@ -132,7 +137,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     
     try {
       console.log("PayPal: 注文作成開始");
-      const response = await fetch('/api/paypal/create-order', {
+      const response = await fetch(`${baseUrl}/api/paypal/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +170,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   const onApprove = async (data: { orderID: string }) => {
     try {
       console.log("PayPal: 支払い承認済み、キャプチャ開始", data.orderID);
-      const response = await fetch('/api/paypal/capture-order', {
+      const response = await fetch(`${baseUrl}/api/paypal/capture-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

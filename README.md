@@ -34,6 +34,21 @@ npm run build
 npm run start
 ```
 
+## GitHub CLI
+
+このプロジェクトでは開発効率化のためにGitHub CLIを使用しています。インストール方法：
+
+```bash
+# macOS (Homebrew)
+brew install gh
+
+# Windows
+winget install --id GitHub.cli
+
+# 認証
+gh auth login
+```
+
 ## デプロイ
 
 Vercelを使用してデプロイします。詳細は `VERCEL_DEPLOYMENT.md` を参照してください。

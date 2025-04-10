@@ -1,0 +1,91 @@
+{
+  "env": [
+    {
+      "key": "NODE_ENV",
+      "value": "production",
+      "target": ["production"]
+    },
+    {
+      "key": "PORT",
+      "value": "3000",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "value": "https://qgqebyunvamzfaaaypmd.supabase.co",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFncWVieXVudmFtemZhYWF5cG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwNDA5NzcsImV4cCI6MjA1NzYxNjk3N30.PFK6UtIZ1UxteygEr3NwGEiVQryBF0yhiVVTPXlGyIo",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "SUPABASE_SERVICE_ROLE_KEY",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFncWVieXVudmFtemZhYWFhcG1kIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMDQ4NDI1NCwiZXhwIjoyMDI2MDYwMjU0fQ.RvlqA9qj-dUMegS9KwVKRLUyUl-ll1J1jw9pu8UOsRo",
+      "target": ["production", "preview", "development"],
+      "type": "secret"
+    },
+    {
+      "key": "NEXT_PUBLIC_REDIRECT_URL",
+      "value": "https://irutomo-trip.com/auth/callback",
+      "target": ["production"]
+    },
+    {
+      "key": "PAYPAL_CLIENT_ID",
+      "value": "AcTjrhc3hFkSrCH3OwxxU8XRJXfgCJFhVBCp68X3xkUC1lqz4FUivsnN7WTeJj_wTKsx4OCrpg9dIy3z",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "PAYPAL_SECRET_KEY",
+      "value": "EODNg6E4YtJULZIRVAzYUtMnLmrTeyQEF06U-QCsXAuPcy3T4Xjdo2YANrZ--GZ9pW_vLbGo6r7iaMgS",
+      "target": ["production", "preview", "development"],
+      "type": "secret"
+    },
+    {
+      "key": "PAYPAL_WEBHOOK_URL",
+      "value": "https://irutomo-trip.com/api/paypal/webhook",
+      "target": ["production"]
+    },
+    {
+      "key": "PAYPAL_WEBHOOK_ID",
+      "value": "3RT668253M8169721",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_SITE_URL",
+      "value": "https://irutomo-trip.com",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_VERCEL_URL",
+      "value": "https://irutomo-trip.com",
+      "target": ["production"]
+    },
+    {
+      "key": "VERCEL_URL",
+      "value": "https://irutomo-trip.com",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_DEBUG_MODE",
+      "value": "false",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_LOG_LEVEL",
+      "value": "info",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_ENVIRONMENT",
+      "value": "production",
+      "target": ["production"]
+    },
+    {
+      "key": "NEXT_PUBLIC_APP_NAME",
+      "value": "IRUTOMO reserve",
+      "target": ["production", "preview", "development"]
+    }
+  ]
+} 

@@ -1,15 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Node.jsデプロイ用の設定
-  // output: 'export', // 静的出力を無効化（コメントアウト）
-  // distDir: 'deployment/coreserver/out', // 出力先設定（コメントアウト）
+  poweredByHeader: false,
+  // Vercelデプロイ用の設定
+  // output: 'standalone', // 必要に応じて有効化
   // Server Actionsを有効化
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
-      allowedOrigins: ['*'],
+      allowedOrigins: ['irutomo-trip.com', 'vercel.app'],
     },
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    optimizeCss: true,
   },
   // パッケージのトランスパイル設定を追加
   transpilePackages: ["@ant-design", "rc-util", "rc-pagination", "rc-picker", "rc-notification", "rc-tooltip", "rc-tree", "rc-table"],
@@ -18,14 +20,6 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'example.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'img.clerk.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.clerk.dev',
       },
       {
         protocol: 'https',
@@ -52,7 +46,9 @@ const nextConfig = {
         hostname: 'irutomo222yoyaku.core.coresv.com',
       },
     ],
+    domains: ['qgqebyunvamzfaaaypmd.supabase.co'],
   },
+  swcMinify: true,
 };
 
 module.exports = nextConfig; 

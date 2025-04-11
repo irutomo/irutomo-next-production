@@ -291,9 +291,27 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
   }
 
   // 画像の配列を準備
-  const restaurantImages = restaurant.images 
-    ? (typeof restaurant.images === 'string' ? JSON.parse(restaurant.images) : restaurant.images)
-    : [restaurant.image_url || '/images/restaurants/placeholder.jpg'];
+  const restaurantImages = (() => {
+    // 画像データが文字列形式の場合はJSON解析を試みる
+    if (restaurant.images) {
+      if (typeof restaurant.images === 'string') {
+        try {
+          const parsed = JSON.parse(restaurant.images);
+          // 有効なURLのみをフィルタリング
+          return Array.isArray(parsed) ? parsed.filter(img => !!img) : [];
+        } catch (e) {
+          console.error('レストラン画像の解析エラー:', e);
+          return [];
+        }
+      } else if (Array.isArray(restaurant.images)) {
+        // 既に配列形式の場合
+        return restaurant.images.filter(img => !!img);
+      }
+    }
+    
+    // 画像配列がない場合はメイン画像を使用
+    return restaurant.image_url ? [restaurant.image_url] : ['/images/restaurants/placeholder.jpg'];
+  })();
 
   // 実際のレストランデータを使用
   const restaurantData = {
@@ -306,7 +324,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
     tags: restaurant.cuisine ? [restaurant.cuisine] : [],
     rating: restaurant.rating || 0,
     image: restaurant.image_url || '/images/restaurants/placeholder.jpg',
-    images: restaurantImages,
+    images: restaurantImages.length > 0 ? restaurantImages : ['/images/restaurants/placeholder.jpg'],
     description: language === 'ko'
       ? restaurant.korean_description || restaurant.description || '이 레스토랑의 상세 정보가 아직 없습니다'
       : restaurant.description || 'このレストランの詳細情報はまだありません',

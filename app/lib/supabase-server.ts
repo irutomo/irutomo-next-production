@@ -4,9 +4,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/lib/database.types';
 
-// サーバーサイド用のSupabaseクライアント (認証済み)
+// サーバーサイド用のSupabaseクライアント (開発環境用)
 export const createServerSupabaseClient = async () => {
-  // サービスロールキーを使用してRLSをバイパス
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
   
@@ -28,7 +27,7 @@ export const createServerSupabaseClient = async () => {
 
 // サーバーコンポーネント用のSupabaseクライアント (cookiesベース)
 export const createServerComponentClient = async () => {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -39,8 +38,21 @@ export const createServerComponentClient = async () => {
     {
       cookies: {
         get(name: string) {
-          const cookie = cookieStore.get(name);
-          return cookie?.value;
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set(name, value, options);
+          } catch (error) {
+            console.error('Cookie設定エラー:', error);
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.delete(name);
+          } catch (error) {
+            console.error('Cookie削除エラー:', error);
+          }
         },
       },
     }

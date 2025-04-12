@@ -47,6 +47,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>('ko'); // デフォルトを韓国語に設定
   const [baseUrl, setBaseUrl] = useState<string>('');
+  const [paypalReady, setPaypalReady] = useState(false);
 
   useEffect(() => {
     // クライアントサイドでCookieを読み取る
@@ -58,6 +59,32 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     // 現在のホストとポートを取得
     const currentUrl = window.location.origin;
     setBaseUrl(currentUrl);
+  }, []);
+
+  // PayPalスクリプトの読み込みを監視する別のuseEffect
+  useEffect(() => {
+    // PayPalスクリプトが読み込まれたかどうかをチェックする関数
+    const checkPayPalReady = () => {
+      // windowとpaypalオブジェクトが存在するか確認
+      if (typeof window !== 'undefined' && window.paypal) {
+        console.log('PayPal SDKが読み込まれました');
+        setPaypalReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    // 既に読み込み済みでない場合、ポーリングで読み込みを監視
+    if (!checkPayPalReady()) {
+      const interval = setInterval(() => {
+        if (checkPayPalReady()) {
+          clearInterval(interval);
+        }
+      }, 300);
+      
+      // クリーンアップ関数
+      return () => clearInterval(interval);
+    }
   }, []);
 
   // バリデーションメッセージを言語に応じて設定
@@ -96,15 +123,22 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     }
   };
 
-  // PayPal初期化オプション
-  const initialOptions = {
-    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
-    currency: "JPY",
-    intent: "capture",
-    components: "buttons,funding-eligibility",
-    disableFunding: "paylater,venmo",
-    locale: language === 'ko' ? 'ko_KR' : 'ja_JP'
+  // PayPal設定のための関数
+  const getPayPalOptions = () => {
+    return {
+      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
+      currency: "JPY",
+      intent: "capture",
+      components: "buttons,funding-eligibility",
+      disableFunding: "paylater,venmo",
+      locale: language === 'ko' ? 'ko_KR' : 'ja_JP',
+      // Base64エンコード関連のエラーを回避するため、単純なタイムスタンプのみ使用
+      'data-timestamp': Math.floor(Date.now() / 1000).toString(),
+    };
   };
+
+  // 初期化オプション
+  const initialOptions = getPayPalOptions();
 
   // 今日の日付を取得しフォーマット (YYYY-MM-DD)
   const today = new Date().toISOString().split('T')[0];
@@ -337,7 +371,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         {/* 追加リクエスト */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            追加リクエスト <span className="text-gray-400 text-xs">(任意)</span>
+            {language === 'ko' ? '추가 리퀘스트' : '追加リクエスト'} <span className="text-gray-400 text-xs">(임의)</span>
           </label>
           <textarea
             value={request}
@@ -358,30 +392,62 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
             </div>
           )}
           
-          <PayPalScriptProvider options={initialOptions}>
-            <PayPalButtons
-              style={{ 
-                layout: "vertical",
-                shape: "rect",
-                label: "pay",
-                height: 40
-              }}
-              disabled={isSubmitting}
-              fundingSource={undefined}
-              forceReRender={[reservationAmount, initialOptions.currency, language]}
-              createOrder={createOrder}
-              onApprove={onApprove}
-              onError={(err) => {
-                console.error('PayPalエラー:', err);
-                setPaypalError(language === 'ko' ? '결제 중 오류가 발생했습니다. 다시 시도해 주세요.' : 'お支払い処理中にエラーが発生しました。もう一度お試しください。');
-                setIsSubmitting(false);
-              }}
-              onCancel={() => {
-                console.log('PayPal: キャンセルされました');
-                setIsSubmitting(false);
-              }}
-            />
-          </PayPalScriptProvider>
+          <div className="relative min-h-[40px]">
+            {!paypalReady && (
+              <div className="flex items-center justify-center py-4">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-[#FFA500] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                  <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                    {language === 'ko' ? '로딩 중...' : '読み込み中...'}
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            <PayPalScriptProvider options={getPayPalOptions()}>
+              <PayPalButtons
+                style={{ 
+                  layout: "vertical",
+                  shape: "rect",
+                  label: "pay",
+                  height: 40
+                }}
+                disabled={isSubmitting}
+                fundingSource={undefined}
+                forceReRender={[reservationAmount, initialOptions.currency, language, Math.floor(Date.now() / 1000).toString()]}
+                createOrder={createOrder}
+                onApprove={onApprove}
+                onInit={() => {
+                  console.log('PayPalボタンが初期化されました');
+                  setPaypalReady(true);
+                }}
+                onError={(err) => {
+                  console.error('PayPalエラー:', err);
+                  setPaypalError(language === 'ko' ? '결제 중 오류가 발생했습니다. 다시 시도해 주세요.' : 'お支払い処理中にエラーが発生しました。もう一度お試しください。');
+                  setIsSubmitting(false);
+                }}
+                onCancel={() => {
+                  console.log('PayPal: キャンセルされました');
+                  setIsSubmitting(false);
+                }}
+              />
+            </PayPalScriptProvider>
+            
+            {/* 予約可否とリロードの案内 */}
+            <div className="mt-3 text-sm text-center text-gray-700">
+              <p className={language === 'ko' ? 'block' : 'hidden'}>
+                <span className="text-[#FFA500] font-medium">예약불가시에도 100% 환불!</span> 우선은 예약합시다!👀
+              </p>
+              <p className={language === 'ko' ? 'block' : 'hidden'}>
+                버튼이 나와 있지 않은 경우 페이지를 다시 로드해 주세요!
+              </p>
+              <p className={language === 'ja' ? 'block' : 'hidden'}>
+                <span className="text-[#FFA500] font-medium">予約不可時も100%返金!</span> まずは予約しましょう!👀
+              </p>
+              <p className={language === 'ja' ? 'block' : 'hidden'}>
+                ボタンが表示されていない場合は、ページを更新してください!
+              </p>
+            </div>
+          </div>
         </div>
       </form>
 

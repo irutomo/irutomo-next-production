@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/app/lib/supabase-server';
-import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 

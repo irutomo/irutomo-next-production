@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/lib/database.types';
+import { RequestCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
 // サーバーサイド用のSupabaseクライアント (開発環境用)
 export const createServerSupabaseClient = async () => {
@@ -27,7 +28,7 @@ export const createServerSupabaseClient = async () => {
 
 // サーバーコンポーネント用のSupabaseクライアント (cookiesベース)
 export const createServerComponentClient = async () => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -38,7 +39,8 @@ export const createServerComponentClient = async () => {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          const cookie = cookieStore.get(name) as RequestCookie | undefined;
+          return cookie?.value;
         },
         set(name: string, value: string, options: any) {
           try {

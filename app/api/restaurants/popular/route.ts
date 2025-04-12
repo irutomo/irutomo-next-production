@@ -47,11 +47,12 @@ export async function GET(req: NextRequest) {
     
     // 人気レストラン取得クエリ実行
     console.log('人気レストラン取得クエリ実行開始...');
-    const { data: restaurants, error } = await supabase
+    
+    // 指定された3店舗を取得するクエリ
+    let { data: restaurants, error } = await supabase
       .from('restaurants')
       .select('*')
-      .order('rating', { ascending: false })
-      .limit(3);
+      .or('name.ilike.%鉄鍋餃子 餃子の山崎%,name.ilike.%炭火焼鳥 なかお%,name.ilike.%おでん酒場 湯あみ%');
 
     if (error) {
       console.error('クエリエラー:', error);
@@ -66,16 +67,38 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // データが存在しない場合は空配列を返す
+    // データが存在しない場合、代替クエリを実行
     if (!restaurants || restaurants.length === 0) {
-      console.log('レストランデータが見つかりませんでした');
-      return NextResponse.json({
-        success: true,
-        data: []
-      });
+      console.log('指定されたレストランが見つかりませんでした。代替クエリを実行します。');
+      
+      // 代替として評価順でトップ3を取得
+      const { data: fallbackRestaurants, error: fallbackError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(3);
+        
+      if (fallbackError) {
+        console.error('代替クエリエラー:', fallbackError);
+        return NextResponse.json(
+          { success: false, message: `データ取得失敗: ${fallbackError.message}` },
+          { status: 500 }
+        );
+      }
+      
+      if (!fallbackRestaurants || fallbackRestaurants.length === 0) {
+        console.log('代替レストランデータも見つかりませんでした');
+        return NextResponse.json({
+          success: true,
+          data: []
+        });
+      }
+      
+      console.log('代替データ取得成功:', fallbackRestaurants.length, '件');
+      restaurants = fallbackRestaurants;
+    } else {
+      console.log('指定されたレストランデータ取得成功:', restaurants.length, '件');
     }
-
-    console.log('データ取得成功:', restaurants.length, '件');
     
     // レストランデータを処理して画像URLを正規化し、言語に応じた情報を設定
     const processedRestaurants = restaurants.map(restaurant => {

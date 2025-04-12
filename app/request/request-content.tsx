@@ -20,7 +20,7 @@ const translations = {
     customerName: "예약자 이름",
     numberOfPeople: "예약 인원",
     email: "이메일 주소",
-    notes: "추가 요청사항 (선택)",
+    notes: "추가 요청사항 (옵션)",
     submit: "요청 제출하기",
     success: "예약 요청이 접수되었습니다! 예약 성공 이메일을 기다려주세요. 예약 불가 시 100% 환불됩니다👍",
     goToHome: "홈으로 돌아가기",
@@ -85,6 +85,18 @@ interface FormData {
 interface FormErrors {
   [key: string]: string;
 }
+
+// PayPal関連の追加設定
+const getPayPalOptions = (language: string) => {
+  // 必ずstring型のclientIdを返すようにする
+  return {
+    ...paypalConfig,
+    clientId: paypalConfig.clientId || '',
+    locale: language === 'ko' ? 'ko_KR' : 'ja_JP',
+    // Base64エンコード関連のエラーを回避するため、単純なタイムスタンプのみ使用
+    'data-timestamp': Math.floor(Date.now() / 1000).toString(),
+  };
+};
 
 export default function RequestContent() {
   const { language } = useLanguage();
@@ -368,11 +380,19 @@ export default function RequestContent() {
             </div>
             
             {/* PayPalボタン */}
-            <div className="mt-6">
-              <PayPalScriptProvider options={{
-                ...paypalConfig,
-                locale: language === 'ko' ? 'ko_KR' : 'ja_JP'
-              }}>
+            <div className="mt-6 relative min-h-[40px]">
+              {/* 読み込み中の表示 */}
+              {!scriptLoaded && (
+                <div className="flex items-center justify-center py-4">
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-[#FFA500] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                    <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                      {t.loading}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <PayPalScriptProvider options={getPayPalOptions(language)}>
                 <PayPalButtons 
                   style={{ 
                     layout: "vertical",
@@ -382,7 +402,11 @@ export default function RequestContent() {
                   }}
                   disabled={false}
                   fundingSource={undefined}
-                  forceReRender={[PAYMENT_AMOUNT, paypalConfig.currency, language]}
+                  forceReRender={[PAYMENT_AMOUNT, paypalConfig.currency, language, Math.floor(Date.now() / 1000).toString()]}
+                  onInit={() => {
+                    console.log("PayPalボタンが初期化されました");
+                    setScriptLoaded(true);
+                  }}
                   createOrder={(data, actions) => {
                     return actions.order.create({
                       intent: "CAPTURE",
@@ -434,6 +458,22 @@ export default function RequestContent() {
                   : `※上のボタンから手数料¥${PAYMENT_AMOUNT.toLocaleString()}を決済してください。`
                 }
               </p>
+              
+              {/* 予約可否とリロードの案内 */}
+              <div className="mt-3 text-sm text-center text-gray-700">
+                <p className={language === 'ko' ? 'block' : 'hidden'}>
+                  <span className="text-[#FFA500] font-medium">예약불가시에도 100% 환불!</span> 우선은 예약합시다!👀
+                </p>
+                <p className={language === 'ko' ? 'block' : 'hidden'}>
+                  버튼이 나와 있지 않은 경우 페이지를 다시 로드해 주세요!
+                </p>
+                <p className={language === 'ja' ? 'block' : 'hidden'}>
+                  <span className="text-[#FFA500] font-medium">予約不可時も100%返金!</span> まずは予約しましょう!👀
+                </p>
+                <p className={language === 'ja' ? 'block' : 'hidden'}>
+                  ボタンが表示されていない場合は、ページを更新してください!
+                </p>
+              </div>
             </div>
           </form>
         </div>

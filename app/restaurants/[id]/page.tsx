@@ -296,22 +296,42 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
     if (restaurant.images) {
       if (typeof restaurant.images === 'string') {
         try {
+          // console.log('文字列からのパース試行:', restaurant.images);
           const parsed = JSON.parse(restaurant.images);
           // 有効なURLのみをフィルタリング
           return Array.isArray(parsed) ? parsed.filter(img => !!img) : [];
         } catch (e) {
-          console.error('レストラン画像の解析エラー:', e);
+          console.error('レストラン画像の解析エラー:', e, typeof restaurant.images, restaurant.images);
+          // 文字列がJSONではない場合は、単一の画像URLとして扱う
+          if (typeof restaurant.images === 'string' && restaurant.images.trim() !== '') {
+            return [restaurant.images];
+          }
           return [];
         }
       } else if (Array.isArray(restaurant.images)) {
         // 既に配列形式の場合
         return restaurant.images.filter(img => !!img);
+      } else if (restaurant.images && typeof restaurant.images === 'object') {
+        // オブジェクトの場合（Supabaseの内部表現）
+        try {
+          // オブジェクトを文字列化して再パース
+          const stringified = JSON.stringify(restaurant.images);
+          const parsed = JSON.parse(stringified);
+          return Array.isArray(parsed) ? parsed.filter(img => !!img) : [];
+        } catch (e) {
+          console.error('レストラン画像オブジェクトの処理エラー:', e);
+          return [];
+        }
       }
     }
     
     // 画像配列がない場合はメイン画像を使用
     return restaurant.image_url ? [restaurant.image_url] : ['/images/restaurants/placeholder.jpg'];
   })();
+
+  // デバッグ用にイメージデータ型を出力
+  console.log('restaurantImages type:', typeof restaurantImages, Array.isArray(restaurantImages));
+  console.log('restaurant.images type:', typeof restaurant.images, restaurant.images ? 'データあり' : 'データなし');
 
   // 実際のレストランデータを使用
   const restaurantData = {

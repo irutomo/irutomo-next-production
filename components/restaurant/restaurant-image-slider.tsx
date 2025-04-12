@@ -16,12 +16,19 @@ function isValidImageUrl(url: string): boolean {
   // 相対パスの場合は有効と見なす
   if (url.startsWith('/')) return true;
   
+  // 基本的なURL形式チェック（完全なURL構文チェックではない）
+  const urlPattern = /^(https?:\/\/|\/\/).+\..+/i;
+  if (urlPattern.test(url)) {
+    return true;
+  }
+  
   // URLオブジェクトでの検証を試みる
   try {
     new URL(url);
     return true;
   } catch (e) {
     // URLの構築に失敗した場合は無効
+    console.warn('無効なURL:', url, e);
     return false;
   }
 }
@@ -45,12 +52,53 @@ export function RestaurantImageSlider({ images, alt }: RestaurantImageSliderProp
   // 画像が存在しない場合またはimagesが配列でない場合の処理
   let imagesArray: string[] = [];
   
+  // コンポーネントマウント時にコンソールに型情報を出力（デバッグ用）
+  useEffect(() => {
+    console.log('RestaurantImageSlider - images type:', typeof images);
+    console.log('RestaurantImageSlider - Array.isArray:', Array.isArray(images));
+    if (typeof images === 'string') {
+      console.log('RestaurantImageSlider - images (string):', images.substring(0, 100));
+    } else if (Array.isArray(images)) {
+      console.log('RestaurantImageSlider - images (array):', images.length);
+    } else if (images && typeof images === 'object') {
+      console.log('RestaurantImageSlider - images (object):', Object.keys(images));
+    }
+  }, [images]);
+  
   if (Array.isArray(images)) {
     // 配列の場合は有効なURLのみをフィルタリング
     imagesArray = images.filter(img => isValidImageUrl(img));
-  } else if (typeof images === 'string' && isValidImageUrl(images)) {
-    // 文字列で有効なURLの場合は配列に変換
-    imagesArray = [images];
+  } else if (typeof images === 'string') {
+    // 文字列の場合、JSON配列かどうかを判定
+    if (images.trim().startsWith('[') && images.trim().endsWith(']')) {
+      try {
+        const parsed = JSON.parse(images);
+        if (Array.isArray(parsed)) {
+          imagesArray = parsed.filter(img => isValidImageUrl(img));
+        } else {
+          // 単一の画像URL
+          imagesArray = isValidImageUrl(images) ? [images] : [];
+        }
+      } catch (e) {
+        console.error('画像JSON解析エラー:', e);
+        // 解析に失敗した場合は、単一のURLとして処理
+        imagesArray = isValidImageUrl(images) ? [images] : [];
+      }
+    } else {
+      // 通常の文字列でURLとして有効な場合
+      imagesArray = isValidImageUrl(images) ? [images] : [];
+    }
+  } else if (images && typeof images === 'object') {
+    // オブジェクト形式の場合（Supabase JSONBデータなど）
+    try {
+      const stringified = JSON.stringify(images);
+      const parsed = JSON.parse(stringified);
+      if (Array.isArray(parsed)) {
+        imagesArray = parsed.filter(img => isValidImageUrl(img));
+      }
+    } catch (e) {
+      console.error('オブジェクト形式の画像データ処理エラー:', e);
+    }
   }
   
   // 配列が空の場合はプレースホルダーを使用

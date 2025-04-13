@@ -7,10 +7,7 @@ export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
   const pathname = usePathname();
   
-  // ホーム画面（'/'）以外では表示しない
-  if (pathname !== '/') {
-    return null;
-  }
+  // ホーム画面以外でも表示するように修正
   
   return (
     <div className="flex items-center">
@@ -24,7 +21,7 @@ export function LanguageSwitcher() {
       <button 
         className={`bg-transparent border-none cursor-pointer text-xl p-1 ${language === 'ja' ? 'opacity-100 scale-110' : 'opacity-50'}`}
         onClick={() => setLanguage('ja')}
-        aria-label="日本語に切り替え"
+        aria-label="일본어로 전환"
       >
         <span className="text-xl">🇯🇵</span>
       </button>

@@ -113,13 +113,13 @@ export async function generateMetadata(
   
   if (!restaurant) {
     return {
-      title: '店舗が見つかりません | IRUTOMO',
+      title: '맛집을 찾을 수 없습니다 | 이루토모',
     };
   }
 
   return {
-    title: `${restaurant.name}の写真一覧 | IRUTOMO - 日本の飲食店予約サービス`,
-    description: `${restaurant.name}の写真一覧。料理や内装の雰囲気をご覧いただけます。`,
+    title: `${restaurant.name}의 사진 목록 | 이루토모 - 한국인을 위한 일본 식당 예약 서비스`,
+    description: `${restaurant.name}의 사진 목록. 요리와 인테리어 분위기를 확인하실 수 있습니다.`,
   };
 }
 
@@ -182,11 +182,11 @@ export default async function RestaurantPhotosPage({ params }: Props) {
         </div>
         
         <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 p-6 mb-8">
-          <h1 className="text-2xl font-bold mb-2">{restaurant.name}の写真</h1>
-          <p className="text-gray-600">全{photos.length}枚の写真があります</p>
+          <h1 className="text-2xl font-bold mb-2">{restaurant.name}의 사진</h1>
+          <p className="text-gray-600">전 {photos.length}장의 사진이 있습니다</p>
         </div>
         
-        {/* 写真グリッド */}
+        {/* 写真칼럼 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {photos.map((photo, index) => (
             <div 
@@ -196,7 +196,7 @@ export default async function RestaurantPhotosPage({ params }: Props) {
               <div className="aspect-w-16 aspect-h-9 relative h-64">
                 <Image
                   src={photo}
-                  alt={`${restaurant.name}の写真 ${index + 1}`}
+                  alt={`${restaurant.name}의 사진 ${index + 1}`}
                   fill
                   style={{ objectFit: 'cover' }}
                   quality={80}
@@ -209,20 +209,20 @@ export default async function RestaurantPhotosPage({ params }: Props) {
                 <p className="text-gray-600">
                   {index < photoDescriptions.length 
                     ? photoDescriptions[index]
-                    : `写真 ${index + 1}`}
+                    : `사진 ${index + 1}`}
                 </p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* 予約ボタン */}
+        {/* 예약버튼 */}
         <div className="mt-12 text-center">
           <Link
             href={`/reservation?restaurant=${id}`}
             className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3 rounded-md transition-colors inline-block font-medium"
           >
-            この店舗を予約する
+            이 식당을 예약하기
           </Link>
         </div>
       </div>

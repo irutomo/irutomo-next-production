@@ -268,13 +268,13 @@ export async function generateMetadata(
   
   if (!restaurant) {
     return {
-      title: '店舗が見つかりません | IRUTOMO',
+      title: '맛집을 찾을 수 없습니다 | 이루토모',
     };
   }
 
   return {
-    title: `${restaurant.name} | IRUTOMO - 日本の飲食店予約サービス`,
-    description: `${restaurant.name}の詳細情報。${restaurant.cuisine || ''}のお店です。`,
+    title: `${restaurant.name} | 이루토모 - 한국인을 위한 일본 식당 예약 서비스`,
+    description: `${restaurant.name}의 상세 정보. ${restaurant.cuisine || ''} 맛집입니다.`,
   };
 }
 

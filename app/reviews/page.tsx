@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata = {
   title: '리뷰 | 이루토모 - 한국인을 위한 일본 식당 예약 서비스',
-  description: '실제로 이루토모를 이용한 고객의 리뷰를 확인할 수 있습니다. 일본 식당 예약 경험담을 참고해 주세요.',
+  description: '실제로 이루토모를 이용한 고객님들의 리뷰를 볼 수 있습니다. 일본 식당 예약 경험담을 참고해 주세요.',
 };
 
 interface Review {

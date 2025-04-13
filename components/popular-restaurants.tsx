@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 async function getPopularRestaurants(): Promise<Restaurant[]> {
   try {
     // APIリクエスト
+    console.log('人気レストラン取得リクエスト開始');
     const response = await fetch('/api/restaurants/popular', {
       method: 'GET',
       headers: {
@@ -20,18 +21,23 @@ async function getPopularRestaurants(): Promise<Restaurant[]> {
       }
     });
     
+    console.log('APIレスポンス受信:', response.status);
+    
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
     
     const result = await response.json();
+    console.log('データ形式:', result.success ? '成功' : '失敗');
     
     if (!result.success) {
       throw new Error(result.message || 'APIエラーが発生しました');
     }
     
     // 新しいAPIレスポンス形式に対応
-    return result.data || [];
+    const restaurants = result.data || [];
+    console.log(`${restaurants.length}件のレストランデータを取得しました`);
+    return restaurants;
   } catch (error) {
     console.error('レストラン情報の取得中にエラーが発生しました:', error);
     throw error;
@@ -142,11 +148,25 @@ export default function PopularRestaurants() {
       try {
         setLoading(true);
         setError(null);
+        console.log('人気レストラン取得処理開始');
         const data = await getPopularRestaurants();
-        setRestaurants(data);
+        
+        if (Array.isArray(data)) {
+          setRestaurants(data);
+          console.log(`${data.length}件のレストランデータをセットしました`);
+        } else {
+          console.error('予期しないデータ形式:', data);
+          setError('データ形式が不正です');
+          setRestaurants([]);
+        }
       } catch (err) {
         console.error('人気レストラン取得エラー:', err);
-        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
+        if (err instanceof Error) {
+          setError(`エラー: ${err.message}`);
+        } else {
+          setError('不明なエラーが発生しました');
+        }
+        setRestaurants([]);
       } finally {
         setLoading(false);
       }
@@ -158,7 +178,29 @@ export default function PopularRestaurants() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900">🔥人気のレストラン</h2>
+        <div className="flex justify-between items-center pr-3">
+          <h2 className="text-xl font-bold text-gray-900">🔥人気のレストラン</h2>
+          <Link 
+            href="/restaurants" 
+            className="text-[#00CBB3] hover:text-[#00A99E] text-sm flex items-center"
+          >
+            {content[language].viewMore}
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="ml-1"
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </Link>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="overflow-hidden bg-white">
@@ -187,7 +229,29 @@ export default function PopularRestaurants() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900">{content[language].title}</h2>
+      <div className="flex justify-between items-center pr-3">
+        <h2 className="text-xl font-bold text-gray-900">{content[language].title}</h2>
+        <Link 
+          href="/restaurants" 
+          className="text-[#00CBB3] hover:text-[#00A99E] text-sm flex items-center"
+        >
+          {content[language].viewMore}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="ml-1"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </Link>
+      </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 px-3">
         {restaurants.map((restaurant) => (
           <div key={restaurant.id} className="bg-white rounded-md overflow-hidden shadow-xs hover:shadow-md transition-shadow duration-200 border border-gray-100 flex flex-col h-full">

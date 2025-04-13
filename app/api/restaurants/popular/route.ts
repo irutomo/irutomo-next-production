@@ -48,11 +48,12 @@ export async function GET(req: NextRequest) {
     // 人気レストラン取得クエリ実行
     console.log('人気レストラン取得クエリ実行開始...');
     
-    // 指定された3店舗を取得するクエリ
+    // 指定の3店舗を取得するクエリ
     let { data: restaurants, error } = await supabase
       .from('restaurants')
       .select('*')
-      .or('name.ilike.%鉄鍋餃子 餃子の山崎%,name.ilike.%炭火焼鳥 なかお%,name.ilike.%おでん酒場 湯あみ%');
+      .or('name.ilike.%鉄鍋餃子 餃子の山崎%,name.ilike.%炭火焼鳥 なかお%,name.ilike.%おでん酒場 湯あみ%')
+      .limit(10); // 念のため多めに取得
 
     if (error) {
       console.error('クエリエラー:', error);
@@ -67,21 +68,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // データが存在しない場合、代替クエリを実行
+    // データが存在しない場合
     if (!restaurants || restaurants.length === 0) {
-      console.log('指定されたレストランが見つかりませんでした。代替クエリを実行します。');
+      console.log('指定のレストランデータが見つかりませんでした。代替クエリを実行します。');
       
-      // 代替として評価順でトップ3を取得
+      // 代替としてratingの高い店舗を2件取得
       const { data: fallbackRestaurants, error: fallbackError } = await supabase
         .from('restaurants')
         .select('*')
         .order('rating', { ascending: false })
-        .limit(3);
+        .limit(2);
         
       if (fallbackError) {
         console.error('代替クエリエラー:', fallbackError);
         return NextResponse.json(
-          { success: false, message: `データ取得失敗: ${fallbackError.message}` },
+          { success: false, message: `代替データ取得失敗: ${fallbackError.message}` },
           { status: 500 }
         );
       }
@@ -98,18 +99,36 @@ export async function GET(req: NextRequest) {
       restaurants = fallbackRestaurants;
     } else {
       console.log('指定されたレストランデータ取得成功:', restaurants.length, '件');
+      // 必要なら指定の3店舗のみに絞り込む
+      const filteredRestaurants = restaurants.filter(r => 
+        r.name.includes('鉄鍋餃子 餃子の山崎') || 
+        r.name.includes('炭火焼鳥 なかお') ||
+        r.name.includes('おでん酒場 湯あみ')
+      ).slice(0, 3);
+      
+      restaurants = filteredRestaurants;
     }
+      
+    console.log('レストランデータ取得成功:', restaurants.length, '件');
     
     // レストランデータを処理して画像URLを正規化し、言語に応じた情報を設定
     const processedRestaurants = restaurants.map(restaurant => {
-      // imagesがJSON文字列の場合はパースする
-      if (restaurant.images && typeof restaurant.images === 'string' && 
-          (restaurant.images.startsWith('[') || restaurant.images.startsWith('{'))) {
-        try {
-          restaurant.images = JSON.parse(restaurant.images);
-        } catch (e) {
-          console.warn(`画像JSONのパースに失敗: ${e}`);
+      // imagesの処理を安全に行う
+      let processedImages = restaurant.images;
+      if (restaurant.images) {
+        if (typeof restaurant.images === 'string') {
+          try {
+            if (restaurant.images.startsWith('[') || restaurant.images.startsWith('{')) {
+              processedImages = JSON.parse(restaurant.images);
+            }
+          } catch (e) {
+            console.warn(`画像JSONのパースに失敗: ${restaurant.id}, ${e}`);
+            processedImages = restaurant.image_url ? [restaurant.image_url] : [];
+          }
         }
+      } else {
+        // imagesがないならimage_urlから配列を作成
+        processedImages = restaurant.image_url ? [restaurant.image_url] : [];
       }
 
       // 言語に応じた情報を設定
@@ -119,10 +138,14 @@ export async function GET(req: NextRequest) {
           name: restaurant.korean_name || restaurant.name,
           description: restaurant.korean_description || restaurant.description,
           address: restaurant.korean_address || restaurant.address,
+          images: processedImages
         };
       }
       
-      return restaurant;
+      return {
+        ...restaurant,
+        images: processedImages
+      };
     });
     
     // デバッグ: 画像URLをログに出力
@@ -134,11 +157,10 @@ export async function GET(req: NextRequest) {
           console.log(`  画像情報: ${typeof restaurant.images}`);
           if (Array.isArray(restaurant.images)) {
             console.log(`  画像配列: ${restaurant.images.length}枚`);
-            restaurant.images.forEach((img: string, i: number) => console.log(`    [${i}] ${img}`));
           } else if (typeof restaurant.images === 'string') {
             console.log(`  画像文字列: ${restaurant.images}`);
           } else {
-            console.log(`  画像オブジェクト: ${JSON.stringify(restaurant.images)}`);
+            console.log(`  画像オブジェクト: ${JSON.stringify(restaurant.images).substring(0, 100)}...`);
           }
         }
       });

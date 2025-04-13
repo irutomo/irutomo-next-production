@@ -268,13 +268,16 @@ export async function generateMetadata(
   
   if (!restaurant) {
     return {
-      title: '맛집을 찾을 수 없습니다 | 이루토모',
+      title: '식당을 찾을 수 없습니다 | 이루토모',
     };
   }
 
+  const name = restaurant.korean_name || restaurant.name;
+  const cuisine = restaurant.korean_cuisine || restaurant.cuisine || '';
+
   return {
-    title: `${restaurant.name} | 이루토모 - 한국인을 위한 일본 식당 예약 서비스`,
-    description: `${restaurant.name}의 상세 정보. ${restaurant.cuisine || ''} 맛집입니다.`,
+    title: `${name} | 이루토모 - 한국인을 위한 일본 식당 예약 서비스`,
+    description: `${name}의 상세 정보. ${cuisine}의 가게입니다.`,
   };
 }
 

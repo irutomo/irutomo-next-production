@@ -5,8 +5,8 @@ import { Restaurant } from '@/types/restaurant';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '맛집 목록 | 이루토모',
-  description: '일본의 인기 맛집 목록을 확인해 보세요',
+  title: '레스토랑 목록 | 이루토모',
+  description: '일본의 인기 레스토랑 목록을 확인해 보세요',
 };
 
 // レストラン情報をSupabaseから直接取得する関数

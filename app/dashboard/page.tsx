@@ -4,8 +4,8 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/app/lib/supabase";
 
 export const metadata = {
-  title: "마이 대시보드 | 이루토모 - 한국인을 위한 일본 식당 예약 서비스",
-  description: "이루토모의 마이 대시보드에서 레스토랑 예약과 리뷰 이력을 관리하세요.",
+  title: "マイダッシュボード | IRUTOMO - 日本の飲食店予約サービス",
+  description: "IRUTOMOのマイダッシュボードでレストランの予約やレビュー履歴を管理しましょう。",
 };
 
 export const revalidate = 0; // 常に最新データを取得

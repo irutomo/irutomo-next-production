@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   },
   description: '한국인을 위한 일본 식당 예약 서비스. 일본 현지인이 추천하는 맛집을 쉽게 예약하세요!',
   keywords: ['일본 식당', '예약', '맛집', '레스토랑', '일본 여행'],
+  icons: {
+    icon: '/favicons/favicon.png',
+    shortcut: '/favicons/favicon.png',
+    apple: '/favicons/favicon.png',
+  },
 };
 
 export const viewport = {

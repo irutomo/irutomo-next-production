@@ -170,7 +170,12 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     setIsSubmitting(true);
     
     try {
-      console.log("PayPal: 注文作成開始");
+      console.log("PayPal: 注文作成開始", {
+        amount: reservationAmount,
+        currency: 'JPY',
+        restaurantId,
+        baseUrl
+      });
       const response = await fetch(`${baseUrl}/api/paypal/create-order`, {
         method: 'POST',
         headers: {
@@ -183,11 +188,27 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
         }),
       });
 
-      const data = await response.json();
+      // レスポンスのステータスとテキストを取得
+      const responseStatus = response.status;
+      const responseStatusText = response.statusText;
+      let data;
+      
+      try {
+        data = await response.json();
+      } catch (parseError: unknown) {
+        console.error('JSONパースエラー:', parseError);
+        const rawText = await response.text();
+        console.error('生のレスポンステキスト:', rawText);
+        throw new Error(`レスポンスのパースに失敗しました: ${parseError instanceof Error ? parseError.message : '不明なエラー'}`);
+      }
       
       if (!response.ok) {
-        console.error('注文作成エラーレスポンス:', data);
-        throw new Error(data.message || '注文の作成に失敗しました');
+        console.error('注文作成エラーレスポンス:', {
+          status: responseStatus,
+          statusText: responseStatusText,
+          data
+        });
+        throw new Error(data?.message || `注文の作成に失敗しました (${responseStatus}: ${responseStatusText})`);
       }
       
       console.log("PayPal: 注文ID取得成功", data.orderId);

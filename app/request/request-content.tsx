@@ -149,6 +149,34 @@ export default function RequestContent() {
     }
   }, []);
 
+  // PayPal SDKのロード状態とエラーをデバッグ
+  useEffect(() => {
+    // ウィンドウのイベントリスナーを設定
+    if (typeof window !== 'undefined') {
+      // エラーのキャプチャ
+      const handleError = (event: ErrorEvent) => {
+        if (event.message && event.message.includes('PayPal')) {
+          console.error('PayPal関連のエラー:', event.message, event.error);
+        }
+      };
+
+      // ロード状態の監視
+      const handlePayPalLoad = () => {
+        if (window.paypal) {
+          console.log('PayPalがグローバルに利用可能になりました');
+        }
+      };
+
+      window.addEventListener('error', handleError);
+      window.addEventListener('load', handlePayPalLoad);
+
+      return () => {
+        window.removeEventListener('error', handleError);
+        window.removeEventListener('load', handlePayPalLoad);
+      };
+    }
+  }, []);
+
   // 入力値の変更処理
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -392,7 +420,15 @@ export default function RequestContent() {
                 </div>
               )}
               
-              <PayPalScriptProvider options={getPayPalOptions(language)}>
+              <PayPalScriptProvider 
+                options={{
+                  ...getPayPalOptions(language),
+                  'data-csp-nonce': 'true',
+                  'data-namespace': 'paypal_sdk',
+                  'data-page-type': 'checkout'
+                }}
+                deferLoading={false}
+              >
                 <PayPalButtons 
                   style={{ 
                     layout: "vertical",

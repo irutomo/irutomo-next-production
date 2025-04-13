@@ -56,6 +56,38 @@ const nextConfig = {
     ],
     domains: ['qgqebyunvamzfaaaypmd.supabase.co'],
   },
+  // CSPヘッダーの設定
+  async headers() {
+    // 開発環境ではCSPを適用しない
+    if (process.env.NODE_ENV === 'development') {
+      return [];
+    }
+
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: `
+              default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
+              script-src * 'unsafe-inline' 'unsafe-eval';
+              style-src * 'unsafe-inline';
+              img-src * data: blob:;
+              font-src * data:;
+              connect-src *;
+              frame-src *;
+              child-src *;
+              object-src 'none';
+              base-uri 'self';
+              form-action *;
+              media-src *;
+            `.replace(/\s{2,}/g, ' ').trim()
+          }
+        ]
+      }
+    ];
+  }
 };
 
 module.exports = nextConfig; 

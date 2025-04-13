@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
     // 環境変数の確認
     const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    const clientSecret = process.env.PAYPAL_CLIENT_SECRET || process.env.PAYPAL_SECRET_KEY;
+    const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
       console.error('PayPal認証情報が設定されていません');

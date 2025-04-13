@@ -71,18 +71,35 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: `
               default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
-              script-src * 'unsafe-inline' 'unsafe-eval';
+              script-src * 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://pay.google.com;
               style-src * 'unsafe-inline';
               img-src * data: blob:;
               font-src * data:;
-              connect-src *;
-              frame-src *;
-              child-src *;
+              connect-src * https://*.paypal.com https://*.paypalobjects.com;
+              frame-src * https://*.paypal.com https://pay.google.com;
+              child-src * https://*.paypal.com;
               object-src 'none';
               base-uri 'self';
-              form-action *;
+              form-action * https://*.paypal.com;
               media-src *;
+              report-uri /api/csp-report;
             `.replace(/\s{2,}/g, ' ').trim()
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true'
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET,POST,PUT,DELETE,OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
           }
         ]
       }

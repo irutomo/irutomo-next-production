@@ -22,6 +22,36 @@ export async function middleware(req: NextRequest) {
     const path = url.pathname;
     log(`リクエストパス: ${path}`);
     
+    // PayPal関連ページでCSPノンスを生成
+    if (path.includes('/restaurants/') || path.includes('/request')) {
+      // セキュアな乱数を生成してノンスとして使用
+      const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+      log('CSPノンス生成:', nonce);
+      
+      // クライアントが使用するためにリクエストヘッダーにノンスを設定
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-nonce', nonce);
+      
+      // レスポンスヘッダーにCSPを設定
+      res.headers.set(
+        'Content-Security-Policy',
+        `
+          default-src 'self';
+          script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://*.paypalobjects.com 'nonce-${nonce}';
+          style-src 'self' 'unsafe-inline' https://*.paypalobjects.com;
+          img-src 'self' data: blob: https://*.paypal.com https://*.paypalobjects.com;
+          font-src 'self' https://*.paypalobjects.com;
+          connect-src 'self' https://*.paypal.com https://*.paypalobjects.com;
+          frame-src 'self' https://*.paypal.com https://*.paypalobjects.com;
+          object-src 'none';
+          base-uri 'self';
+          form-action 'self' https://*.paypal.com;
+          frame-ancestors 'self';
+          upgrade-insecure-requests;
+        `.replace(/\s{2,}/g, ' ').trim()
+      );
+    }
+    
     // Supabaseクライアントの作成
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

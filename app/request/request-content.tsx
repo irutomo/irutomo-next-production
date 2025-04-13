@@ -93,8 +93,14 @@ const getPayPalOptions = (language: string) => {
     ...paypalConfig,
     clientId: paypalConfig.clientId || '',
     locale: language === 'ko' ? 'ko_KR' : 'ja_JP',
-    // Base64エンコード関連のエラーを回避するため、単純なタイムスタンプのみ使用
+    // サードパーティCookieの制限に対応するための設定
+    'data-csp-nonce': 'true',
+    'data-namespace': 'paypal_sdk',
+    'data-page-type': 'checkout',
+    // ChromeのCookie警告を抑制するためタイムスタンプはセッション内で一意になるようにする
     'data-timestamp': Math.floor(Date.now() / 1000).toString(),
+    // Partner Attribution IDを追加（任意）
+    'data-partner-attribution-id': 'IRUTOMO_JP',
   };
 };
 
@@ -423,9 +429,6 @@ export default function RequestContent() {
               <PayPalScriptProvider 
                 options={{
                   ...getPayPalOptions(language),
-                  'data-csp-nonce': 'true',
-                  'data-namespace': 'paypal_sdk',
-                  'data-page-type': 'checkout'
                 }}
                 deferLoading={false}
               >

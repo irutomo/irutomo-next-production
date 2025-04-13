@@ -101,6 +101,7 @@ export async function POST(request: Request) {
     
     // 予約情報をデータベースに保存
     try {
+      // Next.js 15.3対応:非同期サーバークライアントの作成
       const supabase = await createServerSupabaseClient();
       
       // テスト用のユーザーID

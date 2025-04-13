@@ -28,6 +28,7 @@ export const createServerSupabaseClient = async () => {
 
 // サーバーコンポーネント用のSupabaseクライアント (cookiesベース)
 export const createServerComponentClient = async () => {
+  // Next.js 15.3対応: cookies()を非同期で呼び出す
   const cookieStore = await cookies();
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

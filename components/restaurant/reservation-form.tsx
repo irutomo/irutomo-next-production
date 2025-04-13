@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import Script from 'next/script';
 
 interface ReservationFormProps {
   restaurantId: string;
@@ -48,6 +49,7 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
   const [language, setLanguage] = useState<Language>('ko'); // デフォルトを韓国語に設定
   const [baseUrl, setBaseUrl] = useState<string>('');
   const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalScriptLoaded, setPaypalScriptLoaded] = useState(false);
 
   useEffect(() => {
     // クライアントサイドでCookieを読み取る
@@ -61,31 +63,67 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
     setBaseUrl(currentUrl);
   }, []);
 
-  // PayPalスクリプトの読み込みを監視する別のuseEffect
+  // Next.js 15.3対応: PayPalスクリプトの読み込みを監視
   useEffect(() => {
-    // PayPalスクリプトが読み込まれたかどうかをチェックする関数
-    const checkPayPalReady = () => {
-      // windowとpaypalオブジェクトが存在するか確認
-      if (typeof window !== 'undefined' && window.paypal) {
-        console.log('PayPal SDKが読み込まれました');
-        setPaypalReady(true);
-        return true;
-      }
-      return false;
+    if (typeof window === 'undefined') return;
+
+    // PayPalスクリプトのロード状態を確認
+    const checkPayPalLoaded = () => {
+      return typeof window !== 'undefined' && 
+             typeof window.paypal !== 'undefined' && 
+             window.paypal !== null &&
+             typeof window.paypal.Buttons !== 'undefined';
     };
 
-    // 既に読み込み済みでない場合、ポーリングで読み込みを監視
-    if (!checkPayPalReady()) {
-      const interval = setInterval(() => {
-        if (checkPayPalReady()) {
-          clearInterval(interval);
-        }
-      }, 300);
-      
-      // クリーンアップ関数
-      return () => clearInterval(interval);
+    // 既にロードされているか確認
+    if (checkPayPalLoaded()) {
+      console.log('PayPal SDKは既に読み込まれています');
+      setPaypalScriptLoaded(true);
+      setPaypalReady(true);
+      return;
     }
-  }, []);
+
+    // スクリプトの動的読み込み
+    const loadPayPalScript = () => {
+      // 既存のスクリプトがあれば削除
+      const existingScript = document.getElementById('paypal-sdk');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+
+      const script = document.createElement('script');
+      script.id = 'paypal-sdk';
+      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=JPY&locale=${language === 'ko' ? 'ko_KR' : 'ja_JP'}&components=buttons`;
+      script.async = true;
+      script.onload = () => {
+        console.log('PayPal SDKが正常に読み込まれました');
+        setPaypalScriptLoaded(true);
+        setTimeout(() => {
+          if (checkPayPalLoaded()) {
+            setPaypalReady(true);
+          } else {
+            console.error('PayPal Buttons APIが見つかりません');
+          }
+        }, 100);
+      };
+      script.onerror = () => {
+        console.error('PayPal SDKの読み込みに失敗しました');
+        setPaypalError(language === 'ko' ? 'PayPal SDK 로딩에 실패했습니다' : 'PayPal SDKの読み込みに失敗しました');
+      };
+      
+      document.body.appendChild(script);
+    };
+
+    loadPayPalScript();
+
+    return () => {
+      // クリーンアップ - 必要に応じてスクリプトを削除
+      const script = document.getElementById('paypal-sdk');
+      if (script) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [language]);
 
   // バリデーションメッセージを言語に応じて設定
   const validationMessages: ValidationMessages = {
@@ -125,15 +163,31 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
 
   // PayPal設定のための関数
   const getPayPalOptions = () => {
+    // ユニークIDの生成（1時間ごとに更新）- これによりキャッシュの問題を回避
+    const uniqueId = Math.floor(Date.now() / 3600000).toString();
+    
     return {
       clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
       currency: "JPY",
       intent: "capture",
-      components: "buttons,funding-eligibility",
-      disableFunding: "paylater,venmo",
+      // コンポーネントを明示的に指定
+      components: "buttons",
+      // 利用できない支払い方法を無効化
+      disableFunding: "paylater,venmo,card",
+      // 言語設定
       locale: language === 'ko' ? 'ko_KR' : 'ja_JP',
-      // Base64エンコード関連のエラーを回避するため、単純なタイムスタンプのみ使用
-      'data-timestamp': Math.floor(Date.now() / 1000).toString(),
+      // サードパーティCookieの制限に対応するための設定（Next.js 15.3対応）
+      'data-csp-nonce': 'true',
+      'data-namespace': 'paypal_sdk',
+      'data-page-type': 'checkout',
+      'data-sdk-integration-source': 'nextjs_client',
+      // セッション内で一意のクライアントトークンを生成
+      'data-client-token': `nextjs_${uniqueId}`,
+      // デバッグモードを有効化
+      'debug': process.env.NODE_ENV === 'development',
+      // データ属性の設定
+      'data-react-paypal-script-provider': true,
+      dataSdkIntegrationSource: 'next_clientside',
     };
   };
 
@@ -286,6 +340,26 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
 
   return (
     <>
+      {/* Next.js 15.3対応: PayPal SDK読み込み方法を改善 */}
+      {!paypalScriptLoaded && (
+        <Script
+          id="paypal-script-loader"
+          strategy="afterInteractive"
+          src={`https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=JPY&locale=${language === 'ko' ? 'ko_KR' : 'ja_JP'}&components=buttons`}
+          onLoad={() => {
+            console.log('Script onLoad: PayPal SDK読み込み完了');
+            setPaypalScriptLoaded(true);
+            if (typeof window !== 'undefined' && window.paypal && typeof window.paypal !== 'undefined' && window.paypal.Buttons) {
+              setPaypalReady(true);
+            }
+          }}
+          onError={() => {
+            console.error('Script onError: PayPal SDKの読み込みに失敗');
+            setPaypalError(language === 'ko' ? 'PayPal SDK 로딩에 실패했습니다' : 'PayPal SDKの読み込みに失敗しました');
+          }}
+        />
+      )}
+      
       <form>
         <h3 className="text-xl font-bold text-gray-800 mb-4">
           {language === 'ko' ? '예약 정보 입력' : '予約情報入力'}
@@ -424,47 +498,54 @@ export function ReservationForm({ restaurantId, restaurantName, restaurantImage,
               </div>
             )}
             
-            <PayPalScriptProvider options={getPayPalOptions()}>
-              <PayPalButtons
-                style={{ 
-                  layout: "vertical",
-                  shape: "rect",
-                  label: "pay",
-                  height: 40
-                }}
-                disabled={isSubmitting}
-                fundingSource={undefined}
-                forceReRender={[reservationAmount, initialOptions.currency, language, Math.floor(Date.now() / 1000).toString()]}
-                createOrder={createOrder}
-                onApprove={onApprove}
-                onInit={() => {
-                  console.log('PayPalボタンが初期化されました');
-                  setPaypalReady(true);
-                }}
-                onError={(err) => {
-                  console.error('PayPalエラー:', err);
-                  setPaypalError(language === 'ko' ? '결제 중 오류가 발생했습니다. 다시 시도해 주세요.' : 'お支払い処理中にエラーが発生しました。もう一度お試しください。');
-                  setIsSubmitting(false);
-                }}
-                onCancel={() => {
-                  console.log('PayPal: キャンセルされました');
-                  setIsSubmitting(false);
-                }}
-              />
-            </PayPalScriptProvider>
+            {paypalScriptLoaded && (
+              <PayPalScriptProvider 
+                options={getPayPalOptions()} 
+                deferLoading={false}
+              >
+                {typeof window !== 'undefined' && window.paypal && typeof window.paypal !== 'undefined' && window.paypal.Buttons && (
+                  <PayPalButtons
+                    style={{ 
+                      layout: "vertical",
+                      shape: "rect",
+                      label: "pay",
+                      height: 40
+                    }}
+                    disabled={isSubmitting}
+                    fundingSource={undefined}
+                    forceReRender={[reservationAmount, language, Math.floor(Date.now() / 3600000).toString()]}
+                    createOrder={createOrder}
+                    onApprove={onApprove}
+                    onInit={() => {
+                      console.log('PayPalボタンが初期化されました');
+                      setPaypalReady(true);
+                    }}
+                    onError={(err) => {
+                      console.error('PayPalエラー:', err);
+                      setPaypalError(language === 'ko' ? '결제 중 오류가 발생했습니다. 다시 시도해 주세요.' : 'お支払い処理中にエラーが発生しました。もう一度お試しください。');
+                      setIsSubmitting(false);
+                    }}
+                    onCancel={() => {
+                      console.log('PayPal: キャンセルされました');
+                      setIsSubmitting(false);
+                    }}
+                  />
+                )}
+              </PayPalScriptProvider>
+            )}
             
             {/* 予約可否とリロードの案内 */}
             <div className="mt-3 text-sm text-center text-gray-700">
               <p className={language === 'ko' ? 'block' : 'hidden'}>
                 <span className="text-[#FFA500] font-medium">예약불가시에도 100% 환불!</span> 우선은 예약합시다!👀
               </p>
-              <p className={language === 'ko' ? 'block' : 'hidden'}>
+              <p className={language === 'ko' ? 'hidden md:block' : 'hidden'}>
                 버튼이 나와 있지 않은 경우 페이지를 다시 로드해 주세요!
               </p>
               <p className={language === 'ja' ? 'block' : 'hidden'}>
                 <span className="text-[#FFA500] font-medium">予約不可時も100%返金!</span> まずは予約しましょう!👀
               </p>
-              <p className={language === 'ja' ? 'block' : 'hidden'}>
+              <p className={language === 'ja' ? 'hidden md:block' : 'hidden'}>
                 ボタンが表示されていない場合は、ページを更新してください!
               </p>
             </div>

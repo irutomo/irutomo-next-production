@@ -9,8 +9,4 @@ export const paypalConfig = {
   intent: 'capture',
   components: 'buttons',
   disableFunding: 'paylater,venmo',
-  'data-csp-nonce': 'true',
-  'data-page-type': 'checkout',
-  'data-namespace': 'paypal_sdk',
-  'enable-funding': 'venmo,paylater',
 }; 

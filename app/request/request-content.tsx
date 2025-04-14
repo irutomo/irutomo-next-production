@@ -88,19 +88,10 @@ interface FormErrors {
 
 // PayPal関連の追加設定
 const getPayPalOptions = (language: string) => {
-  // 必ずstring型のclientIdを返すようにする
   return {
     ...paypalConfig,
-    clientId: paypalConfig.clientId || '',
+    clientId: PAYPAL_CLIENT_ID || '',
     locale: language === 'ko' ? 'ko_KR' : 'ja_JP',
-    // サードパーティCookieの制限に対応するための設定
-    'data-csp-nonce': 'true',
-    'data-namespace': 'paypal_sdk',
-    'data-page-type': 'checkout',
-    // ChromeのCookie警告を抑制するためタイムスタンプはセッション内で一意になるようにする
-    'data-timestamp': Math.floor(Date.now() / 1000).toString(),
-    // Partner Attribution IDを追加（任意）
-    'data-partner-attribution-id': 'IRUTOMO_JP',
   };
 };
 
@@ -127,32 +118,19 @@ export default function RequestContent() {
   // 送信成功状態
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(true);
   
   // PayPalスクリプト読み込み状態の監視
   useEffect(() => {
-    // PayPalスクリプトが既に読み込まれているか確認
-    const checkScriptLoaded = () => {
-      if (typeof window !== 'undefined' && window.paypal) {
-        console.log("PayPal SDKが読み込まれました");
-        setScriptLoaded(true);
-        return true;
-      }
-      return false;
-    };
-
-    // 初期チェック
-    if (!checkScriptLoaded()) {
-      // スクリプトがまだ読み込まれていない場合、定期的にチェック
-      const interval = setInterval(() => {
-        if (checkScriptLoaded()) {
-          clearInterval(interval);
-        }
-      }, 500);
-      
-      // クリーンアップ
-      return () => clearInterval(interval);
-    }
+    // ローディング表示は最初は非表示（scriptLoadedはtrueで初期化）
+    
+    // PayPalが5秒経過しても初期化されない場合のフォールバック
+    const timer = setTimeout(() => {
+      console.log("PayPal初期化確認タイマー実行");
+      setScriptLoaded(true);
+    }, 5000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // PayPal SDKのロード状態とエラーをデバッグ
@@ -415,74 +393,100 @@ export default function RequestContent() {
             
             {/* PayPalボタン */}
             <div className="mt-6 relative min-h-[40px]">
-              {/* 読み込み中の表示 */}
-              {!scriptLoaded && (
-                <div className="flex items-center justify-center py-4">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-[#FFA500] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-                    <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                      {t.loading}
-                    </span>
-                  </div>
-                </div>
-              )}
-              
               <PayPalScriptProvider 
-                options={{
-                  ...getPayPalOptions(language),
-                }}
+                options={getPayPalOptions(language)}
                 deferLoading={false}
               >
-                <PayPalButtons 
-                  style={{ 
-                    layout: "vertical",
-                    shape: "rect",
-                    label: "pay",
-                    height: 40
-                  }}
-                  disabled={false}
-                  fundingSource={undefined}
-                  forceReRender={[PAYMENT_AMOUNT, paypalConfig.currency, language, Math.floor(Date.now() / 1000).toString()]}
-                  onInit={() => {
-                    console.log("PayPalボタンが初期化されました");
-                    setScriptLoaded(true);
-                  }}
-                  createOrder={(data, actions) => {
-                    return actions.order.create({
-                      intent: "CAPTURE",
-                      purchase_units: [
-                        {
-                          amount: {
-                            currency_code: "JPY",
-                            value: PAYMENT_AMOUNT.toString()
-                          },
-                          description: `${formData.restaurantName || "食堂"} - ${formData.numberOfPeople || "1"}名様`
+                {!scriptLoaded && (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-[#FFA500] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                      <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                        {t.loading}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className={!scriptLoaded ? 'hidden' : 'block'}>
+                  <PayPalButtons 
+                    style={{ 
+                      layout: "vertical",
+                      shape: "rect",
+                      height: 40
+                    }}
+                    disabled={false}
+                    fundingSource={undefined}
+                    forceReRender={[PAYMENT_AMOUNT, paypalConfig.currency, language]}
+                    createOrder={(data, actions) => {
+                      try {
+                        if (!actions.order) {
+                          console.error("actions.orderが存在しません");
+                          setPaymentError(t.paymentError);
+                          return Promise.reject("PayPal actions.order not available");
                         }
-                      ],
-                      application_context: {
-                        shipping_preference: "NO_SHIPPING"
+
+                        return actions.order.create({
+                          intent: "CAPTURE",
+                          purchase_units: [
+                            {
+                              amount: {
+                                currency_code: "JPY",
+                                value: PAYMENT_AMOUNT.toString()
+                              },
+                              description: `${formData.restaurantName || "食堂"} - ${formData.numberOfPeople || "1"}名様`
+                            }
+                          ],
+                          application_context: {
+                            shipping_preference: "NO_SHIPPING"
+                          }
+                        }).catch(err => {
+                          console.error("注文作成中にエラー:", err);
+                          setPaymentError(t.paymentError);
+                          return Promise.reject(err);
+                        });
+                      } catch (err) {
+                        console.error("createOrderでエラーが発生:", err);
+                        setPaymentError(t.paymentError);
+                        return Promise.reject(err);
                       }
-                    });
-                  }}
-                  onApprove={(data, actions) => {
-                    if (!actions.order) {
-                      console.error("PayPal actions.orderが利用できません");
-                      return Promise.reject("PayPal actions.order not available");
-                    }
-                    
-                    return actions.order.capture().then((details) => {
-                      console.log("決済が完了しました:", details);
-                      const payerName = details.payer?.name?.given_name || "お客様";
-                      console.log("Transaction completed by: " + payerName);
-                      console.log("Transaction ID: " + details.id);
-                      setIsSubmitted(true);
-                      setPaymentError(null);
-                    });
-                  }}
-                  onError={(err) => {
-                    console.error("PayPal決済エラー:", err);
-                    setPaymentError(t.paymentError);
-                  }}
-                />
+                    }}
+                    onInit={(data, actions) => {
+                      console.log("PayPalボタンが初期化されました");
+                      // 確実に表示状態にする
+                      setScriptLoaded(true);
+                      return Promise.resolve();
+                    }}
+                    onApprove={(data, actions) => {
+                      if (!actions.order) {
+                        console.error("PayPal actions.orderが利用できません");
+                        return Promise.reject("PayPal actions.order not available");
+                      }
+                      
+                      return actions.order.capture().then((details) => {
+                        console.log("決済が完了しました:", details);
+                        const payerName = details.payer?.name?.given_name || "お客様";
+                        console.log("Transaction completed by: " + payerName);
+                        console.log("Transaction ID: " + details.id);
+                        setIsSubmitted(true);
+                        setPaymentError(null);
+                      });
+                    }}
+                    onError={(err) => {
+                      console.error("PayPal決済エラー:", err);
+                      try {
+                        // エラーオブジェクトの詳細情報をログに記録
+                        console.error("エラー詳細:", JSON.stringify({
+                          name: err.name,
+                          message: err.message,
+                          stack: err.stack,
+                        }));
+                      } catch (logError) {
+                        console.error("エラーログ記録中にエラー:", logError);
+                      }
+                      setPaymentError(t.paymentError);
+                    }}
+                  />
+                </div>
               </PayPalScriptProvider>
               
               {paymentError && (

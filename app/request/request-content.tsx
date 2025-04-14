@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/language-context';
 import { useRouter } from 'next/navigation';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { PAYPAL_CLIENT_ID, PAYPAL_MODE, PAYMENT_AMOUNT, paypalConfig } from './paypalConfig';
+import { sendAdminNotificationEmail } from '@/lib/utils';
 
 // 言語データの定義
 const translations = {
@@ -467,6 +468,31 @@ export default function RequestContent() {
                         const payerName = details.payer?.name?.given_name || "お客様";
                         console.log("Transaction completed by: " + payerName);
                         console.log("Transaction ID: " + details.id);
+                        
+                        // 管理者通知用のAPIエンドポイントを呼び出す
+                        fetch('/api/notifications/admin-email', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({
+                            type: 'request',
+                            orderId: details.id,
+                            data: formData,
+                            language: language
+                          })
+                        })
+                        .then(response => {
+                          if (response.ok) {
+                            console.log("管理者通知APIコール成功");
+                          } else {
+                            console.error("管理者通知API呼び出しエラー:", response.statusText);
+                          }
+                        })
+                        .catch(err => {
+                          console.error("管理者通知APIエラー:", err);
+                        });
+                        
                         setIsSubmitted(true);
                         setPaymentError(null);
                       });

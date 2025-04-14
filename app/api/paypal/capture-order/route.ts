@@ -137,6 +137,53 @@ export async function POST(request: Request) {
         );
       }
 
+      // レストラン情報の取得（メールに含めるため）
+      let restaurantName = '指定なし';
+      if (reservationData.restaurantId) {
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('name')
+          .eq('id', reservationData.restaurantId)
+          .single();
+
+        if (restaurant) {
+          restaurantName = restaurant.name;
+        }
+      }
+
+      // 管理者に通知メールを送信
+      try {
+        // 現在のURL（オリジン）を取得
+        const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        
+        // 管理者通知APIを呼び出す
+        const notificationResponse = await fetch(`${origin}/api/notifications/admin-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'reservation',
+            orderId: captureData.id,
+            data: {
+              ...reservationData,
+              restaurantName: restaurantName
+            },
+            // 言語設定を取得（ユーザーの入力言語から推測）
+            language: /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(reservationData.name) ? 'ko' : 'ja'
+          }),
+        });
+
+        if (notificationResponse.ok) {
+          console.log('管理者への通知メール送信API呼び出し成功');
+        } else {
+          console.error('管理者通知API呼び出しエラー:', await notificationResponse.text());
+        }
+      } catch (emailError) {
+        // メール送信エラーはログに記録するが、予約処理自体は続行する
+        console.error('管理者通知API呼び出しエラー:', emailError);
+      }
+
       return NextResponse.json({
         success: true,
         message: '支払いと予約が完了しました',

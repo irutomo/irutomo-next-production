@@ -50,6 +50,12 @@ const restaurants = [
     rating: 3.22,
     price_range: '적당한 가격',
     opening_hours: '11:30〜22:00',
+    image_url: '/images/restaurants/restaurant1_main.jpg',
+    images: JSON.stringify([
+      '/images/restaurants/restaurant1_1.jpg',
+      '/images/restaurants/restaurant1_2.jpg',
+      '/images/restaurants/restaurant1_3.jpg'
+    ]),
     google_maps_link: 'https://www.google.com/maps/search/?api=1&query=京都府京都市中京区西魚屋町594',
     has_vegetarian_options: false,
     has_english_menu: true,
@@ -74,6 +80,12 @@ const restaurants = [
     rating: 3.62,
     price_range: '적당한 가격',
     opening_hours: '16:00〜24:00',
+    image_url: '/images/restaurants/restaurant2_main.jpg',
+    images: JSON.stringify([
+      '/images/restaurants/restaurant2_1.jpg',
+      '/images/restaurants/restaurant2_2.jpg',
+      '/images/restaurants/restaurant2_3.jpg'
+    ]),
     google_maps_link: 'https://maps.app.goo.gl/orBCGb1LWE9gy7Js8?g_st=com.google.maps.preview.copy',
     has_vegetarian_options: false,
     has_english_menu: true,
@@ -98,6 +110,12 @@ const restaurants = [
     rating: 3.67,
     price_range: '고급 식당',
     opening_hours: '11:00〜20:30',
+    image_url: '/images/restaurants/restaurant3_main.jpg',
+    images: JSON.stringify([
+      '/images/restaurants/restaurant3_1.jpg',
+      '/images/restaurants/restaurant3_2.jpg',
+      '/images/restaurants/restaurant3_3.jpg'
+    ]),
     google_maps_link: 'https://maps.app.goo.gl/V8R7rv6adrjuJep67?g_st=com.google.maps.preview.copy',
     has_vegetarian_options: false,
     has_english_menu: true,

@@ -5,6 +5,7 @@ import { Footer } from '@/components/footer';
 import { Toaster } from 'react-hot-toast';
 import { LanguageProvider } from '@/contexts/language-context';
 import { ChannelTalk } from '@/components/channel-talk';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: {
@@ -67,6 +68,7 @@ export default function RootLayout({
             pluginKey="abaa78b2-9774-4cc7-9f35-e2d2b3327b0a" 
             accessSecret="914749c0acece8ec4d9854b70f1df609" 
           />
+          <Analytics />
         </LanguageProvider>
       </body>
     </html>

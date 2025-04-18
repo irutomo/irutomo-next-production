@@ -28,7 +28,7 @@ function isValidImageUrl(url: string): boolean {
     return true;
   } catch (e) {
     // URLの構築に失敗した場合は無効
-    console.warn('無効なURL:', url, e);
+    console.warn('無効なURL:', url);
     return false;
   }
 }
@@ -39,8 +39,28 @@ function preloadImage(src: string): Promise<void> {
     const img = new globalThis.Image();
     img.src = src;
     img.onload = () => resolve();
-    img.onerror = () => reject(new Error(`画像の読み込みに失敗しました: ${src}`));
+    img.onerror = (e) => {
+      console.error(`画像の読み込みに失敗しました: ${src}`, e);
+      reject(new Error(`画像の読み込みに失敗しました: ${src}`));
+    }
   });
+}
+
+// 安全にJSON文字列をパースする関数
+function safeJsonParse(jsonString: string): any[] | null {
+  try {
+    if (!jsonString) return null;
+    if (!jsonString.trim().startsWith('[')) return null;
+    
+    const parsed = JSON.parse(jsonString);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+    return null;
+  } catch (e) {
+    console.error('JSON解析エラー:', e);
+    return null;
+  }
 }
 
 export function RestaurantImageSlider({ images, alt }: RestaurantImageSliderProps) {
@@ -65,36 +85,36 @@ export function RestaurantImageSlider({ images, alt }: RestaurantImageSliderProp
     }
   }, [images]);
   
+  // 画像データの処理
   if (Array.isArray(images)) {
     // 配列の場合は有効なURLのみをフィルタリング
     imagesArray = images.filter(img => isValidImageUrl(img));
+    console.log('配列形式の画像数:', imagesArray.length);
   } else if (typeof images === 'string') {
     // 文字列の場合、JSON配列かどうかを判定
-    if (images.trim().startsWith('[') && images.trim().endsWith(']')) {
-      try {
-        const parsed = JSON.parse(images);
-        if (Array.isArray(parsed)) {
-          imagesArray = parsed.filter(img => isValidImageUrl(img));
-        } else {
-          // 単一の画像URL
-          imagesArray = isValidImageUrl(images) ? [images] : [];
-        }
-      } catch (e) {
-        console.error('画像JSON解析エラー:', e);
-        // 解析に失敗した場合は、単一のURLとして処理
-        imagesArray = isValidImageUrl(images) ? [images] : [];
-      }
+    const parsedImages = safeJsonParse(images);
+    if (parsedImages) {
+      imagesArray = parsedImages.filter(img => isValidImageUrl(img));
+      console.log('JSON文字列からパースした画像数:', imagesArray.length);
     } else {
-      // 通常の文字列でURLとして有効な場合
-      imagesArray = isValidImageUrl(images) ? [images] : [];
+      // 単一の画像URL
+      if (isValidImageUrl(images)) {
+        imagesArray = [images];
+        console.log('単一の画像URLを使用');
+      } else {
+        console.warn('無効な画像URL文字列:', images);
+      }
     }
   } else if (images && typeof images === 'object') {
     // オブジェクト形式の場合（Supabase JSONBデータなど）
     try {
       const stringified = JSON.stringify(images);
-      const parsed = JSON.parse(stringified);
-      if (Array.isArray(parsed)) {
-        imagesArray = parsed.filter(img => isValidImageUrl(img));
+      console.log('オブジェクト形式の画像データ:', stringified.substring(0, 100));
+      
+      const parsedImages = safeJsonParse(stringified);
+      if (parsedImages) {
+        imagesArray = parsedImages.filter(img => isValidImageUrl(img));
+        console.log('オブジェクトからパースした画像数:', imagesArray.length);
       }
     } catch (e) {
       console.error('オブジェクト形式の画像データ処理エラー:', e);
@@ -103,6 +123,7 @@ export function RestaurantImageSlider({ images, alt }: RestaurantImageSliderProp
   
   // 配列が空の場合はプレースホルダーを使用
   if (!imagesArray.length) {
+    console.log('有効な画像がないため、プレースホルダー使用');
     imagesArray = [placeholderImage];
   }
 

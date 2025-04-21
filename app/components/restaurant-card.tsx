@@ -34,12 +34,11 @@ export default function RestaurantCard({ restaurant, translations }: RestaurantC
       <Link href={`/restaurants/${restaurant.id}`} className="block">
         <div className="relative h-48 w-full">
           <Image
-            src={Array.isArray(restaurant.images) && restaurant.images.length > 0 ? String(restaurant.images[0]) : restaurant.image_url || '/images/restaurants/placeholder.jpg'}
+            src={restaurant.image_url || '/images/restaurants/placeholder.jpg'}
             alt={language === 'ko' ? restaurant.korean_name || restaurant.name : restaurant.name}
             fill
             className="object-cover"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            onError={(e) => console.error('Image load error:', restaurant.name, Array.isArray(restaurant.images) ? restaurant.images[0] : null)}
           />
           {/* 評価バッジ */}
           <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded-full text-sm font-bold flex items-center">

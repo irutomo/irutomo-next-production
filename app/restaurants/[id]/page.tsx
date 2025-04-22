@@ -269,15 +269,36 @@ export async function generateMetadata(
   if (!restaurant) {
     return {
       title: '식당을 찾을 수 없습니다 | 이루토모',
+      description: '요청하신 레스토랑 정보를 찾을 수 없습니다. 다른 맛집을 탐색해보세요.',
     };
   }
 
   const name = restaurant.korean_name || restaurant.name;
   const cuisine = restaurant.korean_cuisine || restaurant.cuisine || '';
+  const location = restaurant.location || '';
+  const description = restaurant.korean_description || restaurant.description || '';
+  const address = restaurant.korean_address || restaurant.address || '';
+  const rating = restaurant.rating ? `평점 ${restaurant.rating}점` : '';
+  const price = restaurant.price_range || '';
+
+  // 詳細なメタディスクリプションを作成
+  const metaDescription = `${name}는 ${location}에 위치한 ${cuisine} 레스토랑입니다. ${description} ${rating && `${rating}의 평가를 받고 있으며`} ${price && `가격대는 ${price}입니다.`} 이루토모를 통해 쉽게 예약하고 일본 현지 맛집을 경험하세요.`;
+  
+  // レストラン名と住所を含めたキーワード
+  const keywords = [
+    name, 
+    cuisine, 
+    `${location} 맛집`, 
+    '일본 레스토랑', 
+    '일본 맛집', 
+    '일본 현지인 추천', 
+    '일본 식당 예약'
+  ].filter(Boolean);
 
   return {
     title: `${name} | 이루토모 - 한국인을 위한 일본 식당 예약 서비스`,
-    description: `${name}의 상세 정보. ${cuisine}의 가게입니다.`,
+    description: metaDescription,
+    keywords: keywords
   };
 }
 

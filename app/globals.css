@@ -227,4 +227,18 @@
   .img-responsive {
     @apply w-full h-auto object-cover;
   }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* 必要に応じて他のグローバルスタイル */
+body {
+  @apply bg-gray-50 text-gray-900;
 } 

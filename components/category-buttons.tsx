@@ -28,7 +28,7 @@ export function CategoryButtons() {
   const categories = [
     { icon: '🍜', name: t.popularRestaurants, href: '/restaurants' },
     { icon: '📱', name: t.howToUse, href: '/how-to-use' },
-    { icon: '🗺️', name: t.japanInfo, href: 'https://www.instagram.com/irutomo__kr?igshid=MWtmdmF0bHc4OXJ6bw%3D%3D&utm_source=qr', external: true },
+    { icon: '🗺️', name: t.japanInfo, href: '/japan-info' },
     { icon: '💬', name: t.guide, href: 'https://irutomops.studio.site', external: true },
     { icon: '❓', name: t.faq, href: '/faq' },
   ];

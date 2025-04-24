@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { GlobalHeader } from '@/components/ui/header';
 import { Footer } from '@/components/footer';
@@ -32,6 +33,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const KAKAO_JAVASCRIPT_KEY = 'a8f58a3a8847912f87cd821f67a3ea68';
+
   return (
     <html lang="ko">
       <head>
@@ -70,6 +73,25 @@ export default function RootLayout({
           />
           <Analytics />
         </LanguageProvider>
+
+        <Script
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+          integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        <Script id="kakao-init" strategy="afterInteractive">
+          {`
+            try {
+              if (window.Kakao && !window.Kakao.isInitialized()) {
+                window.Kakao.init('${KAKAO_JAVASCRIPT_KEY}');
+                console.log('Kakao SDK initialized');
+              }
+            } catch (e) {
+              console.error('Failed to initialize Kakao SDK:', e);
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

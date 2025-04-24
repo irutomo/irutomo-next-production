@@ -7,10 +7,6 @@
     "web": {
       "command": "env",
       "args": ["BRAVE_API_KEY=YOUR_API_KEY_HERE", "npx", "@modelcontextprotocol/server-brave-search"]
-    },
-    "code-research": {
-      "command": "node",
-      "args": ["/Users/ori/cursorprojects/irutomo-nextjs/code-research-mcp-server/build/index.js"]
     }
   }
 } 

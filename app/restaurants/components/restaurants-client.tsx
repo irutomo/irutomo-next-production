@@ -74,16 +74,18 @@ export default function RestaurantsClient({ restaurants }: { restaurants: Restau
   }, [restaurants, locationFilter]);
   
   return (
-    <main className="max-w-7xl mx-auto bg-[#F8F8F8] min-h-screen pb-20">
+    <main className="bg-[#F8F8F8] min-h-screen pb-20">
       {/* シンプルなヘッダーに変更 */}
-      <header className="flex items-center p-4 bg-white sticky top-0 z-50 shadow-custom">
-        <Link href="/" className="mr-4">
-          <ArrowLeft className="h-6 w-6 text-gray-600" />
-        </Link>
-        <h1 className="text-xl font-bold text-[#FFA500]">{t.pageTitle}</h1>
+      <header className="bg-white sticky top-0 z-50 shadow-custom w-full">
+        <div className="container-responsive flex items-center p-4">
+          <Link href="/" className="mr-4">
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </Link>
+          <h1 className="text-xl font-bold text-[#FFA500]">{t.pageTitle}</h1>
+        </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
+      <div className="container-responsive py-6 space-y-6">
         {/* フィルター */}
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex space-x-2 overflow-x-auto pb-2">

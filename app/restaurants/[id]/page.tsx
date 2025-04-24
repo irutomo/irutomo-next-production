@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { RestaurantImageSlider } from '../../../components/restaurant/restaurant-image-slider';
 import { ReservationForm } from '../../../components/restaurant/reservation-form';
 import { Database } from '@/lib/database.types';
+import { ArrowLeft } from 'lucide-react';
 
 // SVGコンポーネント
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -422,26 +423,26 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <main>
-      <div className="max-w-md mx-auto">
-        {/* 戻るボタン */}
-        <div className="p-4">
-          <Link href="/restaurants" className="flex items-center text-gray-600 hover:text-[#00CBB3] transition-colors">
-            <svg className="mr-1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            {language === 'ko' ? '맛집 리스트로 돌아가기' : '食堂一覧に戻る'}
+    <main className="bg-[#F8F8F8] min-h-screen pb-20">
+      {/* ヘッダー */}
+      <header className="bg-white sticky top-0 z-50 shadow-custom w-full">
+        <div className="container-responsive flex items-center p-4">
+          <Link href="/restaurants" className="mr-4">
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
+          <h1 className="text-xl font-bold text-[#FFA500]">
+            {language === 'ko' ? '맛집 상세정보' : 'レストラン詳細'}
+          </h1>
         </div>
+      </header>
 
+      <div className="container-responsive py-6 space-y-6">
         {/* レストラン写真スライダー */}
-        <div className="mx-4">
-          <RestaurantImageSlider images={restaurantData.images} alt={restaurantData.name} />
-        </div>
+        <RestaurantImageSlider images={restaurantData.images} alt={restaurantData.name} />
 
         {/* レストラン情報 */}
-        <div className="bg-white rounded-lg shadow-sm mx-4 mt-4 p-4">
-          <h1 className="text-xl font-bold mb-2 bg-white/80 backdrop-blur-sm p-2 rounded text-gray-900">
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <h1 className="text-xl font-bold mb-2 text-gray-900">
             {restaurantData.name}
           </h1>
           
@@ -479,7 +480,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* 予約フォーム */}
-        <div className="mt-6 mx-4 mb-20">
+        <div className="bg-white rounded-lg shadow-sm p-4">
           <ReservationForm 
             restaurantId={restaurantData.id}
             restaurantName={restaurantData.name}

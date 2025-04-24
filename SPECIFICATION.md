@@ -32,15 +32,24 @@
 project/
 ├── app/                   # Next.js Appディレクトリ
 │   ├── api/               # API エンドポイント
+│   │   ├── auth/          # 認証関連API
+│   │   ├── paypal/        # PayPal決済API
+│   │   ├── csp-report/    # CSP違反レポートAPI
+│   │   ├── restaurants/   # レストラン関連API
+│   │   └── reservations/  # 予約管理API
 │   ├── auth/              # 認証関連ページ
 │   ├── dashboard/         # ダッシュボード
+│   │   ├── reservations/  # 予約管理画面
+│   │   └── profile/       # プロフィール管理画面
 │   ├── faq/               # FAQページ
 │   ├── how-to-use/        # 予約方法ページ
+│   ├── japan-info/        # 日本情報ページ
 │   ├── privacy-policy/    # プライバシーポリシーページ
 │   ├── request/           # リクエストフォームページ
 │   ├── reservation/       # 予約管理ページ
 │   ├── restaurants/       # レストラン一覧・詳細ページ
 │   ├── reviews/           # レビューページ
+│   ├── search/            # 検索ページ
 │   ├── service/           # サービス紹介ページ
 │   ├── terms/             # 利用規約ページ
 │   ├── write-review/      # レビュー投稿ページ
@@ -48,15 +57,57 @@ project/
 │   └── page.tsx           # メインページ
 ├── components/            # 再利用可能なコンポーネント
 │   ├── restaurant/        # レストラン関連コンポーネント
-│   └── ui/                # UIコンポーネント
+│   ├── ui/                # UIコンポーネント
+│   ├── hero-section.tsx   # ヒーローセクションコンポーネント
+│   ├── category-buttons.tsx # カテゴリーボタンコンポーネント
+│   ├── popular-restaurants.tsx # 人気レストランコンポーネント
+│   ├── service-features.tsx # サービス特徴コンポーネント
+│   ├── customer-reviews.tsx # お客様の声コンポーネント
+│   ├── cta-banner.tsx     # CTAバナーコンポーネント
+│   ├── global-header.tsx  # グローバルヘッダーコンポーネント
+│   └── footer.tsx         # フッターコンポーネント
 ├── contexts/              # コンテキストプロバイダー
 │   └── language-context.tsx # 言語切り替えコンテキスト
 ├── hooks/                 # カスタムフック
+│   ├── use-language.ts    # 言語フック
+│   └── use-restaurants.ts # レストランデータフック
 ├── lib/                   # ユーティリティ関数
+│   ├── supabase-server.ts # サーバーサイドSupabaseクライアント
+│   ├── supabase.ts        # クライアントサイドSupabaseクライアント
+│   └── utils.ts           # 汎用ユーティリティ関数
 ├── public/                # 静的アセット
-│   └── images/            # 画像ファイル
-└── supabase/              # Supabase関連ファイル
-    └── migrations/        # データベースマイグレーション
+│   ├── icons/             # アイコンファイル
+│   │   ├── icon-192x192.png # PWAアイコン(192x192)
+│   │   ├── icon-512x512.png # PWAアイコン(512x512)
+│   │   └── apple-touch-icon.png # Appleタッチアイコン
+│   ├── images/            # 画像ファイル
+│   ├── og/                # OG画像ファイル
+│   ├── favicons/          # ファビコンファイル
+│   ├── manifest.json      # PWAマニフェスト
+│   ├── service-worker.js  # サービスワーカー
+│   ├── clear-cache.js     # キャッシュクリアスクリプト
+│   ├── robots.txt         # ロボット制御ファイル
+│   └── sitemap.xml        # サイトマップ
+├── tests/                 # テストファイル
+│   └── e2e/               # E2Eテスト
+├── supabase/              # Supabase関連ファイル
+│   └── migrations/        # データベースマイグレーション
+├── deployment/            # デプロイメント関連ファイル
+├── .cursor/               # Cursor IDE設定
+├── .vscode/               # VSCode設定
+├── .env                   # 環境変数
+├── .env.development       # 開発環境変数
+├── .env.production        # 本番環境変数
+├── .env.test              # テスト環境変数
+├── .eslintrc.json         # ESLint設定
+├── next.config.js         # Next.js設定
+├── tailwind.config.js     # Tailwind CSS設定
+├── tailwind.config.ts     # Tailwind CSS型定義
+├── tsconfig.json          # TypeScript設定
+├── package.json           # パッケージ設定
+├── README.md              # プロジェクト説明
+├── SPECIFICATION.md       # 仕様書
+└── GUIDELINES.md          # 開発ガイドライン
 ```
 
 ### 3.2 主要ページ
@@ -431,8 +482,172 @@ const testimonials = [
    - Supabaseのセキュリティ設定の最適化
    - 環境変数による機密情報の保護
 
+## 13. インフラストラクチャと品質保証
+
+### 13.1 パフォーマンス最適化
+
+1. **Next.js設定の最適化**
+   - サーバーミニフィケーションの有効化
+   - パッケージインポートの最適化（react-icons, lucide-react, framer-motion, date-fns）
+   - SVGファイルの最適な取り扱い（@svgr/webpack）
+   - 画像フォーマットとしてWebPを優先使用
+
+2. **画像最適化**
+   - `next/image`コンポーネントによる自動最適化
+   - 画像のキャッシュTTLを3600秒に設定
+   - LCPに影響する重要な画像に`priority`属性を使用
+   - 画像のリモートパターン設定による安全な画像読み込み
+
+3. **キャッシュ戦略**
+   - Service Workerによるキャッシュ管理
+   - オフライン対応のためのキャッシュファースト戦略
+   - 動的コンテンツのネットワークファースト戦略
+   - APIレスポンスの適切なキャッシュ
+
+4. **バンドル最適化**
+   - Tree-shakingによる未使用コードの削除
+   - コンポーネントの動的インポート
+   - `next/dynamic`を使用した必要に応じたコンポーネントの読み込み
+
+### 13.2 セキュリティ強化
+
+1. **CSPヘッダー設定**
+   - コンテンツセキュリティポリシーの詳細な設定
+   - CSP違反の報告エンドポイント（`/api/csp-report`）
+   - CSP違反の詳細ロギングとモニタリング
+
+2. **セキュリティヘッダー**
+   - X-Content-Type-Options: nosniff
+   - X-XSS-Protection: 1; mode=block
+   - X-Frame-Options: SAMEORIGIN
+   - Referrer-Policy: strict-origin-when-cross-origin
+   - Permissions-Policy: camera=(), microphone=(), geolocation=(self), interest-cohort=()
+
+3. **認証フロー**
+   - Supabase認証の安全な実装
+   - JWTトークン管理
+   - クッキーベースのセッション管理
+
+4. **環境変数管理**
+   - 開発環境と本番環境の分離
+   - 機密情報の適切な管理
+   - .env.development, .env.production, .env.testの適切な区分け
+
+### 13.3 コード品質と標準化
+
+1. **ESLint設定**
+   - next/core-web-vitalsとnext/typescriptの拡張
+   - 未使用変数の警告（no-unused-vars: warn）
+   - コンソール出力の制限（no-console: warn, allow: ["warn", "error"]）
+   - Reactフックのルール強制（react-hooks/rules-of-hooks: error）
+   - 依存配列の検証（react-hooks/exhaustive-deps: warn）
+
+2. **TypeScript型安全性**
+   - 厳密なnull/undefinedチェック
+   - 適切なインターフェース定義
+   - レスポンスデータの型付け
+   - APIルートの型定義
+
+3. **コンポーネント設計原則**
+   - 単一責任の原則
+   - 分離された関心事
+   - 再利用可能なコンポーネント
+   - 適切なprops渡し
+
+### 13.4 テスト戦略
+
+1. **ユニットテスト**
+   - Vitestを使用したコンポーネントテスト
+   - MSWによるAPIモック
+   - React Testing Libraryによるコンポーネントテスト
+
+2. **E2Eテスト**
+   - Playwrightによるエンドツーエンドテスト
+   - クロスブラウザテスト
+   - モバイル対応テスト
+
+3. **統合テスト**
+   - APIエンドポイントのテスト
+   - 認証フローのテスト
+   - データフローの検証
+
+### 13.5 PWA対応
+
+1. **マニフェスト設定**
+   - アプリ名、短い名前、説明
+   - アイコン設定（192x192, 512x512, 180x180）
+   - テーマカラー（#00CBB3）
+   - 背景色（#FFFFFF）
+   - ショートカット機能（レストラン検索、予約確認）
+   - スクリーンショット
+
+2. **Service Worker機能**
+   - オフラインサポート
+   - キャッシュ管理
+   - プッシュ通知対応
+   - バックグラウンド同期
+   - キャッシュクリア機能
+
+3. **インストール体験**
+   - インストールプロンプト
+   - アプリケーションアイコン
+   - スプラッシュスクリーン
+
+### 13.6 モニタリングと分析
+
+1. **パフォーマンスモニタリング**
+   - Vercel Analyticsによるパフォーマンス計測
+   - Web Vitals（LCP, FID, CLS, TTFB）の監視
+   - リアルユーザーモニタリング
+
+2. **エラー追跡**
+   - クライアントサイドエラーのロギング
+   - サーバーサイドエラーの集約
+   - CSP違反レポートの監視
+
+3. **ユーザー行動分析**
+   - ページ遷移の追跡
+   - コンバージョンフローの分析
+   - ユーザーセグメンテーション
+
+## 14. デプロイメントとDevOps
+
+### 14.1 デプロイメントパイプライン
+
+1. **Vercelデプロイフロー**
+   - GitHub連携によるCI/CD
+   - プレビューデプロイメント
+   - 本番環境デプロイ
+
+2. **環境分離**
+   - 開発環境
+   - ステージング環境
+   - 本番環境
+
+3. **ロールバック戦略**
+   - デプロイメントの自動ロールバック
+   - 手動ロールバックプロセス
+   - デプロイメント履歴管理
+
+### 14.2 保守と運用
+
+1. **バックアップ戦略**
+   - データベースの定期バックアップ
+   - ファイルストレージのバックアップ
+   - 設定ファイルのバージョン管理
+
+2. **監視システム**
+   - サーバーステータスの監視
+   - API応答時間のモニタリング
+   - エラー率のアラート
+
+3. **ドキュメンテーション**
+   - API仕様書
+   - コンポーネント設計ドキュメント
+   - 運用手順書
+
 ---
 
 このドキュメントは、IRUTOMOプロジェクトの設計と実装の指針となるものです。今後の開発作業はこの仕様に基づいて行われ、変更が必要な場合は本ドキュメントを更新してください。
 
-**最終更新日**: 2025年4月7日
+**最終更新日**: 2024年6月10日

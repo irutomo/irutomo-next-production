@@ -190,8 +190,8 @@ export function RestaurantImageSlider({ images, alt }: RestaurantImageSliderProp
   };
 
   return (
-    <div className="relative rounded-lg overflow-hidden shadow-lg">
-      <div className="h-48 w-full relative">
+    <div className="relative rounded-lg overflow-hidden shadow-lg w-full">
+      <div className="h-60 sm:h-72 md:h-80 w-full relative">
         {/* メイン画像 */}
         <Image 
           src={imagesArray[currentImageIndex]}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { JapanInfo } from '@/types/japan-info';
-import { ArrowLeft, CalendarIcon, MapPinIcon, TagIcon } from 'lucide-react';
+import { ArrowLeft, MapPinIcon, TagIcon, EyeIcon, LinkIcon } from 'lucide-react';
 import { CtaBanner } from '@/components/cta-banner';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -27,6 +27,7 @@ export default function JapanInfoDetailClient({ info, language }: JapanInfoDetai
   const [currentUrl, setCurrentUrl] = useState('');
   const [shareText, setShareText] = useState('');
   const [isKakaoSdkReady, setIsKakaoSdkReady] = useState(false);
+  const [localViews, setLocalViews] = useState<number | undefined>(info.views);
 
   useEffect(() => {
     // クライアントサイドでのみ window オブジェクトにアクセス
@@ -46,7 +47,25 @@ export default function JapanInfoDetailClient({ info, language }: JapanInfoDetai
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [info, language]);
+
+    // 閲覧数をカウントアップ（重複防止機能を削除）
+    const updateViewCount = async () => {
+      try {
+        const response = await fetch(`/api/japan-info/${info.id}/view`, {
+          method: 'POST',
+        });
+        const data = await response.json();
+        
+        if (data.success && data.views) {
+          setLocalViews(data.views);
+        }
+      } catch (error) {
+        console.error('閲覧数の更新に失敗しました:', error);
+      }
+    };
+    
+    updateViewCount();
+  }, [info.id, info.title, info.korean_title, language]);
 
   const twitterShareUrl = currentUrl 
     ? `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareText)}` 
@@ -82,6 +101,19 @@ export default function JapanInfoDetailClient({ info, language }: JapanInfoDetai
     });
   };
 
+  // リンクコピー関数
+  const copyLinkToClipboard = async () => {
+    if (!currentUrl) return;
+    
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      toast.success(language === 'ko' ? '링크가 복사되었습니다' : 'リンクがコピーされました');
+    } catch (error) {
+      console.error('クリップボードへのコピーに失敗しました:', error);
+      toast.error(language === 'ko' ? '링크 복사에 실패했습니다' : 'リンクのコピーに失敗しました');
+    }
+  };
+
   return (
     <main>
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-8">
@@ -111,12 +143,12 @@ export default function JapanInfoDetailClient({ info, language }: JapanInfoDetai
             {language === 'ko' ? info.korean_title || info.title : info.title}
           </h1>
 
-          {/* メタ情報 (日付、場所、タグ) */}
+          {/* メタ情報 (閲覧数、場所、タグ) */}
           <div className="flex flex-wrap items-center text-sm text-gray-500 mb-6 space-x-4">
-            {info.published_at && (
+            {(localViews !== undefined || info.views !== undefined) && (
               <div className="flex items-center">
-                <CalendarIcon className="w-4 h-4 mr-1" />
-                <span>{info.published_at}</span>
+                <EyeIcon className="w-4 h-4 mr-1" />
+                <span>{localViews ?? info.views} {language === 'ko' ? '조회' : '閲覧'}</span>
               </div>
             )}
             {info.location && (
@@ -147,40 +179,46 @@ export default function JapanInfoDetailClient({ info, language }: JapanInfoDetai
 
           {/* SNS共有ボタン */}
           <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-end space-x-3">
-            <span className="text-sm text-gray-600">공유하기✉️:</span>
+            <span className="text-sm text-gray-600">친구랑 공유하기✉️:</span>
             {/* X 共有ボタン */}
             {twitterShareUrl && ( // URLが生成されてから表示
               <a
                 href={twitterShareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
                 aria-label="Share on X"
               >
                 <Image 
-                  src="/icons/Xlogo.svg" 
+                  src="/icons/x-logo-black.svg" 
                   alt="X Logo" 
-                  width={20} 
-                  height={20} 
-                  className="text-gray-700" 
+                  width={24} 
+                  height={24}
                 />
               </a>
             )}
             {/* KakaoTalk 共有ボタン */}
             <button
               onClick={shareOnKakao}
-              className={`p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors ${!isKakaoSdkReady ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors ${!isKakaoSdkReady ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label="Share on KakaoTalk"
               disabled={!isKakaoSdkReady} // SDK準備完了まで無効化
             >
               <Image 
-                src="/icons/kakaotalk-svgrepo-com.svg" 
+                src="/icons/kakao-logo-darker.svg" 
                 alt="KakaoTalk Logo" 
-                width={20} 
-                height={20} 
+                width={24} 
+                height={24}
               />
             </button>
-             {/* 他の共有ボタン (例: URLコピーなど) はここに追加 */} 
+            {/* リンクコピーボタン */}
+            <button
+              onClick={copyLinkToClipboard}
+              className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+              aria-label={language === 'ko' ? '링크 복사' : 'リンクをコピー'}
+            >
+              <LinkIcon className="w-[24px] h-[24px] text-gray-700" />
+            </button>
           </div>
         </article>
       </div>

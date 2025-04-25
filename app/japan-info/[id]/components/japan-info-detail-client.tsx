@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { JapanInfo } from '@/types/japan-info';
 import { ArrowLeft, MapPinIcon, TagIcon, EyeIcon, LinkIcon } from 'lucide-react';
-import { CtaBanner } from '@/components/cta-banner';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
@@ -221,11 +220,6 @@ export default function JapanInfoDetailClient({ info, language }: JapanInfoDetai
             </button>
           </div>
         </article>
-      </div>
-
-      {/* リクエストフォームカード */}
-      <div className="max-w-3xl mx-auto px-4 mb-8">
-        <CtaBanner />
       </div>
     </main>
   );

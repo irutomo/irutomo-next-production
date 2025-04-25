@@ -2,14 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { JapanInfo } from '@/types/japan-info';
 import { useLanguage } from '@/contexts/language-context';
-
-// SVGアイコン
-const MapPinIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-    <circle cx="12" cy="10" r="3"/>
-  </svg>
-);
+import { MapPinIcon, EyeIcon } from 'lucide-react';
 
 interface JapanInfoCardProps {
   japanInfo: JapanInfo;
@@ -19,7 +12,7 @@ interface JapanInfoCardProps {
   };
 }
 
-export default function JapanInfoCard({ japanInfo }: JapanInfoCardProps) {
+export default function JapanInfoCard({ japanInfo, translations }: JapanInfoCardProps) {
   const { language } = useLanguage();
 
   return (
@@ -33,6 +26,11 @@ export default function JapanInfoCard({ japanInfo }: JapanInfoCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
+          {japanInfo.is_popular && (
+            <div className="absolute top-2 left-2 bg-[#FFA500] px-2 py-0.5 rounded-full text-xs text-white font-bold">
+              {translations.popular}
+            </div>
+          )}
         </div>
 
         <div className="p-3">
@@ -40,14 +38,23 @@ export default function JapanInfoCard({ japanInfo }: JapanInfoCardProps) {
             {language === 'ko' ? japanInfo.korean_title || japanInfo.title : japanInfo.title}
           </h3>
           
-          {japanInfo.location && (
-            <div className="flex items-center text-xs text-gray-500">
-              <MapPinIcon className="w-3 h-3 mr-1" />
-              <span className="truncate">
-                {japanInfo.location}
-              </span>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+            {japanInfo.views !== undefined && (
+              <div className="flex items-center">
+                <EyeIcon className="w-3 h-3 mr-1" />
+                <span>{japanInfo.views} {language === 'ko' ? '조회' : '閲覧'}</span>
+              </div>
+            )}
+            
+            {japanInfo.location && (
+              <div className="flex items-center">
+                <MapPinIcon className="w-3 h-3 mr-1" />
+                <span className="truncate">
+                  {japanInfo.location}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Link>

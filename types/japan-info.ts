@@ -15,4 +15,11 @@ export interface JapanInfo {
   updated_at?: string;
   author?: string;
   views?: number;
+  language?: string;
+  embed_links?: {
+    youtube?: string;
+    instagram?: string;
+    twitter?: string;
+    [key: string]: string | undefined;
+  };
 } 

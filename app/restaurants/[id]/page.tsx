@@ -8,6 +8,7 @@ import { RestaurantImageSlider } from '../../../components/restaurant/restaurant
 import { ReservationForm } from '../../../components/restaurant/reservation-form';
 import { Database } from '@/lib/database.types';
 import { ArrowLeft } from 'lucide-react';
+import { cookies } from 'next/headers';
 
 // SVGコンポーネント
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -122,20 +123,17 @@ type DatabaseRestaurant = Partial<Restaurant> & {
 };
 
 // レストラン情報をSupabaseから取得する関数
-async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
+async function getRestaurant(id: string, language: string = 'ko'): Promise<DatabaseRestaurant | null> {
   try {
     // UUIDフォーマットのバリデーション（簡易的なチェック）
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       console.error('無効なUUID形式:', id);
-      return getFallbackRestaurant(id);
+      return getFallbackRestaurant(id, language);
     }
 
     try {
       const supabase = await createServerComponentClient();
-      
-      // 言語設定をハードコードで設定（デフォルトを'ko'に）
-      const language = 'ko';
       
       const { data, error } = await supabase
         .from('restaurants')
@@ -145,12 +143,12 @@ async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
       
       if (error) {
         console.error('レストラン情報の取得エラー:', error);
-        return getFallbackRestaurant(id);
+        return getFallbackRestaurant(id, language);
       }
       
       if (!data) {
         console.warn('レストランデータが見つかりません:', id);
-        return getFallbackRestaurant(id);
+        return getFallbackRestaurant(id, language);
       }
       
       // 言語に応じた情報を返す
@@ -163,16 +161,16 @@ async function getRestaurant(id: string): Promise<DatabaseRestaurant | null> {
       } as DatabaseRestaurant;
     } catch (dbError) {
       console.error('データベース接続エラー:', dbError);
-      return getFallbackRestaurant(id);
+      return getFallbackRestaurant(id, language);
     }
   } catch (error) {
     console.error('レストラン情報の取得中にエラーが発生しました:', error);
-    return getFallbackRestaurant(id);
+    return getFallbackRestaurant(id, language);
   }
 }
 
 // フォールバック用のダミーレストランデータを返す関数
-function getFallbackRestaurant(id: string): DatabaseRestaurant {
+function getFallbackRestaurant(id: string, language: string = 'ko'): DatabaseRestaurant {
   // このレストランIDに基づいて異なるダミーデータを返す
   const fallbackRestaurants: DatabaseRestaurant[] = [
     {
@@ -265,7 +263,11 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   // paramsをawaitする
   const { id } = await params;
-  const restaurant = await getRestaurant(id);
+  // クッキーから言語設定を取得
+  const cookieStore = await cookies();
+  const language = cookieStore.get('language')?.value || 'ko';
+  
+  const restaurant = await getRestaurant(id, language);
   
   if (!restaurant) {
     return {
@@ -306,11 +308,12 @@ export async function generateMetadata(
 export default async function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
   // paramsをawaitする
   const { id } = await params;
-  // cookies の呼び出しを削除して、言語設定をハードコードする
-  const language = 'ko';
+  // クッキーから言語設定を取得
+  const cookieStore = await cookies();
+  const language = cookieStore.get('language')?.value || 'ko';
 
   // レストラン情報を取得
-  const restaurant = await getRestaurant(id);
+  const restaurant = await getRestaurant(id, language);
   if (!restaurant) {
     notFound();
   }

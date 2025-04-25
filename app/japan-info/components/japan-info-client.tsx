@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/language-context';
 import { JapanInfo } from '@/types/japan-info';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, EyeIcon } from 'lucide-react';
 import { CtaBanner } from '@/components/cta-banner';
 // JapanInfoCardのインポートパスを修正しました
 import JapanInfoCard from './japan-info-card';
@@ -231,7 +231,8 @@ export default function JapanInfoClient({ japanInfoList }: { japanInfoList: Japa
                           {language === 'ko' ? info.korean_title || info.title : info.title}
                         </h3>
                         <div className="flex items-center text-xs text-gray-500">
-                          <span>{info.published_at}</span>
+                          <EyeIcon className="w-3 h-3 mr-1" />
+                          <span>{info.views || 0} {language === 'ko' ? '조회' : '閲覧'}</span>
                         </div>
                       </div>
                     </div>

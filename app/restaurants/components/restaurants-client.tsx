@@ -21,7 +21,9 @@ const translations = {
     map: '지도',
     osaka: '오사카',
     tokyo: '도쿄',
-    kyoto: '교토'
+    kyoto: '교토',
+    hokkaido: '홋카이도',
+    fukuoka: '후쿠오카'
   },
   ja: {
     title: 'レストラン一覧',
@@ -34,12 +36,14 @@ const translations = {
     map: '地図',
     osaka: '大阪',
     tokyo: '東京',
-    kyoto: '京都'
+    kyoto: '京都',
+    hokkaido: '北海道',
+    fukuoka: '福岡'
   }
 };
 
 // 場所のフィルタータイプ
-type LocationFilter = 'all' | 'osaka' | 'tokyo' | 'kyoto';
+type LocationFilter = 'all' | 'osaka' | 'tokyo' | 'kyoto' | 'hokkaido' | 'fukuoka';
 
 // クライアントコンポーネント
 export default function RestaurantsClient({ restaurants }: { restaurants: Restaurant[] }) {
@@ -67,6 +71,10 @@ export default function RestaurantsClient({ restaurants }: { restaurants: Restau
           return location.includes('東京') || location.includes('tokyo');
         case 'kyoto':
           return location.includes('京都') || location.includes('kyoto');
+        case 'hokkaido':
+          return location.includes('北海道') || location.includes('hokkaido');
+        case 'fukuoka':
+          return location.includes('福岡') || location.includes('fukuoka');
         default:
           return true;
       }
@@ -120,6 +128,22 @@ export default function RestaurantsClient({ restaurants }: { restaurants: Restau
               onClick={() => setLocationFilter('kyoto')}
             >
               {t.kyoto}
+            </button>
+            <button 
+              className={`px-4 py-2 rounded-md ${
+                locationFilter === 'hokkaido' ? 'bg-[#00CBB3] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+              } font-medium whitespace-nowrap`}
+              onClick={() => setLocationFilter('hokkaido')}
+            >
+              {t.hokkaido}
+            </button>
+            <button 
+              className={`px-4 py-2 rounded-md ${
+                locationFilter === 'fukuoka' ? 'bg-[#00CBB3] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+              } font-medium whitespace-nowrap`}
+              onClick={() => setLocationFilter('fukuoka')}
+            >
+              {t.fukuoka}
             </button>
           </div>
         </div>

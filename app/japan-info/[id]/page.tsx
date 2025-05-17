@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { JapanInfo } from '@/types/japan-info';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { CtaBanner } from '@/components/cta-banner';
 import { CalendarIcon, MapPinIcon, TagIcon, Share2Icon } from 'lucide-react';
@@ -12,6 +12,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import JapanInfoDetailClient from './components/japan-info-detail-client';
 import { cookies } from 'next/headers';
+import { getJapanInfoArticleById } from '@/lib/strapi/client';
 
 // 型定義
 type Props = {
@@ -139,6 +140,11 @@ export async function generateMetadata(
         : `${title} | IRUTOMO - 日本旅行情報`,
       description: description,
       keywords: info.tags || (language === 'ko' ? ['일본 여행'] : ['日本旅行']),
+      openGraph: {
+        title: language === 'ko' ? (info.korean_title || info.title) : info.title,
+        description: language === 'ko' ? (info.korean_description || info.description) : info.description,
+        images: [info.image_url],
+      },
     };
   } catch (error) {
     console.error('メタデータ生成エラー:', error);
@@ -149,29 +155,113 @@ export async function generateMetadata(
   }
 }
 
-// 日本情報詳細ページ (サーバーコンポーネント)
-export default async function JapanInfoDetailPage({ params }: Props) {
-  const { id } = params;
-  console.log(`日本情報詳細ページ表示: ID=${id}`);
-  
+// Supabaseから日本情報を取得する関数
+async function getJapanInfoFromSupabase(id: string, language: 'ja' | 'ko' = 'ko') {
   try {
-    // クッキーから言語設定を取得
-    const cookieStore = await cookies();
-    const language = cookieStore.get('language')?.value || 'ko';
-    console.log(`使用言語: ${language}`);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     
-    const info = await getJapanInfo(id, language);
-
-    if (!info) {
-      console.error(`ID=${id}の日本情報が見つかりません。404エラーを返します。`);
-      notFound();
+    // 匿名キーでSupabaseクライアントを作成
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    // japan_infoテーブルから指定IDのデータを取得
+    const { data, error } = await supabase
+      .from('japan_info')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Supabaseからのデータ取得エラー:', error);
+      return null;
     }
-
-    console.log(`日本情報取得成功: ${info.title}`);
-    // 言語はクライアントコンポーネントで切り替えるため、渡す
-    return <JapanInfoDetailClient info={info} language={language as 'ja' | 'ko'} />;
+    
+    if (!data) {
+      return null;
+    }
+    
+    // データ型の変換と返却（言語に応じてタイトルと説明を切り替え）
+    return {
+      id: data.id.toString(),
+      title: language === 'ko' ? (data.korean_title || data.title) : data.title,
+      korean_title: data.korean_title,
+      description: language === 'ko' ? (data.korean_description || data.description) : data.description,
+      korean_description: data.korean_description,
+      image_url: data.image_url,
+      images: data.images,
+      content: language === 'ko' ? (data.korean_content || data.content) : data.content,
+      korean_content: data.korean_content,
+      tags: data.tags,
+      location: data.location,
+      is_popular: data.is_popular,
+      published_at: data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : undefined,
+      updated_at: data.updated_at ? new Date(data.updated_at).toISOString().split('T')[0] : undefined,
+      author: data.author,
+      views: data.views,
+      embed_links: data.embed_links
+    };
   } catch (error) {
-    console.error('日本情報詳細ページの表示エラー:', error);
-    notFound();
+    console.error('日本情報の取得中にエラーが発生しました:', error);
+    return null;
   }
+}
+
+// SupabaseとStrapiから日本情報を取得して統合する関数
+async function getJapanInfoById(id: string, language: 'ja' | 'ko' = 'ko') {
+  try {
+    // まずSupabaseからデータを取得
+    const supabaseData = await getJapanInfoFromSupabase(id, language);
+    
+    // Strapiからデータを取得
+    console.log(`Strapiからデータを取得 (ID: ${id})...`);
+    const strapiData = await getJapanInfoArticleById(id);
+    
+    // Strapiからデータが取得できた場合
+    if (strapiData) {
+      console.log('Strapiからデータを取得しました');
+      
+      // 言語に応じてデータを加工
+      return {
+        ...strapiData,
+        title: language === 'ko' ? (strapiData.korean_title || strapiData.title) : strapiData.title,
+        description: language === 'ko' ? (strapiData.korean_description || strapiData.description) : strapiData.description,
+        content: language === 'ko' ? (strapiData.korean_content || strapiData.content) : strapiData.content,
+      };
+    }
+    
+    // Strapiからデータが取得できない場合はSupabaseのデータを返す
+    return supabaseData;
+  } catch (error) {
+    console.error('Strapi/Supabaseからのデータ統合中にエラーが発生しました:', error);
+    // エラー時はSupabaseだけを試す
+    return getJapanInfoFromSupabase(id, language);
+  }
+}
+
+// サーバーコンポーネントとしてページを実装
+export default async function JapanInfoDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  // URLパラメータから言語設定を取得（例: /japan-info/1?lang=ko）
+  // 有効な値は'ja'または'ko'のみ、それ以外は'ko'をデフォルトとする
+  const lang = searchParams?.lang || '';
+  const language = (typeof lang === 'string' && lang === 'ja' ? 'ja' : 'ko') as 'ja' | 'ko';
+  
+  // サーバーサイドでデータを取得
+  const japanInfo = await getJapanInfoById(params.id, language);
+  
+  // データが見つからない場合はリダイレクト
+  if (!japanInfo) {
+    redirect('/japan-info');
+  }
+  
+  return (
+    <div className="min-h-screen">
+      <JapanInfoDetailClient japanInfo={japanInfo} />
+    </div>
+  );
 } 

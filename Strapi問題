@@ -1,0 +1,24 @@
+APIトークンを環境変数に設定しました。
+StrapiとIRUTOMOの連携を設定するには、まずStrapi上で「japan-info-articles」コンテンツタイプを作成する必要があります。現在、APIで確認したところこのコンテンツタイプがまだ存在していないようです。
+Strapiの管理画面で以下の作業を行ってください：
+コンテンツタイプビルダーで「Japan Info Article」を作成
+以下のフィールドを追加：
+title: テキスト（必須）
+koreanTitle: テキスト
+description: テキスト/リッチテキスト（必須）
+koreanDescription: テキスト/リッチテキスト
+content: リッチテキスト（必須）
+koreanContent: リッチテキスト
+imageUrl: URL/メディア（必須）
+images: メディアコレクション
+tags: テキストの配列
+location: テキスト
+isPopular: ブール値
+author: テキスト
+views: 数値
+embedLinks: JSONオブジェクト
+slug: テキスト（必須、ユニーク）
+コンテンツタイプを作成し保存した後、APIからアクセスできるようにするための権限設定を行ってください。
+それが完了すれば、Strapiで記事を作成した際に自動的にIRUTOMOの日本情報ページに反映されるようになります。
+Strapiの管理画面でどうやってついかするんだ？？
+詳細に教えて。CLIからは設定できない？

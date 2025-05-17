@@ -1,9 +1,9 @@
 // サーバーコンポーネント
 import { createClient } from '@supabase/supabase-js';
-// JapanInfoClientのインポートを削除しました
 import { JapanInfo } from '@/types/japan-info';
 import { Metadata } from 'next';
 import JapanInfoClient from './components/japan-info-client';
+import { getAllJapanInfoArticles } from '@/lib/strapi/client';
 
 export const metadata: Metadata = {
   title: '일본 여행 정보 | 이루토모',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 // 日本情報をSupabaseから取得する関数
-async function getJapanInfoList(language: 'ja' | 'ko' = 'ko'): Promise<JapanInfo[]> {
+async function getJapanInfoListFromSupabase(language: 'ja' | 'ko' = 'ko'): Promise<JapanInfo[]> {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -55,6 +55,56 @@ async function getJapanInfoList(language: 'ja' | 'ko' = 'ko'): Promise<JapanInfo
   } catch (error) {
     console.error('日本情報の取得中にエラーが発生しました:', error);
     return [];
+  }
+}
+
+// 日本情報をSupabaseとStrapiから取得して結合する関数
+async function getJapanInfoList(language: 'ja' | 'ko' = 'ko'): Promise<JapanInfo[]> {
+  try {
+    // Supabaseからデータを取得
+    const supabaseData = await getJapanInfoListFromSupabase(language);
+    
+    // Strapiからデータを取得
+    console.log('Strapiからデータを取得します...');
+    const strapiData = await getAllJapanInfoArticles();
+    console.log(`Strapiから${strapiData.length}件のデータを取得しました`);
+    
+    // 言語に応じてStrapiのデータを加工
+    const processedStrapiData = strapiData.map(item => ({
+      ...item,
+      title: language === 'ko' ? (item.korean_title || item.title) : item.title,
+      description: language === 'ko' ? (item.korean_description || item.description) : item.description,
+      content: language === 'ko' ? (item.korean_content || item.content) : item.content,
+    }));
+    
+    // Supabaseのデータとマージ（IDが同じ場合はStrapiのデータで上書き）
+    const combinedData = [...supabaseData];
+    
+    // strapiDataの各要素に対して、既存のデータにあれば更新、なければ追加
+    for (const strapiItem of processedStrapiData) {
+      const existingIndex = combinedData.findIndex(item => item.id === strapiItem.id);
+      if (existingIndex >= 0) {
+        combinedData[existingIndex] = strapiItem;
+      } else {
+        combinedData.push(strapiItem);
+      }
+    }
+    
+    // 人気順→作成日順でソート
+    return combinedData
+      .sort((a, b) => {
+        // まず人気記事を優先
+        if (a.is_popular && !b.is_popular) return -1;
+        if (!a.is_popular && b.is_popular) return 1;
+        
+        // 次に公開日で降順ソート
+        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+        return dateB - dateA;
+      });
+  } catch (error) {
+    console.error('Supabaseと統合したデータの取得中にエラーが発生しました:', error);
+    return getJapanInfoListFromSupabase(language); // エラー時はSupabaseのデータだけを返す
   }
 }
 

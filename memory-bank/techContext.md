@@ -24,18 +24,20 @@
 - ✅ **ファイルストレージ**: Supabase Storage
 - ✅ **決済処理**: PayPal API 8.8.2
 - ✅ **画像最適化**: Next.js Image Optimization
+- ✅ **コンテンツ管理**: Strapi 4.15.5 (ヘッドレスCMS)
 
 ### 開発ツール
 - ✅ **パッケージ管理**: npm
 - ✅ **コード品質**: ESLint, Prettier
 - ✅ **Git管理**: GitHub
-- ✅ **CI/CD**: GitHub Actions, Vercel
+- ✅ **CI/CD**: GitHub Actions, Vercel (Next.js), Railway (Strapi)
 - ✅ **テスト**: Vitest 1.3.1, Testing Library 14.3.1, Playwright
 - ✅ **開発サーバー**: Next.js + Turbopack
 - ✅ **アクセシビリティ**: axe-core
 
 ### デプロイ
-- ✅ **ホスティング**: Vercel
+- ✅ **Next.jsホスティング**: Vercel
+- ✅ **Strapiホスティング**: Railway
 - ✅ **コンテンツ配信**: Vercel Edge Network
 - ✅ **分析**: Vercel Analytics
 - ✅ **モニタリング**: Sentry
@@ -119,6 +121,58 @@
 - ✅ 型安全なデータアクセス
 - ✅ エラーハンドリング
 
+## Strapi CMSの活用
+
+### 基本構成
+- ✅ Strapi 4.15.5（ヘッドレスCMS）
+- ✅ Node.js 16.17.0以上
+- ✅ Railway上にデプロイ
+- ✅ Next.jsアプリケーションとAPIを介して連携
+
+### 連携方法
+- ✅ StrapiクライアントAPIの実装（`lib/strapi/client.ts`）
+- ✅ REST APIを使用したデータフェッチ
+- ✅ 環境変数による接続情報管理
+- ✅ 型安全なデータ構造定義
+
+### コンテンツモデル
+- ✅ 日本情報記事（japan-info-articles）
+- ✅ 多言語フィールド（日本語/韓国語）のサポート
+- ✅ 画像とメディア管理
+- ✅ リレーションとコレクションタイプ
+
+### デプロイ設定
+- ✅ Railway Platform（PaaS）でのホスティング
+- ✅ 環境変数設定（NODE_ENV, PORT, HOST）
+- ✅ 開発/本番モードの切り替え
+- ✅ Railway CLIによるデプロイ管理
+
+## Railway連携の活用
+
+### デプロイパターン
+- ✅ Githubリポジトリとの連携
+- ✅ Railway CLIを使用したデプロイ管理
+- ✅ 環境変数の設定と管理
+- ✅ サービス間連携（Strapi + PostgreSQL）
+
+### 設定オプション
+- ✅ 環境変数: `NODE_ENV`, `PORT`, `HOST`
+- ✅ リソース割り当て: メモリ、CPU
+- ✅ ヘルスチェック設定
+- ✅ 自動デプロイトリガー
+
+### 主要コマンド
+- ✅ `railway up --service Strapi` - サービスのデプロイ
+- ✅ `railway variables --set "KEY=VALUE"` - 環境変数設定
+- ✅ `railway logs --service Strapi` - ログ確認
+- ✅ `railway status` - サービス状態確認
+
+### モニタリング
+- ✅ Railway Dashboardでのリソース監視
+- ✅ ログストリーミング
+- ✅ デプロイ履歴管理
+- ✅ アラートとヘルスチェック
+
 ## PayPal統合
 
 ### 実装状況
@@ -192,6 +246,7 @@
 ### サーバーサイド
 - ✅ Server Componentsでの直接データフェッチ
 - ✅ Supabase Clientを使用した型安全なクエリ
+- ✅ Strapi APIを使用したコンテンツフェッチ
 - ✅ キャッシュとリバリデーション
 
 ### クライアントサイド
@@ -301,6 +356,7 @@
 - ✅ React Developer Tools
 - ✅ Chrome DevTools
 - ✅ Supabaseダッシュボード
+- ✅ Strapi管理画面
 
 ### コード品質
 - ✅ TypeScript厳格モード
@@ -319,7 +375,7 @@
 ### CI/CD
 - ✅ GitHub Actionsによる自動化
 - ✅ テスト自動実行
-- ✅ Vercelへの自動デプロイ
+- ✅ Vercel + Railwayへの自動デプロイ
 - ✅ デプロイ前後のチェック
 
 ### モニタリング

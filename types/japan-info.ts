@@ -22,4 +22,5 @@ export interface JapanInfo {
     twitter?: string;
     [key: string]: string | undefined;
   };
+  slug?: string;
 } 

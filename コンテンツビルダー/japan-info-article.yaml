@@ -1,0 +1,105 @@
+kind: CollectionType
+apiID: japan-info-article
+info:
+  displayName: 日本情報記事
+  singularName: japan-info-article
+  pluralName: japan-info-articles
+  description: IRUTOMOの日本情報ページに表示される記事
+  draftAndPublish: true
+
+attributes:
+  title:
+    type: string
+    required: true
+    private: false
+    maxLength: 255
+    minLength: 3
+    description: 記事のタイトル（日本語）
+
+  koreanTitle:
+    type: string
+    required: false
+    private: false
+    maxLength: 255
+    description: 記事のタイトル（韓国語）
+
+  description:
+    type: text
+    required: true
+    private: false
+    description: 記事の概要（日本語）
+
+  koreanDescription:
+    type: text
+    required: false
+    private: false
+    description: 記事の概要（韓国語）
+
+  content:
+    type: richtext
+    required: true
+    private: false
+    description: 記事の本文（日本語）
+
+  koreanContent:
+    type: richtext
+    required: false
+    private: false
+    description: 記事の本文（韓国語）
+
+  imageUrl:
+    type: string
+    required: true
+    private: false
+    description: 記事のメイン画像URL
+
+  images:
+    type: json
+    required: false
+    private: false
+    description: 記事の追加画像URL（配列形式）
+
+  tags:
+    type: json
+    required: false
+    private: false
+    description: 記事のタグ（配列形式）
+
+  location:
+    type: string
+    required: false
+    private: false
+    description: 記事に関連する場所や地域
+
+  isPopular:
+    type: boolean
+    required: false
+    private: false
+    default: false
+    description: 人気記事としてマークするかどうか
+
+  author:
+    type: string
+    required: false
+    private: false
+    description: 記事の著者名
+
+  views:
+    type: integer
+    required: false
+    private: false
+    default: 0
+    description: 記事の閲覧数
+
+  embedLinks:
+    type: json
+    required: false
+    private: false
+    description: 埋め込みリンク情報（YouTubeやInstagramなど）
+
+  slug:
+    type: uid
+    targetField: title
+    required: true
+    private: false
+    description: URLに使用される一意の識別子 

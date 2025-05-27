@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "japan_info_articles",
+  "info": {
+    "singularName": "japan-info-article",
+    "pluralName": "japan-info-articles",
+    "displayName": "日本情報記事",
+    "description": "IRUTOMOの日本情報ページに表示される記事"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255,
+      "minLength": 3
+    },
+    "koreanTitle": {
+      "type": "string",
+      "required": false,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "text",
+      "required": true
+    },
+    "koreanDescription": {
+      "type": "text",
+      "required": false
+    },
+    "content": {
+      "type": "richtext",
+      "required": true
+    },
+    "koreanContent": {
+      "type": "richtext",
+      "required": false
+    },
+    "imageUrl": {
+      "type": "string",
+      "required": true
+    },
+    "images": {
+      "type": "json",
+      "required": false
+    },
+    "tags": {
+      "type": "json",
+      "required": false
+    },
+    "location": {
+      "type": "string",
+      "required": false
+    },
+    "isPopular": {
+      "type": "boolean",
+      "required": false,
+      "default": false
+    },
+    "author": {
+      "type": "string",
+      "required": false
+    },
+    "views": {
+      "type": "integer",
+      "required": false,
+      "default": 0
+    },
+    "embedLinks": {
+      "type": "json",
+      "required": false
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    }
+  }
+} 

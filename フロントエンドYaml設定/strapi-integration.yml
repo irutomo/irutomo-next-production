@@ -1,0 +1,447 @@
+# ===================================
+# Strapi v5 Japan Info Article
+# フロントエンド連携設定ファイル
+# ===================================
+
+api:
+  # 基本設定
+  base:
+    url: "http://localhost:1337"
+    version: "v5"
+    timeout: 10000
+    retries: 3
+
+  # エンドポイント設定
+  endpoints:
+    japan_info:
+      collection: "/api/japan-info-articles"
+      single: "/api/japan-info-articles/{id}"
+      draft: "/api/japan-info-articles/{id}?status=draft"
+      popular: "/api/japan-info-articles?filters[isPopular][$eq]=true"
+      
+  # ロケール設定
+  locales:
+    default: "ja"
+    supported: ["ja", "ko", "en"]
+    fallback: "ja"
+
+# ===================================
+# コンテンツ構造定義
+# ===================================
+
+content_type:
+  name: "japan-info-article"
+  display_name: "日本情報記事"
+  
+  # フィールド定義
+  fields:
+    # 基本フィールド
+    id:
+      type: "number"
+      required: true
+      description: "記事ID"
+      
+    documentId:
+      type: "string"
+      required: true
+      description: "グローバル記事識別子"
+      
+    title:
+      type: "string"
+      required: true
+      max_length: 255
+      min_length: 3
+      description: "記事タイトル（日本語）"
+      validation:
+        - not_empty
+        - min_length_3
+        
+    koreanTitle:
+      type: "string"
+      required: false
+      max_length: 255
+      description: "記事タイトル（韓国語）"
+      
+    description:
+      type: "text"
+      required: true
+      description: "記事概要（日本語）"
+      validation:
+        - not_empty
+        
+    koreanDescription:
+      type: "text"
+      required: false
+      description: "記事概要（韓国語）"
+      
+    content:
+      type: "richtext"
+      required: true
+      description: "記事本文（日本語）"
+      sanitize: true
+      
+    koreanContent:
+      type: "richtext"
+      required: false
+      description: "記事本文（韓国語）"
+      sanitize: true
+      
+    # メディアフィールド
+    imageUrl:
+      type: "string"
+      required: true
+      format: "url"
+      description: "メイン画像URL"
+      validation:
+        - url_format
+        - image_extension
+        
+    images:
+      type: "array"
+      items_type: "string"
+      description: "追加画像URLs"
+      validation:
+        - url_array
+        
+    # メタデータフィールド
+    tags:
+      type: "array"
+      items_type: "string"
+      description: "記事タグ"
+      max_items: 10
+      
+    location:
+      type: "string"
+      required: false
+      max_length: 100
+      description: "関連場所・地域"
+      
+    slug:
+      type: "string"
+      required: true
+      format: "slug"
+      description: "URL用スラッグ"
+      validation:
+        - slug_format
+        - unique
+        
+    # フラグ・統計フィールド
+    isPopular:
+      type: "boolean"
+      default: false
+      description: "人気記事フラグ"
+      
+    views:
+      type: "integer"
+      default: 0
+      min: 0
+      description: "閲覧数"
+      
+    author:
+      type: "string"
+      required: false
+      max_length: 50
+      description: "著者名"
+      
+    # 埋め込みコンテンツ
+    embedLinks:
+      type: "array"
+      items_type: "object"
+      description: "埋め込みリンク情報"
+      schema:
+        type:
+          type: "string"
+          enum: ["video", "map", "iframe", "social"]
+        url:
+          type: "string"
+          format: "url"
+        title:
+          type: "string"
+          required: false
+          
+    # システムフィールド
+    locale:
+      type: "string"
+      default: "ja"
+      enum: ["ja", "ko", "en"]
+      description: "コンテンツロケール"
+      
+    publishedAt:
+      type: "datetime"
+      description: "公開日時"
+      
+    createdAt:
+      type: "datetime"
+      description: "作成日時"
+      
+    updatedAt:
+      type: "datetime"
+      description: "更新日時"
+
+# ===================================
+# フロントエンド表示設定
+# ===================================
+
+frontend:
+  # リスト表示設定
+  list_view:
+    page_size: 12
+    sort_by: "publishedAt"
+    sort_order: "desc"
+    display_fields:
+      - "title"
+      - "description"
+      - "imageUrl"
+      - "tags"
+      - "publishedAt"
+      - "views"
+      - "isPopular"
+    
+    # フィルター設定
+    filters:
+      popular:
+        field: "isPopular"
+        operator: "eq"
+        value: true
+        label: "人気記事"
+        
+      location:
+        field: "location"
+        operator: "contains"
+        label: "場所で絞り込み"
+        
+      tags:
+        field: "tags"
+        operator: "in"
+        label: "タグで絞り込み"
+        
+    # 検索設定
+    search:
+      fields: ["title", "description", "content", "tags"]
+      placeholder: "記事を検索..."
+      min_length: 2
+
+  # 詳細表示設定
+  detail_view:
+    display_fields:
+      - "title"
+      - "description"
+      - "content"
+      - "imageUrl"
+      - "images"
+      - "tags"
+      - "location"
+      - "author"
+      - "publishedAt"
+      - "embedLinks"
+    
+    # SEO設定
+    seo:
+      title_field: "title"
+      description_field: "description"
+      image_field: "imageUrl"
+      canonical_base: "https://irutomo.com/japan-info"
+      
+    # 関連記事設定
+    related_articles:
+      enabled: true
+      limit: 3
+      match_by: ["tags", "location"]
+
+  # カード表示設定
+  card_view:
+    image:
+      field: "imageUrl"
+      aspect_ratio: "16:9"
+      lazy_load: true
+      fallback: "/assets/no-image.jpg"
+      
+    title:
+      field: "title"
+      max_length: 60
+      
+    description:
+      field: "description"
+      max_length: 120
+      
+    metadata:
+      - field: "publishedAt"
+        format: "YYYY年MM月DD日"
+      - field: "views"
+        suffix: "回閲覧"
+      - field: "location"
+        prefix: "📍"
+
+# ===================================
+# 多言語対応設定
+# ===================================
+
+i18n:
+  # 日本語表示
+  ja:
+    labels:
+      title: "タイトル"
+      description: "概要"
+      content: "本文"
+      published_at: "公開日"
+      views: "閲覧数"
+      author: "著者"
+      tags: "タグ"
+      location: "場所"
+      popular: "人気記事"
+      read_more: "続きを読む"
+      share: "シェア"
+      related: "関連記事"
+      
+    messages:
+      no_articles: "記事が見つかりませんでした"
+      loading: "読み込み中..."
+      error: "エラーが発生しました"
+
+  # 韓国語表示
+  ko:
+    field_mapping:
+      title: "koreanTitle"
+      description: "koreanDescription"
+      content: "koreanContent"
+      
+    labels:
+      title: "제목"
+      description: "설명"
+      content: "내용"
+      published_at: "게시일"
+      views: "조회수"
+      author: "작성자"
+      tags: "태그"
+      location: "위치"
+      popular: "인기 기사"
+      read_more: "더 보기"
+      share: "공유"
+      related: "관련 기사"
+      
+    messages:
+      no_articles: "기사를 찾을 수 없습니다"
+      loading: "로딩 중..."
+      error: "오류가 발생했습니다"
+
+# ===================================
+# API クエリ設定
+# ===================================
+
+queries:
+  # 記事一覧取得
+  get_articles:
+    endpoint: "/api/japan-info-articles"
+    method: "GET"
+    default_params:
+      populate: "*"
+      sort: "publishedAt:desc"
+      pagination:
+        page: 1
+        pageSize: 12
+      locale: "ja"
+      
+  # 人気記事取得
+  get_popular_articles:
+    endpoint: "/api/japan-info-articles"
+    method: "GET"
+    default_params:
+      populate: "*"
+      filters:
+        isPopular:
+          $eq: true
+      sort: "views:desc"
+      pagination:
+        pageSize: 6
+      locale: "ja"
+      
+  # 記事詳細取得
+  get_article_detail:
+    endpoint: "/api/japan-info-articles/{documentId}"
+    method: "GET"
+    default_params:
+      populate: "*"
+      locale: "ja"
+      
+  # 関連記事取得
+  get_related_articles:
+    endpoint: "/api/japan-info-articles"
+    method: "GET"
+    default_params:
+      populate: "title,description,imageUrl,publishedAt"
+      pagination:
+        pageSize: 3
+      locale: "ja"
+      filters:
+        documentId:
+          $ne: "{current_article_id}"
+
+# ===================================
+# キャッシュ設定
+# ===================================
+
+cache:
+  # 記事一覧
+  articles_list:
+    ttl: 300  # 5分
+    key_pattern: "articles:list:{locale}:{page}:{filters_hash}"
+    
+  # 記事詳細
+  article_detail:
+    ttl: 600  # 10分
+    key_pattern: "article:detail:{documentId}:{locale}"
+    
+  # 人気記事
+  popular_articles:
+    ttl: 900  # 15分
+    key_pattern: "articles:popular:{locale}"
+
+# ===================================
+# パフォーマンス設定
+# ===================================
+
+performance:
+  # 画像最適化
+  images:
+    lazy_load: true
+    responsive: true
+    formats: ["webp", "jpg"]
+    sizes:
+      thumbnail: "300x200"
+      medium: "600x400"
+      large: "1200x800"
+      
+  # プリロード設定
+  preload:
+    critical_resources:
+      - "imageUrl"
+    prefetch_related: true
+    
+  # バンドル最適化
+  bundle:
+    code_splitting: true
+    tree_shaking: true
+    compression: "gzip"
+
+# ===================================
+# セキュリティ設定
+# ===================================
+
+security:
+  # サニタイゼーション
+  sanitize:
+    html_fields: ["content", "koreanContent"]
+    allowed_tags: ["p", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "a", "img", "br"]
+    allowed_attributes:
+      a: ["href", "title"]
+      img: ["src", "alt", "title"]
+      
+  # CSP設定
+  content_security_policy:
+    img_src: ["'self'", "data:", "https:"]
+    media_src: ["'self'", "https:"]
+    
+  # レート制限
+  rate_limiting:
+    requests_per_minute: 100
+    burst_limit: 20 

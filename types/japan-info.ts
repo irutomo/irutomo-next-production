@@ -7,17 +7,19 @@
 export interface JapanInfo {
   id: string;
   title: string;
-  korean_title?: string;
+  korean_title?: string | null;
   description: string;
-  korean_description?: string;
-  image_url: string;
+  korean_description?: string | null;
+  image_url?: string;
   images?: string[];
   content: string;
-  korean_content?: string;
+  korean_content?: string | null;
   tags?: string[];
   location?: string;
+  prefecture?: string;
   is_popular?: boolean;
   published_at?: string;
+  created_at?: string;
   updated_at?: string;
   author?: string;
   views?: number;
@@ -29,10 +31,77 @@ export interface JapanInfo {
     [key: string]: string | undefined;
   };
   slug?: string;
+  featured_image?: string | null;
+  meta_title?: string;
+  meta_description?: string;
 }
 
 // ===================================
-// Strapi v5 新型定義
+// Strapi v5 新型定義（実際のAPI構造に合わせて修正）
+// ===================================
+
+// Strapi v5の実際のレスポンス構造
+export interface JapanInfoArticle {
+  id: number;
+  documentId: string;
+  title: string;
+  koreanTitle?: string | null;
+  description: string;
+  koreanDescription?: string | null;
+  content: string;
+  koreanContent?: string | null;
+  featuredImage?: string | null;
+  location?: string;
+  prefecture?: string;
+  tags?: string[];
+  isPopular?: boolean;
+  views?: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  slug?: string;
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  locale?: string;
+}
+
+// Strapi Collection Response
+export interface JapanInfoCollectionResponse {
+  data: JapanInfoArticle[];
+  meta: {
+    pagination: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+}
+
+// Strapi Single Response
+export interface JapanInfoArticleResponse {
+  data: JapanInfoArticle;
+  meta: Record<string, unknown>;
+}
+
+// Pagination Parameters
+export interface StrapiPaginationParams {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  locale?: string;
+}
+
+// Connection Status
+export interface StrapiConnectionStatus {
+  isConnected: boolean;
+  lastChecked: Date;
+  error?: string;
+}
+
+// ===================================
+// 従来の型定義（後方互換性のため保持）
 // ===================================
 
 // Strapi基本型定義
@@ -61,7 +130,7 @@ export interface StrapiAttributes {
   locale: string;
 }
 
-// Japan Info Article型定義（Strapi v5）
+// Japan Info Article型定義（Strapi v5 Attributes）
 export interface JapanInfoArticleAttributes extends StrapiAttributes {
   // 基本情報
   title: string;
@@ -89,12 +158,6 @@ export interface JapanInfoArticleAttributes extends StrapiAttributes {
   embedLinks?: EmbedLink[];
 }
 
-export interface JapanInfoArticle {
-  id: number;
-  documentId: string;
-  attributes: JapanInfoArticleAttributes;
-}
-
 // 埋め込みリンク型
 export interface EmbedLink {
   type: 'video' | 'map' | 'iframe' | 'social';
@@ -102,9 +165,8 @@ export interface EmbedLink {
   title?: string;
 }
 
-// API レスポンス型
+// API レスポンス型（従来）
 export type JapanInfoArticlesResponse = StrapiResponse<JapanInfoArticle[]>;
-export type JapanInfoArticleResponse = StrapiSingleResponse<JapanInfoArticle>;
 
 // クエリパラメータ型
 export interface ArticleQueryParams {
@@ -204,7 +266,10 @@ export interface SearchResults {
   };
 }
 
-// フロントエンド表示用型
+// ===================================
+// フロントエンド用型
+// ===================================
+
 export interface ArticleCardProps {
   article: JapanInfo;
   locale?: string;

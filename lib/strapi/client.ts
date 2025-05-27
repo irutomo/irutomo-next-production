@@ -1,513 +1,429 @@
 // ===================================
-// Strapi v5 クライアント（フル機能版）
-// Next.js App Router 対応
+// Strapi v5 クライアント（詳細デバッグ版）
 // ===================================
 
 import { 
-  JapanInfo, 
   JapanInfoArticle, 
-  JapanInfoArticleAttributes,
-  JapanInfoArticlesResponse,
   JapanInfoArticleResponse,
-  ArticleQueryParams,
+  JapanInfoCollectionResponse,
   SearchFilters,
-  SearchResults,
-  EmbedLink
+  JapanInfo,
+  StrapiPaginationParams,
+  StrapiConnectionStatus 
 } from '@/types/japan-info';
 
-// Strapi API設定
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'https://strapi-production-dd77.up.railway.app';
-const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN || '';
+// 環境変数とAPI設定
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
+const API_ENDPOINT = '/api/japan-info-articles';
 
-// APIエラー型
-export class StrapiError extends Error {
-  constructor(
-    message: string,
-    public status?: number,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'StrapiError';
+// デバッグログ関数
+function debugLog(message: string, data?: any) {
+  if (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+    console.log(`[Strapi Client] ${message}`, data || '');
   }
 }
 
-// ===================================
-// 基本的なfetch関数（v5対応）
-// ===================================
-async function fetchAPI<T>(
-  endpoint: string, 
-  options: RequestInit = {},
-  params?: ArticleQueryParams
-): Promise<T> {
-  const url = new URL(`${STRAPI_URL}/api${endpoint}`);
+// エラーログ関数
+function errorLog(message: string, error?: any) {
+  console.error(`[Strapi Client ERROR] ${message}`, error || '');
+}
+
+// 設定確認関数
+function validateConfiguration(): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
   
-  // クエリパラメータの構築
-  if (params) {
-    if (params.locale) {
-      url.searchParams.append('locale', params.locale);
-    }
-    
-    if (params.populate) {
-      const populateValue = Array.isArray(params.populate) 
-        ? params.populate.join(',') 
-        : params.populate;
-      url.searchParams.append('populate', populateValue);
-    }
-    
-    if (params.sort) {
-      const sortValue = Array.isArray(params.sort) 
-        ? params.sort.join(',') 
-        : params.sort;
-      url.searchParams.append('sort', sortValue);
-    }
-    
-    if (params.pagination) {
-      if (params.pagination.page) {
-        url.searchParams.append('pagination[page]', params.pagination.page.toString());
-      }
-      if (params.pagination.pageSize) {
-        url.searchParams.append('pagination[pageSize]', params.pagination.pageSize.toString());
-      }
-    }
-    
-    // フィルターの構築
-    if (params.filters) {
-      Object.entries(params.filters).forEach(([key, filter]) => {
-        if (filter && typeof filter === 'object') {
-          Object.entries(filter).forEach(([operator, value]) => {
-            if (value !== undefined) {
-              url.searchParams.append(`filters[${key}][${operator}]`, String(value));
-            }
-          });
-        }
-      });
-    }
+  if (!STRAPI_URL) {
+    errors.push('NEXT_PUBLIC_STRAPI_URL is not set');
   }
-
-  const defaultOptions: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(STRAPI_API_TOKEN ? { 'Authorization': `Bearer ${STRAPI_API_TOKEN}` } : {}),
-    },
-    next: {
-      revalidate: 300, // 5分間キャッシュ
-    },
-  };
-
-  const mergedOptions = {
-    ...defaultOptions,
-    ...options,
-    headers: {
-      ...defaultOptions.headers,
-      ...options.headers,
-    },
-  };
-
-  try {
-    console.log(`🚀 Fetching: ${url.toString()}`);
-    const response = await fetch(url.toString(), mergedOptions);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ API Error [${response.status}]:`, errorText);
-      
-      throw new StrapiError(
-        `Failed to fetch data from API: ${response.status} ${response.statusText}`,
-        response.status,
-        response.status.toString()
-      );
-    }
-    
-    const data = await response.json();
-    console.log('✅ API Response received');
-    return data;
-  } catch (error) {
-    if (error instanceof StrapiError) {
-      throw error;
-    }
-    
-    console.error('❌ Network Error:', error);
-    throw new StrapiError(
-      'Network error occurred while fetching data',
-      0,
-      'NETWORK_ERROR'
-    );
+  
+  if (!STRAPI_API_TOKEN) {
+    errors.push('STRAPI_API_TOKEN is not set');
   }
-}
-
-// ===================================
-// データ変換ユーティリティ
-// ===================================
-
-/**
- * Strapi v5形式から内部形式へマッピング
- */
-function mapStrapiJapanInfoToInternal(strapiItem: JapanInfoArticle): JapanInfo {
-  const { id, documentId, attributes } = strapiItem;
   
   return {
-    id: documentId || id.toString(),
-    title: attributes.title,
-    korean_title: attributes.koreanTitle,
-    description: attributes.description,
-    korean_description: attributes.koreanDescription,
-    content: attributes.content,
-    korean_content: attributes.koreanContent,
-    image_url: attributes.imageUrl,
-    images: attributes.images || [],
-    tags: attributes.tags || [],
-    location: attributes.location,
-    is_popular: attributes.isPopular,
-    published_at: attributes.publishedAt || attributes.createdAt,
-    updated_at: attributes.updatedAt,
-    author: attributes.author,
-    views: attributes.views || 0,
-    embed_links: transformEmbedLinks(attributes.embedLinks),
-    slug: attributes.slug,
-    language: attributes.locale || 'ja',
+    isValid: errors.length === 0,
+    errors
   };
 }
 
-/**
- * 埋め込みリンクの変換
- */
-function transformEmbedLinks(embedLinks?: EmbedLink[]): Record<string, string> | undefined {
-  if (!embedLinks?.length) return undefined;
+// APIリクエスト関数
+async function makeRequest(
+  endpoint: string, 
+  options: RequestInit = {}
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  debugLog('🚀 Making API request', { endpoint, hasAuth: !!STRAPI_API_TOKEN });
   
-  return embedLinks.reduce((acc, link) => {
-    acc[link.type] = link.url;
-    return acc;
-  }, {} as Record<string, string>);
-}
+  const config = validateConfiguration();
+  if (!config.isValid) {
+    errorLog('Configuration validation failed', config.errors);
+    return { success: false, error: `Configuration error: ${config.errors.join(', ')}` };
+  }
 
-// ===================================
-// メインAPI関数
-// ===================================
+  const url = `${STRAPI_URL}${endpoint}`;
+  debugLog('📡 Request URL', url);
 
-/**
- * すべての日本情報記事を取得（ページネーション対応）
- */
-export async function getAllJapanInfoArticles(
-  options: {
-    page?: number;
-    pageSize?: number;
-    locale?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  } = {}
-): Promise<{
-  articles: JapanInfo[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    pageCount: number;
-    total: number;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
   };
-}> {
+
+  if (STRAPI_API_TOKEN) {
+    headers['Authorization'] = `Bearer ${STRAPI_API_TOKEN}`;
+    debugLog('🔑 Authorization header added');
+  }
+
+  const requestOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
+    // キャッシュを無効化して常に最新データを取得
+    cache: 'no-store'
+  };
+
+  debugLog('📋 Request options', { 
+    method: requestOptions.method || 'GET',
+    hasAuth: !!headers['Authorization'],
+    cache: requestOptions.cache 
+  });
+
   try {
-    const {
-      page = 1,
-      pageSize = 12,
-      locale = 'ja',
-      sortBy = 'publishedAt',
-      sortOrder = 'desc'
-    } = options;
+    debugLog('⏳ Sending request...');
+    const response = await fetch(url, requestOptions);
+    
+    debugLog('📬 Response received', { 
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
 
-    const params: ArticleQueryParams = {
-      locale,
-      populate: '*',
-      sort: [`${sortBy}:${sortOrder}`],
-      pagination: { page, pageSize },
-    };
+    if (!response.ok) {
+      const errorText = await response.text();
+      errorLog(`HTTP Error ${response.status}`, { statusText: response.statusText, body: errorText });
+      return { 
+        success: false, 
+        error: `HTTP ${response.status}: ${response.statusText}${errorText ? ` - ${errorText}` : ''}` 
+      };
+    }
 
-    const response = await fetchAPI<JapanInfoArticlesResponse>(
-      '/japan-info-articles',
-      {},
-      params
-    );
+    const data = await response.json();
+    debugLog('✅ Response parsed successfully', { 
+      hasData: !!data,
+      dataType: Array.isArray(data?.data) ? 'collection' : 'object',
+      itemCount: Array.isArray(data?.data) ? data.data.length : 'N/A'
+    });
 
-    return {
-      articles: response.data.map(mapStrapiJapanInfoToInternal),
-      pagination: response.meta.pagination,
-    };
+    return { success: true, data };
   } catch (error) {
-    console.error('❌ Error fetching Japan info articles from Strapi:', error);
-    return {
-      articles: [],
-      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
+    errorLog('❌ Request failed', error);
+    return { 
+      success: false, 
+      error: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
   }
 }
 
-/**
- * 人気の日本情報記事を取得
- */
+// ===================================
+// Connection Check
+// ===================================
+export async function checkStrapiConnection(): Promise<boolean> {
+  debugLog('🔍 Checking Strapi connection...');
+  
+  const config = validateConfiguration();
+  if (!config.isValid) {
+    errorLog('Configuration check failed', config.errors);
+    return false;
+  }
+
+  try {
+    const result = await makeRequest(API_ENDPOINT + '?pagination[pageSize]=1');
+    const isConnected = result.success;
+    
+    debugLog(`🔗 Connection check result: ${isConnected ? 'SUCCESS' : 'FAILED'}`, 
+      isConnected ? { articles: result.data?.data?.length || 0 } : { error: result.error }
+    );
+    
+    return isConnected;
+  } catch (error) {
+    errorLog('Connection check failed', error);
+    return false;
+  }
+}
+
+// ===================================
+// データ変換関数
+// ===================================
+function transformStrapiArticle(strapiArticle: JapanInfoArticle): JapanInfo {
+  debugLog('🔄 Transforming Strapi article', { 
+    id: strapiArticle.id, 
+    title: strapiArticle.title 
+  });
+
+  return {
+    id: strapiArticle.documentId || strapiArticle.id.toString(),
+    title: strapiArticle.title,
+    korean_title: strapiArticle.koreanTitle || null,
+    description: strapiArticle.description || '',
+    korean_description: strapiArticle.koreanDescription || null,
+    content: strapiArticle.content || '',
+    korean_content: strapiArticle.koreanContent || null,
+    featured_image: strapiArticle.featuredImage || null,
+    location: strapiArticle.location || '',
+    prefecture: strapiArticle.prefecture || '',
+    tags: strapiArticle.tags || [],
+    published_at: strapiArticle.publishedAt || new Date().toISOString(),
+    created_at: strapiArticle.createdAt || new Date().toISOString(),
+    updated_at: strapiArticle.updatedAt || new Date().toISOString(),
+    views: strapiArticle.views || 0,
+    is_popular: strapiArticle.isPopular || false,
+    meta_title: strapiArticle.metaTitle || strapiArticle.title,
+    meta_description: strapiArticle.metaDescription || strapiArticle.description || '',
+    slug: strapiArticle.slug || `article-${strapiArticle.id}`,
+  };
+}
+
+// ===================================
+// 全記事取得
+// ===================================
+export async function getAllJapanInfoArticles(
+  options: StrapiPaginationParams = {}
+): Promise<{ articles: JapanInfo[]; pagination: any }> {
+  debugLog('📚 Getting all Japan Info articles', options);
+
+  const {
+    page = 1,
+    pageSize = 12,
+    sortBy = 'publishedAt',
+    sortOrder = 'desc',
+    locale = 'ja'
+  } = options;
+
+  const queryParams = new URLSearchParams({
+    'pagination[page]': page.toString(),
+    'pagination[pageSize]': pageSize.toString(),
+    'sort[0]': `${sortBy}:${sortOrder}`,
+    'populate': '*',
+    'locale': locale,
+  });
+
+  const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
+  const result = await makeRequest(endpoint);
+
+  if (!result.success) {
+    errorLog('Failed to get all articles', result.error);
+    return { 
+      articles: [], 
+      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 } 
+    };
+  }
+
+  const strapiResponse = result.data as JapanInfoCollectionResponse;
+  const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+  
+  debugLog('📊 Articles retrieved', { 
+    count: articles.length,
+    pagination: strapiResponse.meta?.pagination 
+  });
+
+  return {
+    articles,
+    pagination: strapiResponse.meta?.pagination || { page: 1, pageSize: 12, pageCount: 0, total: 0 }
+  };
+}
+
+// ===================================
+// 人気記事取得
+// ===================================
 export async function getPopularJapanInfoArticles(
-  locale: string = 'ja',
+  locale: string = 'ja', 
   limit: number = 6
 ): Promise<JapanInfo[]> {
-  try {
-    const params: ArticleQueryParams = {
-      locale,
-      populate: '*',
-      sort: ['views:desc', 'publishedAt:desc'],
-      filters: {
-        isPopular: { $eq: true }
-      },
-      pagination: { pageSize: limit },
-    };
+  debugLog('⭐ Getting popular articles', { locale, limit });
 
-    const response = await fetchAPI<JapanInfoArticlesResponse>(
-      '/japan-info-articles',
-      {},
-      params
-    );
+  const queryParams = new URLSearchParams({
+    'filters[isPopular][$eq]': 'true',
+    'pagination[pageSize]': limit.toString(),
+    'sort[0]': 'views:desc',
+    'populate': '*',
+    'locale': locale,
+  });
 
-    return response.data.map(mapStrapiJapanInfoToInternal);
-  } catch (error) {
-    console.error('❌ Error fetching popular Japan info articles from Strapi:', error);
+  const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
+  const result = await makeRequest(endpoint);
+
+  if (!result.success) {
+    errorLog('Failed to get popular articles', result.error);
     return [];
   }
+
+  const strapiResponse = result.data as JapanInfoCollectionResponse;
+  const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+
+  debugLog('🌟 Popular articles retrieved', { count: articles.length });
+  
+  return articles;
 }
 
-/**
- * IDで日本情報記事を取得
- */
-export async function getJapanInfoArticleById(
-  id: string,
+// ===================================
+// 記事検索
+// ===================================
+export async function searchJapanInfoArticles(
+  filters: SearchFilters,
+  page: number = 1,
+  pageSize: number = 12
+): Promise<{ 
+  articles: JapanInfo[]; 
+  pagination: any; 
+  totalResults: number; 
+  searchTime: number; 
+}> {
+  debugLog('🔍 Searching articles', { filters, page, pageSize });
+  
+  const startTime = Date.now();
+  const queryParams = new URLSearchParams({
+    'pagination[page]': page.toString(),
+    'pagination[pageSize]': pageSize.toString(),
+    'populate': '*',
+  });
+
+  // 検索クエリ
+  if (filters.query) {
+    queryParams.append('filters[$or][0][title][$containsi]', filters.query);
+    queryParams.append('filters[$or][1][description][$containsi]', filters.query);
+    queryParams.append('filters[$or][2][content][$containsi]', filters.query);
+  }
+
+  // 地域フィルター
+  if (filters.location) {
+    queryParams.append('filters[location][$containsi]', filters.location);
+  }
+
+  // タグフィルター
+  if (filters.tags && filters.tags.length > 0) {
+    filters.tags.forEach((tag, index) => {
+      queryParams.append(`filters[tags][$in][${index}]`, tag);
+    });
+  }
+
+  // 人気記事フィルター
+  if (filters.isPopular) {
+    queryParams.append('filters[isPopular][$eq]', 'true');
+  }
+
+  // ソート
+  const sortBy = filters.sortBy || 'publishedAt';
+  const sortOrder = filters.sortOrder || 'desc';
+  queryParams.append('sort[0]', `${sortBy}:${sortOrder}`);
+
+  const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
+  const result = await makeRequest(endpoint);
+
+  if (!result.success) {
+    errorLog('Search failed', result.error);
+    return { 
+      articles: [], 
+      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
+      totalResults: 0,
+      searchTime: Date.now() - startTime
+    };
+  }
+
+  const strapiResponse = result.data as JapanInfoCollectionResponse;
+  const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+  const searchTime = Date.now() - startTime;
+
+  debugLog('🔎 Search completed', { 
+    results: articles.length,
+    totalResults: strapiResponse.meta?.pagination?.total || 0,
+    searchTime: `${searchTime}ms`
+  });
+
+  return {
+    articles,
+    pagination: strapiResponse.meta?.pagination || { page: 1, pageSize: 12, pageCount: 0, total: 0 },
+    totalResults: strapiResponse.meta?.pagination?.total || 0,
+    searchTime
+  };
+}
+
+// ===================================
+// 単一記事取得
+// ===================================
+export async function getJapanInfoArticle(
+  id: string, 
   locale: string = 'ja'
 ): Promise<JapanInfo | null> {
-  try {
-    const params: ArticleQueryParams = {
-      locale,
-      populate: '*',
-    };
+  debugLog('📄 Getting single article', { id, locale });
 
-    const response = await fetchAPI<JapanInfoArticleResponse>(
-      `/japan-info-articles/${id}`,
-      {},
-      params
-    );
+  const queryParams = new URLSearchParams({
+    'populate': '*',
+    'locale': locale,
+  });
 
-    return mapStrapiJapanInfoToInternal(response.data);
-  } catch (error) {
-    console.error(`❌ Error fetching Japan info article with ID ${id} from Strapi:`, error);
+  const endpoint = `${API_ENDPOINT}/${id}?${queryParams.toString()}`;
+  const result = await makeRequest(endpoint);
+
+  if (!result.success) {
+    errorLog('Failed to get single article', result.error);
     return null;
   }
+
+  const strapiResponse = result.data as JapanInfoArticleResponse;
+  if (!strapiResponse.data) {
+    debugLog('Article not found', { id });
+    return null;
+  }
+
+  const article = transformStrapiArticle(strapiResponse.data);
+  debugLog('📖 Article retrieved', { id: article.id, title: article.title });
+
+  return article;
 }
 
-/**
- * スラッグで日本情報記事を取得
- */
+// ===================================
+// 後方互換性関数
+// ===================================
+
+// 既存のコードで使用されている関数名をサポート
+export async function getJapanInfoArticleById(
+  id: string, 
+  locale: string = 'ja'
+): Promise<JapanInfo | null> {
+  debugLog('📄 Getting article by ID (legacy function)', { id, locale });
+  return getJapanInfoArticle(id, locale);
+}
+
+// スラッグ検索関数も追加
 export async function getJapanInfoArticleBySlug(
   slug: string,
   locale: string = 'ja'
 ): Promise<JapanInfo | null> {
-  try {
-    const params: ArticleQueryParams = {
-      locale,
-      populate: '*',
-      filters: {
-        slug: { $eq: slug }
-      },
-    };
+  debugLog('📄 Getting article by slug', { slug, locale });
+  
+  const queryParams = new URLSearchParams({
+    'filters[slug][$eq]': slug,
+    'pagination[pageSize]': '1',
+    'populate': '*',
+    'locale': locale,
+  });
 
-    const response = await fetchAPI<JapanInfoArticlesResponse>(
-      '/japan-info-articles',
-      {},
-      params
-    );
-    
-    if (response.data.length === 0) {
-      return null;
-    }
-    
-    return mapStrapiJapanInfoToInternal(response.data[0]);
-  } catch (error) {
-    console.error(`❌ Error fetching Japan info article with slug ${slug} from Strapi:`, error);
+  const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
+  const result = await makeRequest(endpoint);
+
+  if (!result.success) {
+    errorLog('Failed to get article by slug', result.error);
     return null;
   }
-}
 
-/**
- * 高度な検索機能
- */
-export async function searchJapanInfoArticles(
-  searchFilters: SearchFilters,
-  page: number = 1,
-  pageSize: number = 12
-): Promise<SearchResults> {
-  const startTime = Date.now();
-  
-  try {
-    const params: ArticleQueryParams = {
-      locale: 'ja',
-      populate: '*',
-      pagination: { page, pageSize },
-    };
-
-    // 検索クエリの構築
-    const filters: any = {};
-    
-    if (searchFilters.query) {
-      filters.$or = [
-        { title: { $containsi: searchFilters.query } },
-        { description: { $containsi: searchFilters.query } },
-        { content: { $containsi: searchFilters.query } },
-      ];
-    }
-    
-    if (searchFilters.location) {
-      filters.location = { $containsi: searchFilters.location };
-    }
-    
-    if (searchFilters.tags?.length) {
-      filters.tags = { $in: searchFilters.tags };
-    }
-    
-    if (searchFilters.isPopular !== undefined) {
-      filters.isPopular = { $eq: searchFilters.isPopular };
-    }
-
-    params.filters = filters;
-    
-    // ソート設定
-    if (searchFilters.sortBy) {
-      const sortOrder = searchFilters.sortOrder || 'desc';
-      params.sort = [`${searchFilters.sortBy}:${sortOrder}`];
-    } else {
-      params.sort = ['publishedAt:desc'];
-    }
-
-    const response = await fetchAPI<JapanInfoArticlesResponse>(
-      '/japan-info-articles',
-      {},
-      params
-    );
-
-    const searchTime = Date.now() - startTime;
-
-    return {
-      articles: response.data.map(mapStrapiJapanInfoToInternal),
-      totalResults: response.meta.pagination.total,
-      searchTime,
-      pagination: response.meta.pagination,
-    };
-  } catch (error) {
-    console.error('❌ Error searching Japan info articles:', error);
-    return {
-      articles: [],
-      totalResults: 0,
-      searchTime: Date.now() - startTime,
-      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
-    };
+  const strapiResponse = result.data as JapanInfoCollectionResponse;
+  if (!strapiResponse.data || strapiResponse.data.length === 0) {
+    debugLog('Article not found by slug', { slug });
+    return null;
   }
-}
 
-/**
- * 閲覧数を更新
- */
-export async function updateJapanInfoArticleViews(
-  id: string
-): Promise<void> {
-  try {
-    // まず現在の記事を取得
-    const article = await getJapanInfoArticleById(id);
-    if (!article) {
-      throw new StrapiError('Article not found', 404);
-    }
+  const article = transformStrapiArticle(strapiResponse.data[0]);
+  debugLog('📖 Article retrieved by slug', { slug, id: article.id, title: article.title });
 
-    // 閲覧数を増加
-    const updatedViews = (article.views || 0) + 1;
-
-    await fetchAPI(
-      `/japan-info-articles/${id}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          data: {
-            views: updatedViews
-          }
-        }),
-        next: { revalidate: 0 }, // キャッシュを無効化
-      }
-    );
-
-    console.log(`✅ Views updated for article ${id}: ${updatedViews}`);
-  } catch (error) {
-    console.error(`❌ Error updating views for article ${id}:`, error);
-    // 閲覧数の更新に失敗してもページ表示は継続
-  }
-}
-
-/**
- * 関連記事を取得
- */
-export async function getRelatedJapanInfoArticles(
-  currentArticleId: string,
-  tags: string[] = [],
-  location?: string,
-  limit: number = 4
-): Promise<JapanInfo[]> {
-  try {
-    const params: ArticleQueryParams = {
-      locale: 'ja',
-      populate: '*',
-      pagination: { pageSize: limit + 1 }, // 現在の記事を除外するため+1
-      sort: ['publishedAt:desc'],
-    };
-
-    // フィルター構築
-    const filters: any = {
-      documentId: { $ne: currentArticleId }
-    };
-
-    if (tags.length > 0 || location) {
-      filters.$or = [];
-      
-      if (tags.length > 0) {
-        filters.$or.push({ tags: { $in: tags } });
-      }
-      
-      if (location) {
-        filters.$or.push({ location: { $eq: location } });
-      }
-    }
-
-    params.filters = filters;
-
-    const response = await fetchAPI<JapanInfoArticlesResponse>(
-      '/japan-info-articles',
-      {},
-      params
-    );
-
-    return response.data
-      .slice(0, limit) // 念のためlimitで切り詰め
-      .map(mapStrapiJapanInfoToInternal);
-  } catch (error) {
-    console.error('❌ Error fetching related articles:', error);
-    return [];
-  }
-}
-
-// ===================================
-// ヘルスチェック
-// ===================================
-
-/**
- * Strapi接続確認
- */
-export async function checkStrapiConnection(): Promise<boolean> {
-  try {
-    await fetchAPI('/japan-info-articles', {
-      method: 'HEAD',
-    }, {
-      pagination: { pageSize: 1 }
-    });
-    return true;
-  } catch (error) {
-    console.error('❌ Strapi connection failed:', error);
-    return false;
-  }
+  return article;
 } 

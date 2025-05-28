@@ -53,8 +53,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'irutomo222yoyaku.core.coresv.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'strapi-production-dd77.up.railway.app',
+      },
     ],
-    domains: ['qgqebyunvamzfaaaypmd.supabase.co'],
+    domains: ['qgqebyunvamzfaaaypmd.supabase.co', 'strapi-production-dd77.up.railway.app'],
   },
   // CSPヘッダーの設定
   async headers() {

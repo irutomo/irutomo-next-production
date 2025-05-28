@@ -9,7 +9,6 @@ import Link from 'next/link';
 import { JapanInfo } from '@/types/japan-info';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, CalendarIcon, MapPinIcon, TagIcon, Share2Icon, EyeIcon } from 'lucide-react';
-import { cookies } from 'next/headers';
 import { getJapanInfoArticleById } from '@/lib/strapi/client';
 import { Suspense } from 'react';
 
@@ -108,17 +107,17 @@ export async function generateMetadata(
   { params, searchParams }: JapanInfoDetailPageProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // Next.js 15: paramsとsearchParamsは非同期
-  const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams;
-  
-  const { id } = resolvedParams;
-  
-  // 言語設定を取得
-  const lang = resolvedSearchParams?.lang || '';
-  const language = (typeof lang === 'string' && lang === 'ja' ? 'ja' : 'ko') as 'ja' | 'ko';
-  
   try {
+    // Next.js 15: paramsとsearchParamsは非同期
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+    
+    const { id } = resolvedParams;
+    
+    // 言語設定を取得
+    const lang = resolvedSearchParams?.lang || '';
+    const language = (typeof lang === 'string' && lang === 'ja' ? 'ja' : 'ko') as 'ja' | 'ko';
+    
     const article = await getJapanInfoById(id, language);
 
     if (!article) {
@@ -159,8 +158,8 @@ export async function generateMetadata(
   } catch (error) {
     console.error('❌ Metadata generation error:', error);
     return {
-      title: language === 'ko' ? '일본 여행 정보 | 이루토모' : '日本旅行情報 | IRUTOMO',
-      description: language === 'ko' ? '일본 여행에 대한 유용한 정보를 제공합니다.' : '日本旅行に関する有用な情報を提供します。',
+      title: '日本旅行情報 | IRUTOMO',
+      description: '日本旅行に関する有用な情報を提供します。',
     };
   }
 }
@@ -171,7 +170,7 @@ export async function generateMetadata(
 function LanguageToggle({ currentLang, articleId }: { currentLang: 'ja' | 'ko'; articleId: string }) {
   const isKorean = currentLang === 'ko';
   const targetLang = isKorean ? 'ja' : 'ko';
-  const buttonText = isKorean ? '한국어로 보기' : '日本語で見る';
+  const buttonText = isKorean ? '日本語で見る' : '한국어로 보기';
   
   return (
     <Link
@@ -310,34 +309,39 @@ function ArticleDetail({ article, language }: { article: JapanInfo; language: 'j
 // メインページコンポーネント
 // ===================================
 export default async function JapanInfoDetailPage({ params, searchParams }: JapanInfoDetailPageProps) {
-  // Next.js 15: paramsとsearchParamsは非同期
-  const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams;
-  
-  const { id } = resolvedParams;
-  
-  // 言語設定を取得
-  const lang = resolvedSearchParams?.lang || '';
-  const language = (typeof lang === 'string' && lang === 'ja' ? 'ja' : 'ko') as 'ja' | 'ko';
-  
-  console.log(`🔍 Loading Japan Info Detail: ID=${id}, language=${language}`);
-  
-  // 記事データを取得
-  const article = await getJapanInfoById(id, language);
-  
-  // 記事が見つからない場合は404
-  if (!article) {
-    console.warn(`❌ Article not found: ID=${id}`);
+  try {
+    // Next.js 15: paramsとsearchParamsは非同期
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+    
+    const { id } = resolvedParams;
+    
+    // 言語設定を取得
+    const lang = resolvedSearchParams?.lang || '';
+    const language = (typeof lang === 'string' && lang === 'ja' ? 'ja' : 'ko') as 'ja' | 'ko';
+    
+    console.log(`🔍 Loading Japan Info Detail: ID=${id}, language=${language}`);
+    
+    // 記事データを取得
+    const article = await getJapanInfoById(id, language);
+    
+    // 記事が見つからない場合は404
+    if (!article) {
+      console.warn(`❌ Article not found: ID=${id}`);
+      notFound();
+    }
+    
+    console.log(`✅ Article loaded: ${article.title}`);
+    
+    return (
+      <div className="min-h-screen bg-white">
+        <Suspense fallback={<LoadingSpinner />}>
+          <ArticleDetail article={article} language={language} />
+        </Suspense>
+      </div>
+    );
+  } catch (error) {
+    console.error('❌ Page rendering error:', error);
     notFound();
   }
-  
-  console.log(`✅ Article loaded: ${article.title}`);
-  
-  return (
-    <div className="min-h-screen bg-white">
-      <Suspense fallback={<LoadingSpinner />}>
-        <ArticleDetail article={article} language={language} />
-      </Suspense>
-    </div>
-  );
 } 

@@ -7,7 +7,6 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { JapanInfo } from '@/types/japan-info';
-import { notFound } from 'next/navigation';
 import { ArrowLeft, CalendarIcon, MapPinIcon, TagIcon, Share2Icon, EyeIcon } from 'lucide-react';
 import { getJapanInfoArticleById } from '@/lib/strapi/client';
 import { Suspense } from 'react';
@@ -48,26 +47,35 @@ function LoadingSpinner() {
 }
 
 // ===================================
-// フォールバック用ダミーデータ
+// 記事が見つからない場合のコンポーネント
 // ===================================
-function getFallbackJapanInfo(id: string): JapanInfo {
-  return {
-    id: id,
-    title: '記事が見つかりません',
-    korean_title: '기사를 찾을 수 없습니다',
-    description: 'リクエストされた記事が見つかりませんでした。',
-    korean_description: '요청하신 기사를 찾을 수 없습니다.',
-    content: '<p>申し訳ございませんが、リクエストされた記事が見つかりませんでした。</p>',
-    korean_content: '<p>죄송합니다. 요청하신 기사를 찾을 수 없습니다.</p>',
-    featured_image: null,
-    tags: [],
-    location: '',
-    published_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    views: 0,
-    is_popular: false,
-  };
+function ArticleNotFound({ id, language }: { id: string; language: 'ja' | 'ko' }) {
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {language === 'ko' ? '기사를 찾을 수 없습니다' : '記事が見つかりません'}
+          </h1>
+          <p className="text-lg text-gray-600 mb-8">
+            {language === 'ko' 
+              ? `ID "${id}"에 해당하는 기사를 찾을 수 없습니다.`
+              : `ID "${id}" に該当する記事が見つかりませんでした。`
+            }
+          </p>
+          <div className="space-y-4">
+            <Link
+              href="/japan-info"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {language === 'ko' ? '일본정보 일람으로 돌아가기' : '日本情報一覧に戻る'}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ===================================
@@ -325,10 +333,10 @@ export default async function JapanInfoDetailPage({ params, searchParams }: Japa
     // 記事データを取得
     const article = await getJapanInfoById(id, language);
     
-    // 記事が見つからない場合は404
+    // 記事が見つからない場合は専用のコンポーネントを表示
     if (!article) {
       console.warn(`❌ Article not found: ID=${id}`);
-      notFound();
+      return <ArticleNotFound id={id} language={language} />;
     }
     
     console.log(`✅ Article loaded: ${article.title}`);
@@ -342,6 +350,14 @@ export default async function JapanInfoDetailPage({ params, searchParams }: Japa
     );
   } catch (error) {
     console.error('❌ Page rendering error:', error);
-    notFound();
+    
+    // エラーが発生した場合も専用のコンポーネントを表示
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+    const { id } = resolvedParams;
+    const lang = resolvedSearchParams?.lang || '';
+    const language = (typeof lang === 'string' && lang === 'ja' ? 'ja' : 'ko') as 'ja' | 'ko';
+    
+    return <ArticleNotFound id={id} language={language} />;
   }
 } 

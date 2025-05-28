@@ -369,42 +369,76 @@ export async function getJapanInfoArticle(
 ): Promise<JapanInfo | null> {
   debugLog('📄 Getting single article', { id, locale });
   
-  // まず、コレクション検索で記事を探す（権限問題を回避）
-  const searchParams = new URLSearchParams({
-    'pagination[pageSize]': '100', // 全記事を取得
-    'populate': '*',
-    'locale': locale,
-  });
+  // 複数のロケールで検索を試行
+  const locales = locale === 'ja' ? ['ja', 'ko'] : ['ko', 'ja'];
+  
+  for (const currentLocale of locales) {
+    debugLog(`🔍 Trying locale: ${currentLocale}`);
+    
+    // コレクション検索で記事を探す（権限問題を回避）
+    const searchParams = new URLSearchParams({
+      'pagination[pageSize]': '100', // 全記事を取得
+      'populate': '*',
+    });
+    
+    // ロケールパラメータは条件付きで追加
+    if (currentLocale) {
+      searchParams.append('locale', currentLocale);
+    }
 
-  const collectionEndpoint = `${API_ENDPOINT}?${searchParams.toString()}`;
-  const collectionResult = await makeRequest(collectionEndpoint);
+    const collectionEndpoint = `${API_ENDPOINT}?${searchParams.toString()}`;
+    const collectionResult = await makeRequest(collectionEndpoint);
 
-  if (!collectionResult.success) {
-    errorLog('Failed to get articles collection', collectionResult.error);
-    return null;
-  }
+    if (!collectionResult.success) {
+      debugLog(`❌ Failed to get articles collection for locale ${currentLocale}`, collectionResult.error);
+      continue; // 次のロケールを試行
+    }
 
-  const strapiResponse = collectionResult.data as JapanInfoCollectionResponse;
-  if (!strapiResponse.data || strapiResponse.data.length === 0) {
-    debugLog('No articles found in collection');
-    return null;
-  }
+    const strapiResponse = collectionResult.data as JapanInfoCollectionResponse;
+    if (!strapiResponse.data || strapiResponse.data.length === 0) {
+      debugLog(`📭 No articles found in collection for locale ${currentLocale}`);
+      continue; // 次のロケールを試行
+    }
 
-  // IDまたはカスタムIDで記事を検索
-  const targetArticle = strapiResponse.data.find((article: any) => {
-    const data = article.attributes || article;
-    return (
-      article.id?.toString() === id ||
-      data.customId === id ||
-      data.slug === id ||
-      data.documentId === id
-    );
-  });
+    debugLog(`📚 Found ${strapiResponse.data.length} articles in locale ${currentLocale}`);
 
-  if (!targetArticle) {
-    debugLog('Article not found in collection', { 
+    // IDまたはカスタムIDで記事を検索
+    const targetArticle = strapiResponse.data.find((article: any) => {
+      const data = article.attributes || article;
+      const matches = (
+        article.id?.toString() === id ||
+        data.customId === id ||
+        data.slug === id ||
+        data.documentId === id
+      );
+      
+      if (matches) {
+        debugLog(`🎯 Found matching article`, {
+          articleId: article.id,
+          documentId: data.documentId || article.documentId,
+          customId: data.customId,
+          slug: data.slug,
+          title: data.title || article.title
+        });
+      }
+      
+      return matches;
+    });
+
+    if (targetArticle) {
+      const transformedArticle = transformStrapiArticle(targetArticle);
+      debugLog('📖 Article found in collection', { 
+        id: transformedArticle.id, 
+        title: transformedArticle.title,
+        locale: currentLocale
+      });
+      
+      return transformedArticle;
+    }
+    
+    debugLog(`🔍 Article not found in locale ${currentLocale}`, { 
       searchId: id, 
-      availableIds: strapiResponse.data.map((a: any) => ({
+      availableIds: strapiResponse.data.slice(0, 5).map((a: any) => ({
         id: a.id,
         documentId: a.documentId,
         customId: a.customId || (a.attributes && a.attributes.customId),
@@ -412,16 +446,10 @@ export async function getJapanInfoArticle(
         title: a.title || (a.attributes && a.attributes.title)
       }))
     });
-    return null;
   }
 
-  const transformedArticle = transformStrapiArticle(targetArticle);
-  debugLog('📖 Article found in collection', { 
-    id: transformedArticle.id, 
-    title: transformedArticle.title 
-  });
-  
-  return transformedArticle;
+  debugLog('❌ Article not found in any locale', { searchId: id, triedLocales: locales });
+  return null;
 }
 
 // ===================================

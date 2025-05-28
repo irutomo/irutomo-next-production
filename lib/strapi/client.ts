@@ -155,37 +155,44 @@ export async function checkStrapiConnection(): Promise<boolean> {
 // データ変換関数
 // ===================================
 function transformStrapiArticle(strapiArticle: any): JapanInfo {
-  debugLog('🔄 Transforming Strapi article', { id: strapiArticle.id, title: strapiArticle.attributes?.title });
+  debugLog('🔄 Transforming Strapi article', { id: strapiArticle.id, title: strapiArticle.title });
   
-  const attrs = strapiArticle.attributes || {};
+  // Strapi v5では、attributesではなく直接プロパティとしてデータが格納される
+  const data = strapiArticle.attributes || strapiArticle;
   
   // カスタムIDがある場合はそれを使用、なければStrapiのIDを文字列として使用
-  const customId = attrs.customId || attrs.slug || strapiArticle.id?.toString();
+  const customId = data.customId || data.slug || data.documentId || strapiArticle.id?.toString();
+  
+  // タイトルのフォールバック処理
+  const title = data.title || data.koreanTitle || `記事 ${strapiArticle.id}`;
+  const description = data.description || data.koreanDescription || '';
+  const content = data.content || data.koreanContent || '';
   
   return {
     id: customId,
-    title: attrs.title || '',
-    korean_title: attrs.korean_title || attrs.koreanTitle || null,
-    description: attrs.description || attrs.excerpt || '',
-    korean_description: attrs.korean_description || attrs.koreanDescription || null,
-    content: attrs.content || '',
-    korean_content: attrs.korean_content || attrs.koreanContent || null,
-    featured_image: attrs.featured_image?.data?.attributes?.url || 
-                   attrs.featuredImage?.data?.attributes?.url || 
-                   attrs.image?.data?.attributes?.url || null,
-    tags: attrs.tags || [],
-    location: attrs.location || '',
-    prefecture: attrs.prefecture || '',
-    is_popular: attrs.is_popular || attrs.isPopular || false,
-    published_at: attrs.publishedAt || attrs.published_at || new Date().toISOString(),
-    created_at: attrs.createdAt || attrs.created_at || new Date().toISOString(),
-    updated_at: attrs.updatedAt || attrs.updated_at || new Date().toISOString(),
-    author: attrs.author || '',
-    views: attrs.views || 0,
-    language: attrs.locale || 'ja',
-    slug: attrs.slug || customId,
-    meta_title: attrs.meta_title || attrs.metaTitle || attrs.title,
-    meta_description: attrs.meta_description || attrs.metaDescription || attrs.description,
+    title: title,
+    korean_title: data.koreanTitle || title,
+    description: description,
+    korean_description: data.koreanDescription || description,
+    content: content,
+    korean_content: data.koreanContent || content,
+    featured_image: data.imageUrl || 
+                   data.featured_image?.data?.attributes?.url || 
+                   data.featuredImage?.data?.attributes?.url || 
+                   data.image?.data?.attributes?.url || null,
+    tags: data.tags || [],
+    location: data.location || '',
+    prefecture: data.prefecture || '',
+    is_popular: data.isPopular || false,
+    published_at: data.publishedAt || data.published_at || data.createdAt || new Date().toISOString(),
+    created_at: data.createdAt || data.created_at || new Date().toISOString(),
+    updated_at: data.updatedAt || data.updated_at || new Date().toISOString(),
+    author: data.author || '',
+    views: data.views || 0,
+    language: data.locale || 'ja',
+    slug: data.slug || customId,
+    meta_title: data.meta_title || data.metaTitle || title,
+    meta_description: data.meta_description || data.metaDescription || description,
   };
 }
 
@@ -354,7 +361,7 @@ export async function searchJapanInfoArticles(
 }
 
 // ===================================
-// 単一記事取得関数（ID検索）
+// 単一記事取得関数（ID検索）- 改善版
 // ===================================
 export async function getJapanInfoArticle(
   id: string, 
@@ -362,66 +369,57 @@ export async function getJapanInfoArticle(
 ): Promise<JapanInfo | null> {
   debugLog('📄 Getting single article', { id, locale });
   
-  // IDが数値かどうかをチェック
-  const isNumericId = /^\d+$/.test(id);
-  
-  let endpoint: string;
-  
-  if (isNumericId) {
-    // 数値IDの場合は直接アクセス
-    const queryParams = new URLSearchParams({
-      'populate': '*',
-      'locale': locale,
-    });
-    endpoint = `${API_ENDPOINT}/${id}?${queryParams.toString()}`;
-  } else {
-    // 文字列IDの場合はslugまたはカスタムIDで検索
-    const queryParams = new URLSearchParams({
-      'filters[slug][$eq]': id,
-      'pagination[pageSize]': '1',
-      'populate': '*',
-      'locale': locale,
-    });
-    endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
-    
-    // slugで見つからない場合はカスタムIDで検索
-    const result = await makeRequest(endpoint);
-    if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
-      return transformStrapiArticle(result.data[0]);
-    }
-    
-    // カスタムIDで再検索
-    const customIdParams = new URLSearchParams({
-      'filters[customId][$eq]': id,
-      'pagination[pageSize]': '1',
-      'populate': '*',
-      'locale': locale,
-    });
-    endpoint = `${API_ENDPOINT}?${customIdParams.toString()}`;
-  }
+  // まず、コレクション検索で記事を探す（権限問題を回避）
+  const searchParams = new URLSearchParams({
+    'pagination[pageSize]': '100', // 全記事を取得
+    'populate': '*',
+    'locale': locale,
+  });
 
-  const result = await makeRequest(endpoint);
+  const collectionEndpoint = `${API_ENDPOINT}?${searchParams.toString()}`;
+  const collectionResult = await makeRequest(collectionEndpoint);
 
-  if (!result.success) {
-    errorLog(`Failed to get single article ${result.error}`);
+  if (!collectionResult.success) {
+    errorLog('Failed to get articles collection', collectionResult.error);
     return null;
   }
 
-  if (!result.data) {
-    debugLog('No article data found');
+  const strapiResponse = collectionResult.data as JapanInfoCollectionResponse;
+  if (!strapiResponse.data || strapiResponse.data.length === 0) {
+    debugLog('No articles found in collection');
     return null;
   }
 
-  // 数値IDの場合は直接オブジェクト、文字列IDの場合は配列
-  const articleData = isNumericId ? result.data : (Array.isArray(result.data) && result.data.length > 0 ? result.data[0] : null);
-  
-  if (!articleData) {
-    debugLog('No article found with given ID');
+  // IDまたはカスタムIDで記事を検索
+  const targetArticle = strapiResponse.data.find((article: any) => {
+    const data = article.attributes || article;
+    return (
+      article.id?.toString() === id ||
+      data.customId === id ||
+      data.slug === id ||
+      data.documentId === id
+    );
+  });
+
+  if (!targetArticle) {
+    debugLog('Article not found in collection', { 
+      searchId: id, 
+      availableIds: strapiResponse.data.map((a: any) => ({
+        id: a.id,
+        documentId: a.documentId,
+        customId: a.customId || (a.attributes && a.attributes.customId),
+        slug: a.slug || (a.attributes && a.attributes.slug),
+        title: a.title || (a.attributes && a.attributes.title)
+      }))
+    });
     return null;
   }
 
-  const transformedArticle = transformStrapiArticle(articleData);
-  debugLog('📖 Article retrieved', { id: transformedArticle.id, title: transformedArticle.title });
+  const transformedArticle = transformStrapiArticle(targetArticle);
+  debugLog('📖 Article found in collection', { 
+    id: transformedArticle.id, 
+    title: transformedArticle.title 
+  });
   
   return transformedArticle;
 }

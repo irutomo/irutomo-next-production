@@ -92,7 +92,7 @@ async function getJapanInfoById(id: string, language: 'ja' | 'ko' = 'ko'): Promi
       };
     }
     
-    console.warn(`⚠️ Article not found: ID=${id}`);
+    console.warn(`⚠️ Article not found in Strapi: ID=${id}`);
     return null;
   } catch (error) {
     console.error('❌ Error getting Japan Info article:', error);

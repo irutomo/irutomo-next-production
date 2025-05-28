@@ -17,10 +17,11 @@ const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const API_ENDPOINT = '/api/japan-info-articles';
 
-// デバッグログ関数
+// デバッグ用ログ関数（本番環境では無効）
 function debugLog(message: string, data?: any) {
-  if (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
-    console.log(`[Strapi Client] ${message}`, data || '');
+  // 本番環境ではデバッグログを出力しない
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_MODE === 'true') {
+    console.log(`[Strapi Debug] ${message}`, data || '');
   }
 }
 

@@ -1,12 +1,13 @@
 'use client';
 
 // ===================================
-// Japan Info Grid Component
+// Japan Info Grid Component（オウンドメディア風）
 // ===================================
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { JapanInfo } from '@/types/japan-info';
+import { Clock, Eye, MapPin } from 'lucide-react';
 
 interface JapanInfoGridProps {
   articles: JapanInfo[];
@@ -36,9 +37,9 @@ export default function JapanInfoGrid({
 
   if (articles.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-6xl text-gray-300 mb-4">📝</div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <div className="text-center py-16">
+        <div className="text-6xl text-gray-300 mb-6">📝</div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-3">
           記事がありません
         </h3>
         <p className="text-gray-600">
@@ -49,64 +50,55 @@ export default function JapanInfoGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {articles.map((article, index) => (
         <article
           key={article.id}
-          className="bg-white rounded-xl shadow-sm border hover:shadow-lg transition-shadow duration-300 overflow-hidden group"
+          className="group cursor-pointer"
         >
-          <Link href={`/japan-info/${article.id}`}>
+          <Link href={`/japan-info/${article.id}`} className="block">
             {/* 記事画像 */}
-            <div className="relative h-48 overflow-hidden">
+            <div className="relative h-56 mb-4 overflow-hidden rounded-xl bg-gray-100">
               {article.image_url ? (
                 <Image
                   src={article.image_url}
                   alt={article.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                  <span className="text-4xl text-blue-300">🏯</span>
+                <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+                  <span className="text-5xl text-blue-200">🏯</span>
                 </div>
               )}
               
               {/* 人気記事バッジ */}
               {article.is_popular && (
-                <div className="absolute top-3 left-3">
-                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                <div className="absolute top-4 left-4">
+                  <span className="bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
                     人気
-                  </span>
-                </div>
-              )}
-              
-              {/* 閲覧数 */}
-              {article.views && article.views > 0 && (
-                <div className="absolute top-3 right-3">
-                  <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                    👁 {article.views.toLocaleString()}
                   </span>
                 </div>
               )}
             </div>
 
             {/* 記事コンテンツ */}
-            <div className="p-6">
+            <div className="space-y-3">
               {/* タグ */}
               {article.tags && article.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {article.tags.slice(0, 3).map((tag, tagIndex) => (
+                <div className="flex flex-wrap gap-2">
+                  {article.tags.slice(0, 2).map((tag, tagIndex) => (
                     <span
                       key={tagIndex}
-                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                      className="text-xs font-medium px-2 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100"
                     >
                       {tag}
                     </span>
                   ))}
-                  {article.tags.length > 3 && (
-                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                      +{article.tags.length - 3}
+                  {article.tags.length > 2 && (
+                    <span className="text-xs font-medium px-2 py-1 bg-gray-50 text-gray-500 rounded-md border border-gray-100">
+                      +{article.tags.length - 2}
                     </span>
                   )}
                 </div>
@@ -114,7 +106,7 @@ export default function JapanInfoGrid({
 
               {/* タイトル */}
               <h3 
-                className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors"
+                className="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors duration-200 line-clamp-2"
                 dangerouslySetInnerHTML={{ 
                   __html: highlightText(article.title) 
                 }}
@@ -122,36 +114,40 @@ export default function JapanInfoGrid({
 
               {/* 説明 */}
               <p 
-                className="text-gray-600 text-sm line-clamp-3 mb-4"
+                className="text-gray-600 leading-relaxed line-clamp-3"
                 dangerouslySetInnerHTML={{ 
                   __html: highlightText(article.description) 
                 }}
               />
 
               {/* メタ情報 */}
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center space-x-4 text-sm text-gray-500">
                   {article.location && (
-                    <span className="flex items-center">
-                      📍 {article.location}
-                    </span>
+                    <div className="flex items-center">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      <span>{article.location}</span>
+                    </div>
                   )}
                   
-                  {article.author && (
-                    <span className="flex items-center">
-                      ✍️ {article.author}
-                    </span>
+                  {article.views && article.views > 0 && (
+                    <div className="flex items-center">
+                      <Eye className="w-3 h-3 mr-1" />
+                      <span>{article.views.toLocaleString()}</span>
+                    </div>
                   )}
                 </div>
                 
                 {article.published_at && (
-                  <time dateTime={article.published_at}>
-                    {new Date(article.published_at).toLocaleDateString('ja-JP', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </time>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Clock className="w-3 h-3 mr-1" />
+                    <time dateTime={article.published_at}>
+                      {new Date(article.published_at).toLocaleDateString('ja-JP', {
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </time>
+                  </div>
                 )}
               </div>
             </div>

@@ -1,5 +1,5 @@
 // ===================================
-// Japan Info メインページ（Strapi v5統合版）
+// Japan Info メインページ（オウンドメディア風レイアウト）
 // Next.js 15 searchParams非同期対応版
 // ===================================
 
@@ -59,52 +59,11 @@ interface JapanInfoPageProps {
 }
 
 // ===================================
-// デバッグ用API接続ステータス表示
-// ===================================
-async function ApiStatusIndicator() {
-  try {
-    console.log('🔄 Checking Strapi connection...');
-    const isConnected = await checkStrapiConnection();
-    console.log(`📡 Strapi Connection Status: ${isConnected ? 'SUCCESS' : 'FAILED'}`);
-    
-    return (
-      <div className={`mb-4 p-3 rounded-lg border ${
-        isConnected ? 'bg-green-50 text-green-800 border-green-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200'
-      }`}>
-        <div className="flex items-center space-x-2">
-          <span className={isConnected ? '✅' : '⚠️'} />
-          <span className="font-medium">
-            {isConnected ? 'Strapi Connected' : 'Using Fallback Data'}
-          </span>
-          <span className="text-sm">
-            URL: {process.env.NEXT_PUBLIC_STRAPI_URL}
-          </span>
-        </div>
-      </div>
-    );
-  } catch (error) {
-    console.error('❌ API Status Check Failed:', error);
-    return (
-      <div className="mb-4 p-3 rounded-lg border bg-red-50 text-red-800 border-red-200">
-        <div className="flex items-center space-x-2">
-          <span>❌</span>
-          <span className="font-medium">API Connection Error</span>
-          <span className="text-sm">{error instanceof Error ? error.message : 'Unknown error'}</span>
-        </div>
-      </div>
-    );
-  }
-}
-
-// ===================================
 // メインページコンポーネント
 // ===================================
 export default async function JapanInfoPage({ searchParams }: JapanInfoPageProps) {
-  console.log('📄 Japan Info Page Loading...');
-  
   // Next.js 15: searchParamsは非同期なのでawaitが必要
   const resolvedSearchParams = await searchParams;
-  console.log('🔍 Resolved Search Params:', resolvedSearchParams);
 
   // パラメータの解析
   const query = resolvedSearchParams?.query || '';
@@ -116,8 +75,6 @@ export default async function JapanInfoPage({ searchParams }: JapanInfoPageProps
   const sortBy = resolvedSearchParams?.sortBy || 'publishedAt';
   const sortOrder = resolvedSearchParams?.sortOrder || 'desc';
   const pageSize = Number(resolvedSearchParams?.pageSize) || 12;
-
-  console.log('🎯 Parsed parameters:', { query, page, location, tags, isPopular, sortBy, sortOrder, pageSize });
 
   // 検索フィルターの構築
   const searchFilters: SearchFilters = {
@@ -133,125 +90,67 @@ export default async function JapanInfoPage({ searchParams }: JapanInfoPageProps
   let articlesData;
   let popularArticles: JapanInfo[] = [];
   let isStrapiAvailable = false;
-  let debugInfo = '';
 
   try {
-    console.log('📡 Starting API calls...');
-    
     // Strapi接続確認
     isStrapiAvailable = await checkStrapiConnection();
-    console.log(`🔗 Strapi available: ${isStrapiAvailable}`);
     
     if (isStrapiAvailable) {
       // 検索条件がある場合は検索API、ない場合は通常取得
       if (query || location || tags.length > 0 || isPopular) {
-        console.log('🔍 Using search API with filters:', searchFilters);
         const searchResults = await searchJapanInfoArticles(searchFilters, page, pageSize);
         articlesData = {
           articles: searchResults.articles,
           pagination: searchResults.pagination,
         };
-        debugInfo = `Search: ${searchResults.totalResults} results in ${searchResults.searchTime}ms`;
       } else {
-        console.log('📚 Using getAllJapanInfoArticles');
         articlesData = await getAllJapanInfoArticles({
           page,
           pageSize,
           sortBy,
           sortOrder,
         });
-        debugInfo = `All articles: ${articlesData.articles.length} loaded`;
       }
-
-      console.log(`📊 Retrieved ${articlesData.articles.length} articles`);
 
       // 人気記事の取得（検索時以外）
       if (!query && !location && tags.length === 0) {
-        console.log('⭐ Getting popular articles...');
         popularArticles = await getPopularJapanInfoArticles('ja', 6);
-        console.log(`🌟 Popular articles: ${popularArticles.length}`);
       }
     } else {
       // Strapiが利用できない場合のフォールバック
-      console.warn('⚠️ Strapi接続失敗、フォールバックデータを使用');
       articlesData = {
         articles: [],
         pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
       };
-      debugInfo = 'Using fallback data';
     }
   } catch (error) {
-    console.error('❌ データ取得エラー:', error);
     articlesData = {
       articles: [],
       pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
     };
-    debugInfo = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
 
   // 検索キーワードのハイライト用
   const highlightTerms = query ? query.split(' ').filter(term => term.length > 0) : [];
 
-  console.log('🎬 Rendering page with data:', {
-    articlesCount: articlesData.articles.length,
-    popularCount: popularArticles.length,
-    isStrapiAvailable,
-    debugInfo
-  });
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <main className="min-h-screen bg-white">
       {/* ヒーローセクション */}
       <JapanInfoHero />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* API接続ステータス表示 */}
-        <Suspense fallback={<LoadingSpinner size="sm" />}>
-          <ApiStatusIndicator />
-        </Suspense>
-
-        {/* デバッグ情報表示（開発環境のみ） */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-4 p-4 rounded-lg bg-gray-50 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-2">🔧 Debug Info</h3>
-            <div className="text-sm text-gray-700 space-y-1">
-              <div><strong>Strapi URL:</strong> {process.env.NEXT_PUBLIC_STRAPI_URL}</div>
-              <div><strong>API Token:</strong> {process.env.STRAPI_API_TOKEN ? '✅ Set' : '❌ Missing'}</div>
-              <div><strong>Connection Status:</strong> {isStrapiAvailable ? '✅ Connected' : '❌ Failed'}</div>
-              <div><strong>Status:</strong> {debugInfo}</div>
-              <div><strong>Articles:</strong> {articlesData.articles.length}</div>
-              <div><strong>Popular:</strong> {popularArticles.length}</div>
-              <div><strong>Search Filters:</strong> {JSON.stringify(searchFilters)}</div>
-              <div><strong>Raw Params:</strong> {JSON.stringify(resolvedSearchParams)}</div>
-            </div>
-          </div>
-        )}
-
-        {/* Strapi API接続テスト表示 */}
-        <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
-          <h3 className="font-semibold text-blue-900 mb-2">🧪 Strapi API Test</h3>
-          <div className="text-sm text-blue-800">
-            <div><strong>Direct API Test:</strong> 
-              <a 
-                href="https://strapi-production-dd77.up.railway.app/api/japan-info-articles" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="ml-2 underline hover:no-underline"
-              >
-                Test Strapi API ↗
-              </a>
-            </div>
-            <div><strong>Expected Results:</strong> 3 articles from Strapi</div>
-            <div><strong>Actual Results:</strong> {articlesData.articles.length} articles loaded</div>
-          </div>
-        </div>
-
+      {/* メインコンテンツ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 検索・フィルターセクション */}
-        <div className="mb-8 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              日本の魅力を探す
-            </h2>
+        <section className="py-8 border-b border-gray-100">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                日本の魅力を探す
+              </h2>
+              <p className="text-gray-600">
+                あなたの興味に合った記事を見つけましょう
+              </p>
+            </div>
             
             <Suspense fallback={<LoadingSpinner />}>
               <JapanInfoSearch 
@@ -260,56 +159,58 @@ export default async function JapanInfoPage({ searchParams }: JapanInfoPageProps
                 initialTags={tags}
               />
             </Suspense>
-          </div>
 
-          <Suspense fallback={<LoadingSpinner />}>
-            <JapanInfoFilters 
-              currentSortBy={sortBy}
-              currentSortOrder={sortOrder}
-              currentPageSize={pageSize}
-              showPopularOnly={isPopular}
-            />
-          </Suspense>
-        </div>
+            <div className="mt-6">
+              <Suspense fallback={<LoadingSpinner />}>
+                <JapanInfoFilters 
+                  currentSortBy={sortBy}
+                  currentSortOrder={sortOrder}
+                  currentPageSize={pageSize}
+                  showPopularOnly={isPopular}
+                />
+              </Suspense>
+            </div>
+          </div>
+        </section>
 
         {/* 人気記事セクション（検索時以外） */}
         {popularArticles.length > 0 && !query && (
-          <div className="mb-12">
+          <section className="py-12">
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner />}>
                 <PopularArticles articles={popularArticles} />
               </Suspense>
             </ErrorBoundary>
-          </div>
+          </section>
         )}
 
-        {/* 検索結果の表示 */}
-        <div className="space-y-6">
-          {/* 検索結果ヘッダー */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {query || location || tags.length > 0 || isPopular ? '検索結果' : '最新の記事'}
-              </h2>
-              
-              {articlesData.pagination.total > 0 && (
-                <p className="text-gray-600 mt-1">
-                  {articlesData.pagination.total}件の記事が見つかりました
-                  {query && (
-                    <span className="ml-2">
-                      「<span className="font-medium text-blue-600">{query}</span>」の検索結果
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
+        {/* 記事一覧セクション */}
+        <section className="py-8">
+          {/* セクションヘッダー */}
+          <div className="mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  {query || location || tags.length > 0 || isPopular ? '検索結果' : '最新の記事'}
+                </h2>
+                
+                {articlesData.pagination.total > 0 && (
+                  <p className="text-gray-600">
+                    {articlesData.pagination.total}件の記事
+                    {query && (
+                      <span className="ml-2">
+                        「<span className="font-medium text-blue-600">{query}</span>」の検索結果
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
 
-            {/* 表示件数情報 */}
-            <div className="text-sm text-gray-500 mt-2 sm:mt-0">
+              {/* 表示件数情報 */}
               {articlesData.pagination.total > 0 && (
-                <>
+                <div className="text-sm text-gray-500 mt-4 lg:mt-0">
                   {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, articlesData.pagination.total)} / {articlesData.pagination.total}
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -344,58 +245,39 @@ export default async function JapanInfoPage({ searchParams }: JapanInfoPageProps
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
                 <div className="text-6xl text-gray-300 mb-4">🔍</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   記事が見つかりませんでした
                 </h3>
-                <p className="text-gray-600 mb-6">
-                  {isStrapiAvailable 
-                    ? 'Strapi APIに接続できましたが、記事データが存在しないか、検索条件にマッチする記事がありません。' 
-                    : 'Strapi APIに接続できませんでした。ネットワーク接続やAPIトークンを確認してください。'
-                  }
+                <p className="text-gray-600 mb-8">
+                  検索条件を変更して再度お試しください
                 </p>
                 
                 {/* 検索条件リセットボタン */}
-                <div className="space-x-4">
-                  <a
-                    href="/japan-info"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    すべての記事を見る
-                  </a>
-                  {!isStrapiAvailable && (
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                      再読み込み
-                    </button>
-                  )}
-                  <a
-                    href="https://strapi-production-dd77.up.railway.app/api/japan-info-articles"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    API直接テスト ↗
-                  </a>
-                </div>
+                <a
+                  href="/japan-info"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  すべての記事を見る
+                </a>
               </div>
             </div>
           )}
-        </div>
+        </section>
 
         {/* SEO向け追加コンテンツ */}
-        <section className="mt-16 bg-white rounded-xl shadow-sm border p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            日本の魅力を発見しよう
-          </h2>
-          <div className="prose prose-gray max-w-none">
-            <p className="text-gray-600 leading-relaxed">
-              IRUTOMOでは、日本全国の隠れた名所から有名な観光地まで、
-              多彩な情報をお届けしています。地域の文化、伝統、グルメ、
-              そして現地の人々との交流を通じて、本当の日本の魅力を
-              体験していただけます。
-            </p>
+        <section className="py-16 border-t border-gray-100">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              日本の魅力を発見しよう
+            </h2>
+            <div className="prose prose-lg prose-gray max-w-none">
+              <p className="text-gray-600 leading-relaxed">
+                IRUTOMOでは、日本全国の隠れた名所から有名な観光地まで、
+                多彩な情報をお届けしています。地域の文化、伝統、グルメ、
+                そして現地の人々との交流を通じて、本当の日本の魅力を
+                体験していただけます。
+              </p>
+            </div>
           </div>
         </section>
       </div>

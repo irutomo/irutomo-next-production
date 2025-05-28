@@ -1,10 +1,11 @@
 // ===================================
-// Popular Articles Component
+// Popular Articles Component（オウンドメディア風）
 // ===================================
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { JapanInfo } from '@/types/japan-info';
+import { TrendingUp, Eye, MapPin, Clock } from 'lucide-react';
 
 interface PopularArticlesProps {
   articles: JapanInfo[];
@@ -16,113 +17,123 @@ export default function PopularArticles({ articles }: PopularArticlesProps) {
   }
 
   return (
-    <section className="bg-white rounded-xl shadow-sm border p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-          <span className="text-red-500 mr-2">🔥</span>
+    <section className="bg-white">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 flex items-center">
+          <TrendingUp className="w-8 h-8 text-red-500 mr-3" />
           人気の記事
         </h2>
         <Link
           href="/japan-info?popular=true"
-          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
         >
           すべて見る →
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articles.map((article, index) => (
           <article
             key={article.id}
-            className="group relative overflow-hidden rounded-lg"
+            className="group relative"
           >
-            <Link href={`/japan-info/${article.id}`}>
+            <Link href={`/japan-info/${article.id}`} className="block">
               {/* 記事画像 */}
-              <div className="relative h-48 overflow-hidden rounded-lg">
+              <div className="relative h-56 overflow-hidden rounded-xl bg-gray-100 mb-4">
                 {article.image_url ? (
                   <Image
                     src={article.image_url}
                     alt={article.title}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
-                    <span className="text-4xl text-red-300">🌟</span>
+                  <div className="w-full h-full bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+                    <span className="text-5xl text-red-200">🌟</span>
                   </div>
                 )}
-                
-                {/* オーバーレイ */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 
                 {/* ランキング番号 */}
-                <div className="absolute top-3 left-3">
-                  <div className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full flex items-center">
+                <div className="absolute top-4 left-4">
+                  <div className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full flex items-center shadow-sm">
                     <span className="text-yellow-300 mr-1">🏆</span>
-                    {index + 1}位
+                    {index + 1}
                   </div>
                 </div>
-                
-                {/* 閲覧数 */}
-                {article.views && article.views > 0 && (
-                  <div className="absolute top-3 right-3">
-                    <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                      👁 {article.views.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                
-                {/* タイトルとメタ情報 */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-white font-bold text-lg line-clamp-2 mb-2 group-hover:text-yellow-300 transition-colors">
-                    {article.title}
-                  </h3>
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-200">
-                    {article.location && (
-                      <span className="flex items-center">
-                        📍 {article.location}
+              </div>
+              
+              {/* 記事コンテンツ */}
+              <div className="space-y-3">
+                {/* タグ */}
+                {article.tags && article.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags.slice(0, 2).map((tag, tagIndex) => (
+                      <span
+                        key={tagIndex}
+                        className="text-xs font-medium px-2 py-1 bg-red-50 text-red-600 rounded-md border border-red-100"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {article.tags.length > 2 && (
+                      <span className="text-xs font-medium px-2 py-1 bg-gray-50 text-gray-500 rounded-md border border-gray-100">
+                        +{article.tags.length - 2}
                       </span>
                     )}
+                  </div>
+                )}
+
+                {/* タイトル */}
+                <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-red-600 transition-colors duration-200 line-clamp-2">
+                  {article.title}
+                </h3>
+                
+                {/* 説明 */}
+                {article.description && (
+                  <p className="text-gray-600 leading-relaxed line-clamp-2">
+                    {article.description}
+                  </p>
+                )}
+                
+                {/* メタ情報 */}
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    {article.location && (
+                      <div className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        <span>{article.location}</span>
+                      </div>
+                    )}
                     
-                    {article.published_at && (
+                    {article.views && article.views > 0 && (
+                      <div className="flex items-center">
+                        <Eye className="w-3 h-3 mr-1" />
+                        <span>{article.views.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {article.published_at && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="w-3 h-3 mr-1" />
                       <time dateTime={article.published_at}>
                         {new Date(article.published_at).toLocaleDateString('ja-JP', {
                           month: 'short',
                           day: 'numeric'
                         })}
                       </time>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* タグ */}
-              {article.tags && article.tags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {article.tags.slice(0, 2).map((tag, tagIndex) => (
-                    <span
-                      key={tagIndex}
-                      className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {article.tags.length > 2 && (
-                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                      +{article.tags.length - 2}
-                    </span>
+                    </div>
                   )}
                 </div>
-              )}
+              </div>
             </Link>
           </article>
         ))}
       </div>
 
       {/* フッター */}
-      <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+      <div className="mt-8 pt-6 border-t border-gray-100 text-center">
         <p className="text-sm text-gray-600">
           閲覧数とエンゲージメントに基づいて選出された人気記事です
         </p>

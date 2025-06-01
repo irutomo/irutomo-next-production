@@ -1,87 +1,84 @@
-'use client';
-
 // ===================================
-// Japan Info メインページ（リファクタリング版）
-// シンプルで保守性の高い構造
+// Japan Info メインページ（App Router準拠版）
+// Server Components優先、Client Components最小化
 // ===================================
 
-import { useLanguage } from '@/contexts/language-context';
-import { useJapanInfoArticles } from './hooks/useJapanInfoArticles';
-import { getTranslation } from './lib/translations';
+import { Suspense } from 'react';
+import { Metadata } from 'next';
+import { getAllJapanInfoArticles } from '@/lib/strapi/client';
+import { getTranslation, japanInfoTranslations } from './lib/translations';
 import {
   ApplePageHeader,
-  AppleArticleCard,
   AppleLoadingSpinner,
   AppleEmptyState,
-  AppleLoadMoreButton
+  JapanInfoClient
 } from './components';
 
-export default function JapanInfoPage() {
-  const { language } = useLanguage();
-  const { 
-    articles, 
-    loading, 
-    hasMore, 
-    totalArticles, 
-    error,
-    loadMore 
-  } = useJapanInfoArticles({
-    pageSize: 8,
-    sortBy: 'publishedAt',
-    sortOrder: 'desc'
-  });
+// ===================================
+// メタデータ生成
+// ===================================
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: '日本MZ情報🍯 | IRUTOMO',
+    description: '日本のMZ世代トレンド・カルチャー・ライフスタイル情報をお届け!!',
+    openGraph: {
+      title: '日本MZ情報🍯 | IRUTOMO',
+      description: '日本のMZ世代トレンド・カルチャー・ライフスタイル情報をお届け!!',
+      type: 'website',
+      locale: 'ko_KR',
+      alternateLocale: 'ja_JP',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: '日本MZ情報🍯 | IRUTOMO',
+      description: '日本のMZ世代トレンド・カルチャー・ライフスタイル情報をお届け!!',
+    },
+  };
+}
+
+// ===================================
+// 初期データ取得（Server Component）
+// ===================================
+async function getInitialArticles() {
+  try {
+    const results = await getAllJapanInfoArticles({
+      page: 1,
+      pageSize: 8,
+      sortBy: 'publishedAt',
+      sortOrder: 'desc',
+    });
+    return results;
+  } catch (error) {
+    console.error('Initial data fetch error:', error);
+    return {
+      articles: [],
+      pagination: {
+        page: 1,
+        pageSize: 8,
+        pageCount: 0,
+        total: 0,
+      },
+    };
+  }
+}
+
+// ===================================
+// 静的生成のための再検証設定
+// ===================================
+export const revalidate = 3600; // 1時間に1回再生成
+
+// ===================================
+// メインページコンポーネント（Server Component）
+// ===================================
+export default async function JapanInfoPage() {
+  // サーバーサイドでデータを取得
+  const initialData = await getInitialArticles();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/20 to-white">
-      {/* ページヘッダー */}
-      <ApplePageHeader language={language} />
-      
-      {/* メインコンテンツ */}
-      <main className="container-responsive py-12">
-        {/* エラー表示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-800">データの取得中にエラーが発生しました: {error.message}</p>
-          </div>
-        )}
-
-        {/* 記事一覧 */}
-        {loading && articles.length === 0 ? (
-          <AppleLoadingSpinner />
-        ) : articles.length === 0 ? (
-          <AppleEmptyState language={language} />
-        ) : (
-          <>
-            {/* 記事数表示 */}
-            <div className="mb-8 text-center">
-              <p className="text-gray-600 font-medium">
-                {getTranslation(language, 'totalArticles', { count: totalArticles.toString() })}
-              </p>
-            </div>
-
-            {/* 記事カード一覧 */}
-            <div className="space-y-6">
-              {articles.map((article, index) => (
-                <AppleArticleCard
-                  key={article.id}
-                  article={article}
-                  language={language}
-                  index={index}
-                />
-              ))}
-            </div>
-
-            {/* もっと読み込むボタン */}
-            {hasMore && (
-              <AppleLoadMoreButton
-                language={language}
-                onClick={loadMore}
-                disabled={loading}
-              />
-            )}
-          </>
-        )}
-      </main>
+      <Suspense fallback={<AppleLoadingSpinner />}>
+        <JapanInfoClient initialData={initialData} />
+      </Suspense>
     </div>
   );
 } 

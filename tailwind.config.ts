@@ -11,6 +11,9 @@ const config: Config = {
       colors: {
         primary: '#4F46E5', // インディゴ色
         'primary-dark': '#4338CA',
+        accent: '#FF8008', // IRUTOMOテーマオレンジ
+        'accent-dark': '#E6700A',
+        'accent-light': '#FF9933',
       },
       keyframes: {
         'fade-in': {
@@ -23,7 +26,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 }
 
 export default config 

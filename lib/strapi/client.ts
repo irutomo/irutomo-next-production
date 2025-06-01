@@ -1,5 +1,5 @@
 // ===================================
-// Strapi v5 クライアント（詳細デバッグ版）
+// Strapi v5 クライアント（詳細デバッグ版）+ Supabaseフォールバック
 // ===================================
 
 import { 
@@ -12,10 +12,26 @@ import {
   StrapiConnectionStatus 
 } from '@/types/japan-info';
 
+import { createClient } from '@supabase/supabase-js';
+
 // 環境変数とAPI設定
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 const API_ENDPOINT = '/api/japan-info-articles';
+
+// Supabase設定（フォールバック用）
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+let supabaseClient: any = null;
+
+// Supabaseクライアントの初期化
+function getSupabaseClient() {
+  if (!supabaseClient && SUPABASE_URL && SUPABASE_ANON_KEY) {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return supabaseClient;
+}
 
 // デバッグ用ログ関数（本番環境では無効）
 function debugLog(message: string, data?: any) {
@@ -30,8 +46,17 @@ function errorLog(message: string, error?: any) {
   console.error(`[Strapi Client ERROR] ${message}`, error || '');
 }
 
+// 警告ログ関数
+function warningLog(message: string, data?: any) {
+  console.warn(`[Strapi Client WARNING] ${message}`, data || '');
+}
+
 // 設定確認関数
-function validateConfiguration(): { isValid: boolean; errors: string[] } {
+function validateConfiguration(): { 
+  isValid: boolean; 
+  errors: string[]; 
+  hasSupabaseFallback: boolean 
+} {
   const errors: string[] = [];
   
   if (!STRAPI_URL) {
@@ -42,10 +67,203 @@ function validateConfiguration(): { isValid: boolean; errors: string[] } {
     errors.push('STRAPI_API_TOKEN is not set');
   }
   
+  const hasSupabaseFallback = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+  
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    hasSupabaseFallback
   };
+}
+
+// Supabaseから取得するデータの型定義
+interface SupabaseJapanInfoRow {
+  id: number;
+  title: string;
+  korean_title?: string;
+  description: string;
+  korean_description?: string;
+  content: string;
+  korean_content?: string;
+  image_url: string;
+  tags?: string[];
+  location?: string;
+  is_popular?: boolean;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+  author?: string;
+  views?: number;
+}
+
+// ===================================
+// Supabaseフォールバック関数群
+// ===================================
+
+// SupabaseからJapan Infoデータを取得（フォールバック）
+async function getJapanInfoFromSupabase(
+  options: {
+    page?: number;
+    pageSize?: number;
+    isPopular?: boolean;
+    query?: string;
+    location?: string;
+    tags?: string[];
+    sortBy?: string;
+    sortOrder?: string;
+  } = {}
+): Promise<{ articles: JapanInfo[]; pagination: any }> {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      throw new Error('Supabase client is not available');
+    }
+
+    const {
+      page = 1,
+      pageSize = 12,
+      isPopular,
+      query,
+      location,
+      tags = [],
+      sortBy = 'published_at',
+      sortOrder = 'desc'
+    } = options;
+
+    let supabaseQuery = supabase.from('japan_info').select('*', { count: 'exact' });
+
+    // フィルター適用
+    if (isPopular) {
+      supabaseQuery = supabaseQuery.eq('is_popular', true);
+    }
+
+    if (query) {
+      supabaseQuery = supabaseQuery.or(`title.ilike.%${query}%,description.ilike.%${query}%,korean_title.ilike.%${query}%`);
+    }
+
+    if (location) {
+      supabaseQuery = supabaseQuery.ilike('location', `%${location}%`);
+    }
+
+    if (tags.length > 0) {
+      supabaseQuery = supabaseQuery.contains('tags', tags);
+    }
+
+    // ソート
+    const validSortColumns = ['published_at', 'views', 'title', 'created_at'];
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'published_at';
+    supabaseQuery = supabaseQuery.order(sortColumn, { ascending: sortOrder === 'asc' });
+
+    // ページネーション
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    supabaseQuery = supabaseQuery.range(from, to);
+
+    const { data, error, count } = await supabaseQuery;
+
+    if (error) {
+      throw error;
+    }
+
+    // データ変換
+    const articles: JapanInfo[] = (data as SupabaseJapanInfoRow[] || []).map((item: SupabaseJapanInfoRow) => ({
+      id: item.id.toString(),
+      title: item.title,
+      korean_title: item.korean_title || item.title,
+      description: item.description,
+      korean_description: item.korean_description || item.description,
+      content: item.content,
+      korean_content: item.korean_content || item.content,
+      featured_image: item.image_url,
+      tags: item.tags || [],
+      location: item.location || '',
+      prefecture: '',
+      is_popular: item.is_popular || false,
+      published_at: item.published_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      author: item.author || '',
+      views: item.views || 0,
+      language: 'ja',
+      slug: item.id.toString(),
+      meta_title: item.title,
+      meta_description: item.description,
+    }));
+
+    const totalPages = Math.ceil((count || 0) / pageSize);
+
+    warningLog('Using Supabase fallback for Japan Info data', {
+      articlesFound: articles.length,
+      totalCount: count,
+      page,
+      totalPages
+    });
+
+    return {
+      articles,
+      pagination: {
+        page,
+        pageSize,
+        pageCount: totalPages,
+        total: count || 0
+      }
+    };
+  } catch (error) {
+    errorLog('Supabase fallback failed', error);
+    return {
+      articles: [],
+      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 }
+    };
+  }
+}
+
+// 個別記事をSupabaseから取得
+async function getJapanInfoByIdFromSupabase(id: string): Promise<JapanInfo | null> {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      throw new Error('Supabase client is not available');
+    }
+
+    const { data, error } = await supabase
+      .from('japan_info')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const item = data as SupabaseJapanInfoRow;
+    
+    return {
+      id: item.id.toString(),
+      title: item.title,
+      korean_title: item.korean_title || item.title,
+      description: item.description,
+      korean_description: item.korean_description || item.description,
+      content: item.content,
+      korean_content: item.korean_content || item.content,
+      featured_image: item.image_url,
+      tags: item.tags || [],
+      location: item.location || '',
+      prefecture: '',
+      is_popular: item.is_popular || false,
+      published_at: item.published_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      author: item.author || '',
+      views: item.views || 0,
+      language: 'ja',
+      slug: item.id.toString(),
+      meta_title: item.title,
+      meta_description: item.description,
+    };
+  } catch (error) {
+    errorLog('Supabase fallback failed for single article', error);
+    return null;
+  }
 }
 
 // APIリクエスト関数
@@ -58,6 +276,9 @@ async function makeRequest(
   const config = validateConfiguration();
   if (!config.isValid) {
     errorLog('Configuration validation failed', config.errors);
+    if (config.hasSupabaseFallback) {
+      warningLog('Strapi not available, will use Supabase fallback');
+    }
     return { success: false, error: `Configuration error: ${config.errors.join(', ')}` };
   }
 
@@ -134,6 +355,10 @@ export async function checkStrapiConnection(): Promise<boolean> {
   const config = validateConfiguration();
   if (!config.isValid) {
     errorLog('Configuration check failed', config.errors);
+    if (config.hasSupabaseFallback) {
+      warningLog('Strapi unavailable, but Supabase fallback is available');
+      return false; // Strapiは利用不可だが、フォールバックは可能
+    }
     return false;
   }
 
@@ -213,6 +438,7 @@ export async function getAllJapanInfoArticles(
     locale = 'ja'
   } = options;
 
+  // まずStrapiを試行
   const queryParams = new URLSearchParams({
     'pagination[page]': page.toString(),
     'pagination[pageSize]': pageSize.toString(),
@@ -224,25 +450,39 @@ export async function getAllJapanInfoArticles(
   const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
   const result = await makeRequest(endpoint);
 
-  if (!result.success) {
-    errorLog('Failed to get all articles', result.error);
-    return { 
-      articles: [], 
-      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 } 
+  if (result.success) {
+    const strapiResponse = result.data as JapanInfoCollectionResponse;
+    const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+    
+    debugLog('✅ Articles fetched successfully from Strapi', { 
+      articles: articles.length,
+      totalResults: strapiResponse.meta?.pagination?.total || 0
+    });
+
+    return {
+      articles,
+      pagination: strapiResponse.meta?.pagination || { page: 1, pageSize: 12, pageCount: 0, total: 0 }
     };
   }
 
-  const strapiResponse = result.data as JapanInfoCollectionResponse;
-  const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
-  
-  debugLog('📊 Articles retrieved', { 
-    count: articles.length,
-    pagination: strapiResponse.meta?.pagination 
-  });
+  // Strapiが失敗した場合、Supabaseフォールバックを試行
+  const config = validateConfiguration();
+  if (config.hasSupabaseFallback) {
+    warningLog('Strapi failed, attempting Supabase fallback', result.error);
+    
+    return await getJapanInfoFromSupabase({
+      page,
+      pageSize,
+      sortBy: sortBy === 'publishedAt' ? 'published_at' : sortBy,
+      sortOrder
+    });
+  }
 
+  // 両方失敗した場合
+  errorLog('Both Strapi and Supabase failed', result.error);
   return {
-    articles,
-    pagination: strapiResponse.meta?.pagination || { page: 1, pageSize: 12, pageCount: 0, total: 0 }
+    articles: [],
+    pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 }
   };
 }
 
@@ -253,12 +493,14 @@ export async function getPopularJapanInfoArticles(
   locale: string = 'ja', 
   limit: number = 6
 ): Promise<JapanInfo[]> {
-  debugLog('⭐ Getting popular articles', { locale, limit });
+  debugLog('⭐ Getting popular Japan Info articles', { locale, limit });
 
+  // まずStrapiを試行
   const queryParams = new URLSearchParams({
     'filters[isPopular][$eq]': 'true',
     'pagination[pageSize]': limit.toString(),
     'sort[0]': 'views:desc',
+    'sort[1]': 'publishedAt:desc',
     'populate': '*',
     'locale': locale,
   });
@@ -266,17 +508,35 @@ export async function getPopularJapanInfoArticles(
   const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
   const result = await makeRequest(endpoint);
 
-  if (!result.success) {
-    errorLog('Failed to get popular articles', result.error);
-    return [];
+  if (result.success) {
+    const strapiResponse = result.data as JapanInfoCollectionResponse;
+    const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+    
+    debugLog('✅ Popular articles fetched successfully from Strapi', { 
+      articles: articles.length 
+    });
+
+    return articles;
   }
 
-  const strapiResponse = result.data as JapanInfoCollectionResponse;
-  const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+  // Strapiが失敗した場合、Supabaseフォールバックを試行
+  const config = validateConfiguration();
+  if (config.hasSupabaseFallback) {
+    warningLog('Strapi failed, attempting Supabase fallback for popular articles', result.error);
+    
+    const fallbackResult = await getJapanInfoFromSupabase({
+      pageSize: limit,
+      isPopular: true,
+      sortBy: 'views',
+      sortOrder: 'desc'
+    });
+    
+    return fallbackResult.articles;
+  }
 
-  debugLog('🌟 Popular articles retrieved', { count: articles.length });
-  
-  return articles;
+  // 両方失敗した場合
+  errorLog('Both Strapi and Supabase failed for popular articles', result.error);
+  return [];
 }
 
 // ===================================
@@ -295,6 +555,8 @@ export async function searchJapanInfoArticles(
   debugLog('🔍 Searching articles', { filters, page, pageSize });
   
   const startTime = Date.now();
+  
+  // まずStrapiを試行
   const queryParams = new URLSearchParams({
     'pagination[page]': page.toString(),
     'pagination[pageSize]': pageSize.toString(),
@@ -333,30 +595,59 @@ export async function searchJapanInfoArticles(
   const endpoint = `${API_ENDPOINT}?${queryParams.toString()}`;
   const result = await makeRequest(endpoint);
 
-  if (!result.success) {
-    errorLog('Search failed', result.error);
-    return { 
-      articles: [], 
-      pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
-      totalResults: 0,
-      searchTime: Date.now() - startTime
+  if (result.success) {
+    const strapiResponse = result.data as JapanInfoCollectionResponse;
+    const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+    const searchTime = Date.now() - startTime;
+
+    debugLog('✅ Search completed successfully via Strapi', { 
+      results: articles.length,
+      totalResults: strapiResponse.meta?.pagination?.total || 0,
+      searchTime: `${searchTime}ms`
+    });
+
+    return {
+      articles,
+      pagination: strapiResponse.meta?.pagination || { page: 1, pageSize: 12, pageCount: 0, total: 0 },
+      totalResults: strapiResponse.meta?.pagination?.total || 0,
+      searchTime
     };
   }
 
-  const strapiResponse = result.data as JapanInfoCollectionResponse;
-  const articles = strapiResponse.data?.map(transformStrapiArticle) || [];
+  // Strapiが失敗した場合、Supabaseフォールバックを試行
+  const config = validateConfiguration();
+  if (config.hasSupabaseFallback) {
+    warningLog('Strapi search failed, attempting Supabase fallback', result.error);
+    
+    const fallbackResult = await getJapanInfoFromSupabase({
+      page,
+      pageSize,
+      query: filters.query,
+      location: filters.location,
+      tags: filters.tags,
+      isPopular: filters.isPopular,
+      sortBy: filters.sortBy === 'publishedAt' ? 'published_at' : filters.sortBy,
+      sortOrder: filters.sortOrder
+    });
+    
+    const searchTime = Date.now() - startTime;
+    
+    return {
+      articles: fallbackResult.articles,
+      pagination: fallbackResult.pagination,
+      totalResults: fallbackResult.pagination.total,
+      searchTime
+    };
+  }
+
+  // 両方失敗した場合
   const searchTime = Date.now() - startTime;
-
-  debugLog('🔎 Search completed', { 
-    results: articles.length,
-    totalResults: strapiResponse.meta?.pagination?.total || 0,
-    searchTime: `${searchTime}ms`
-  });
-
-  return {
-    articles,
-    pagination: strapiResponse.meta?.pagination || { page: 1, pageSize: 12, pageCount: 0, total: 0 },
-    totalResults: strapiResponse.meta?.pagination?.total || 0,
+  errorLog('Both Strapi and Supabase search failed', result.error);
+  
+  return { 
+    articles: [], 
+    pagination: { page: 1, pageSize: 12, pageCount: 0, total: 0 },
+    totalResults: 0,
     searchTime
   };
 }
@@ -454,16 +745,39 @@ export async function getJapanInfoArticle(
 }
 
 // ===================================
-// 後方互換性関数
+// ID指定記事取得（言語対応版）
 // ===================================
-
-// 既存のコードで使用されている関数名をサポート
 export async function getJapanInfoArticleById(
   id: string, 
   locale: string = 'ja'
 ): Promise<JapanInfo | null> {
-  debugLog('📄 Getting article by ID (legacy function)', { id, locale });
-  return getJapanInfoArticle(id, locale);
+  debugLog('🆔 Getting Japan Info article by ID', { id, locale });
+
+  // まずStrapiを試行
+  const result = await getJapanInfoArticle(id, locale);
+  
+  if (result) {
+    debugLog('✅ Article fetched successfully from Strapi', { id, title: result.title });
+    return result;
+  }
+
+  // Strapiが失敗した場合、Supabaseフォールバックを試行
+  const config = validateConfiguration();
+  if (config.hasSupabaseFallback) {
+    warningLog('Strapi failed, attempting Supabase fallback for article by ID', { id });
+    
+    const fallbackResult = await getJapanInfoByIdFromSupabase(id);
+    
+    if (fallbackResult) {
+      debugLog('✅ Article fetched successfully from Supabase fallback', { id, title: fallbackResult.title });
+    }
+    
+    return fallbackResult;
+  }
+
+  // 両方失敗した場合
+  errorLog('Both Strapi and Supabase failed for article by ID', { id });
+  return null;
 }
 
 // スラッグ検索関数も追加

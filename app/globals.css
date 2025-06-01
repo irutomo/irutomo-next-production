@@ -35,6 +35,11 @@
     color: rgb(var(--foreground-rgb));
   }
   
+  /* 韓国語専用フォントクラス */
+  .font-noto-sans-kr {
+    font-family: 'Noto Sans KR', sans-serif !important;
+  }
+  
   /* レスポンシブタイポグラフィ */
   h1 {
     @apply text-2xl md:text-3xl lg:text-4xl font-bold;
@@ -166,6 +171,89 @@
   
   .grid-responsive-4 {
     @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8;
+  }
+  
+  /* プロースタイル（記事コンテンツ用） */
+  .prose-article {
+    @apply max-w-none;
+  }
+  
+  .prose-article h1 {
+    @apply text-2xl md:text-3xl font-bold text-gray-900 mt-8 mb-4 leading-tight;
+  }
+  
+  .prose-article h2 {
+    @apply text-xl md:text-2xl font-bold text-gray-900 mt-6 mb-3 leading-tight;
+  }
+  
+  .prose-article h3 {
+    @apply text-lg md:text-xl font-semibold text-gray-900 mt-5 mb-2 leading-tight;
+  }
+  
+  .prose-article h4 {
+    @apply text-base md:text-lg font-semibold text-gray-900 mt-4 mb-2 leading-tight;
+  }
+  
+  .prose-article p {
+    @apply text-gray-700 leading-relaxed mb-4;
+    line-height: 1.75;
+  }
+  
+  .prose-article ul, .prose-article ol {
+    @apply text-gray-700 mb-4 pl-6;
+  }
+  
+  .prose-article li {
+    @apply mb-2 leading-relaxed;
+  }
+  
+  .prose-article blockquote {
+    @apply border-l-4 border-accent/20 pl-4 py-2 italic text-gray-600 bg-gray-50 rounded-r;
+  }
+  
+  .prose-article a {
+    @apply text-accent hover:text-accent-dark underline underline-offset-2;
+  }
+  
+  .prose-article strong {
+    @apply font-semibold text-gray-900;
+  }
+  
+  .prose-article em {
+    @apply italic text-gray-700;
+  }
+  
+  .prose-article code {
+    @apply bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm;
+  }
+  
+  .prose-article pre {
+    @apply bg-gray-900 text-white p-4 rounded-lg overflow-x-auto mb-4;
+  }
+  
+  .prose-article pre code {
+    @apply bg-transparent text-white px-0 py-0;
+  }
+  
+  .prose-article img {
+    @apply rounded-lg shadow-sm my-6 mx-auto;
+  }
+  
+  .prose-article hr {
+    @apply border-gray-200 my-8;
+  }
+  
+  .prose-article table {
+    @apply w-full border-collapse border border-gray-200 my-6;
+  }
+  
+  .prose-article th,
+  .prose-article td {
+    @apply border border-gray-200 px-4 py-2 text-left;
+  }
+  
+  .prose-article th {
+    @apply bg-gray-50 font-semibold text-gray-900;
   }
   
   /* ハンバーガーメニュースタイル */

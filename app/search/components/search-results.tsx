@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import Pagination from '@/components/common/Pagination'
+import { buildSearchParams } from '@/lib/utils/url-params'
 
 interface Restaurant {
   id: string
@@ -63,19 +65,10 @@ export default function SearchResults({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const params = new URLSearchParams()
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.append(key, value)
+    const params = buildSearchParams({
+      ...filters,
+      page: 1, // フィルター変更時は1ページ目に戻す
     })
-    
-    params.set('page', '1') // フィルター変更時は1ページ目に戻す
-    router.push(`/search?${params.toString()}`)
-  }
-
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(window.location.search)
-    params.set('page', page.toString())
     router.push(`/search?${params.toString()}`)
   }
 
@@ -203,66 +196,15 @@ export default function SearchResults({
         )}
         
         {/* ページネーション */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-8">
-            <nav>
-              <ul className="flex gap-1">
-                {currentPage > 1 && (
-                  <li>
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      className="px-3 py-1 border rounded hover:bg-gray-100"
-                    >
-                      前へ
-                    </button>
-                  </li>
-                )}
-                
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = i + 1
-                  
-                  // 現在のページから2ページ前から2ページ後までを表示
-                  let pageToShow
-                  if (totalPages <= 5) {
-                    pageToShow = pageNum
-                  } else if (currentPage <= 3) {
-                    pageToShow = pageNum
-                  } else if (currentPage >= totalPages - 2) {
-                    pageToShow = totalPages - 4 + i
-                  } else {
-                    pageToShow = currentPage - 2 + i
-                  }
-                  
-                  return (
-                    <li key={pageToShow}>
-                      <button
-                        onClick={() => handlePageChange(pageToShow)}
-                        className={`px-3 py-1 border rounded ${
-                          currentPage === pageToShow
-                            ? 'bg-blue-600 text-white'
-                            : 'hover:bg-gray-100'
-                        }`}
-                      >
-                        {pageToShow}
-                      </button>
-                    </li>
-                  )
-                })}
-                
-                {currentPage < totalPages && (
-                  <li>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      className="px-3 py-1 border rounded hover:bg-gray-100"
-                    >
-                      次へ
-                    </button>
-                  </li>
-                )}
-              </ul>
-            </nav>
-          </div>
-        )}
+        <div className="mt-8">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={pageSize}
+            showPageSizeSelector={false}
+          />
+        </div>
       </div>
     </div>
   )

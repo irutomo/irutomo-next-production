@@ -212,7 +212,12 @@
   }
   
   .prose-article a {
-    @apply text-accent hover:text-accent-dark underline underline-offset-2;
+    @apply text-accent hover:text-accent-dark underline underline-offset-2 transition-colors;
+  }
+  
+  .prose-article a[href^="http"]:after {
+    content: " ↗";
+    @apply text-gray-400 text-xs no-underline;
   }
   
   .prose-article strong {
@@ -236,7 +241,15 @@
   }
   
   .prose-article img {
-    @apply rounded-lg shadow-sm my-6 mx-auto;
+    @apply rounded-lg shadow-sm my-6 mx-auto max-w-full h-auto;
+  }
+  
+  .prose-article figure {
+    @apply my-6;
+  }
+  
+  .prose-article figcaption {
+    @apply text-center text-sm text-gray-600 mt-2 italic;
   }
   
   .prose-article hr {
@@ -327,6 +340,10 @@
 }
 
 /* 必要に応じて他のグローバルスタイル */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply bg-gray-50 text-gray-900;
 } 

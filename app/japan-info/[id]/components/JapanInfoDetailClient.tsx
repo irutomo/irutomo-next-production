@@ -19,11 +19,15 @@ import {
 import { 
   getArticleContent, 
   getArticleTitle, 
-  getFontClass 
+  getFontClass,
+  generateTableOfContents,
+  addHeadingIds
 } from '../../lib/utils';
 import {
   ArticleDetailHeader,
   ArticleNavigation,
+  TableOfContents,
+  ArticleFooter,
 } from '../../components';
 
 // ===================================
@@ -32,6 +36,7 @@ import {
 interface InitialData {
   jaArticle: JapanInfo | null;
   koArticle: JapanInfo | null;
+  relatedArticles: JapanInfo[];
 }
 
 interface JapanInfoDetailClientProps {
@@ -43,10 +48,13 @@ interface JapanInfoDetailClientProps {
 // HTMLコンテンツレンダリングコンポーネント
 // ===================================
 function HtmlContent({ content, className = "" }: { content: string; className?: string }) {
+  // 見出しにIDを追加
+  const contentWithIds = addHeadingIds(content);
+  
   return (
     <div 
       className={`prose-article ${className}`}
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: contentWithIds }}
     />
   );
 }
@@ -88,15 +96,20 @@ function ArticleNotFound({ id, language }: { id: string; language: LanguageKey }
 function ArticleDetail({ 
   article, 
   language, 
-  onLanguageChange 
+  onLanguageChange,
+  relatedArticles
 }: { 
   article: JapanInfo; 
   language: LanguageKey;
   onLanguageChange: (lang: LanguageKey) => void;
+  relatedArticles: JapanInfo[];
 }) {
   const content = getArticleContent(article, language);
   const t = japanInfoTranslations[language];
   const fontClass = getFontClass(language);
+  
+  // 目次を生成
+  const tocItems = content ? generateTableOfContents(content) : [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -114,6 +127,14 @@ function ArticleDetail({
             article={article}
             language={language}
           />
+
+          {/* 目次 */}
+          {tocItems.length > 0 && (
+            <TableOfContents 
+              tocItems={tocItems}
+              language={language}
+            />
+          )}
 
           {/* フィーチャー画像 */}
           {article.featured_image && (
@@ -145,7 +166,15 @@ function ArticleDetail({
 
           {/* 記事フッター */}
           <footer className="border-t border-gray-200 pt-8">
-            <div className="text-center">
+            {/* 新しいフッター機能 */}
+            <ArticleFooter 
+              article={article}
+              relatedArticles={relatedArticles}
+              language={language}
+            />
+            
+            {/* 戻るボタン */}
+            <div className="text-center mt-8">
               <Link
                 href="/japan-info"
                 className={`inline-flex items-center px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/90 transition-colors font-medium ${fontClass}`}
@@ -185,7 +214,8 @@ export function JapanInfoDetailClient({ id, initialData }: JapanInfoDetailClient
     <ArticleDetail 
       article={article} 
       language={language} 
-      onLanguageChange={handleLanguageChange} 
+      onLanguageChange={handleLanguageChange}
+      relatedArticles={initialData.relatedArticles}
     />
   );
 } 

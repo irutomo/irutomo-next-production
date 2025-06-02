@@ -37,6 +37,13 @@ export const japanInfoTranslations = {
     location: '場所',
     views: '閲覧数',
     
+    // 目次関連
+    tableOfContents: '目次',
+    showToc: '目次を表示',
+    hideToc: '目次を隠す',
+    expandToc: '展開',
+    collapseToc: '折りたたみ',
+    
     // 言語切り替え
     viewInKorean: '한국어로 보기',
   },
@@ -72,6 +79,13 @@ export const japanInfoTranslations = {
     tags: '태그',
     location: '위치',
     views: '조회수',
+    
+    // 目次関連
+    tableOfContents: '목차',
+    showToc: '목차 표시',
+    hideToc: '목차 숨기기',
+    expandToc: '전개',
+    collapseToc: '접기',
     
     // 言語切り替え
     viewInJapanese: '日本語で見る',

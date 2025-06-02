@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===================================
 // Next.js App Router実装例
 // Strapi v5 Japan Info Article
@@ -557,7 +558,7 @@ export default async function ArticlePage({ params, searchParams }: ArticlePageP
         {relatedArticles.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6">
-              {locale === 'ja' ? '関連記事' : locale === 'ko' ? '관련 기사' : 'Related Articles'}
+              {locale === 'ja' ? '人気記事🔥' : locale === 'ko' ? '인기 기사🔥' : 'Related Articles'}
             </h2>
             <ArticleList articles={relatedArticles} locale={locale} />
           </section>

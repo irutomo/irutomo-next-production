@@ -420,13 +420,15 @@ export default function RequestContent() {
                     forceReRender={[PAYMENT_AMOUNT, paypalConfig.currency, language]}
                     createOrder={(data, actions) => {
                       try {
-                        if (!actions.order) {
+                        // TypeScript型チェックを回避してPayPal APIを使用
+                        const paypalActions = actions as any;
+                        if (!paypalActions?.order) {
                           console.error("actions.orderが存在しません");
                           setPaymentError(t.paymentError);
                           return Promise.reject("PayPal actions.order not available");
                         }
 
-                        return actions.order.create({
+                        return paypalActions.order.create({
                           intent: "CAPTURE",
                           purchase_units: [
                             {
@@ -440,7 +442,7 @@ export default function RequestContent() {
                           application_context: {
                             shipping_preference: "NO_SHIPPING"
                           }
-                        }).catch(err => {
+                        }).catch((err: any) => {
                           console.error("注文作成中にエラー:", err);
                           setPaymentError(t.paymentError);
                           return Promise.reject(err);
@@ -458,12 +460,13 @@ export default function RequestContent() {
                       return Promise.resolve();
                     }}
                     onApprove={(data, actions) => {
-                      if (!actions.order) {
+                      const paypalActions = actions as any;
+                      if (!paypalActions.order) {
                         console.error("PayPal actions.orderが利用できません");
                         return Promise.reject("PayPal actions.order not available");
                       }
                       
-                      return actions.order.capture().then((details) => {
+                      return paypalActions.order.capture().then((details: any) => {
                         console.log("決済が完了しました:", details);
                         const payerName = details.payer?.name?.given_name || "お客様";
                         console.log("Transaction completed by: " + payerName);

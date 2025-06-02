@@ -4,14 +4,14 @@
 
 import { CalendarIcon, MapPinIcon, EyeIcon, Clock } from 'lucide-react';
 import { JapanInfo } from '@/types/japan-info';
-import { LanguageKey, japanInfoTranslations } from '../lib/translations';
+import { LanguageKey, japanInfoTranslations } from '../../lib/translations';
 import { 
   getArticleTitle, 
   getArticleDescription, 
   formatPublishedDate, 
   getFontClass,
   formatViewCount
-} from '../lib/utils';
+} from '../../lib/utils';
 
 interface ArticleDetailHeaderProps {
   article: JapanInfo;

@@ -6,7 +6,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getJapanInfoArticleById } from '@/lib/strapi/client';
+import { getJapanInfoArticleById, getAllJapanInfoArticles } from '@/lib/strapi/client';
 import { getArticleTitle, getArticleDescription } from '../lib/utils';
 import { AppleLoadingSpinner } from '../components';
 import { JapanInfoDetailClient } from './components/JapanInfoDetailClient';
@@ -70,20 +70,28 @@ export async function generateMetadata({ params }: JapanInfoDetailPageProps): Pr
 async function getInitialArticleData(id: string) {
   try {
     // 日本語版と韓国語版の両方を取得
-    const [jaArticle, koArticle] = await Promise.allSettled([
+    const [jaArticle, koArticle, relatedArticlesResult] = await Promise.allSettled([
       getJapanInfoArticleById(id, 'ja'),
       getJapanInfoArticleById(id, 'ko'),
+      getAllJapanInfoArticles({
+        page: 1,
+        pageSize: 6,
+        sortBy: 'publishedAt',
+        sortOrder: 'desc',
+      }),
     ]);
 
     return {
       jaArticle: jaArticle.status === 'fulfilled' ? jaArticle.value : null,
       koArticle: koArticle.status === 'fulfilled' ? koArticle.value : null,
+      relatedArticles: relatedArticlesResult.status === 'fulfilled' ? relatedArticlesResult.value.articles : [],
     };
   } catch (error) {
     console.error('Error fetching article data:', error);
     return {
       jaArticle: null,
       koArticle: null,
+      relatedArticles: [],
     };
   }
 }

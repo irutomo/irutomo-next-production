@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from '@/app/lib/supabase-server';
 import { NextRequest, NextResponse } from 'next/server';
-import { Database } from '@/lib/database.types';
+import { Database } from '@/types/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,8 +33,7 @@ export async function GET(request: NextRequest) {
     
     // Apply pagination
     const { data, error, count } = await query
-      .range(offset, offset + pageSize - 1)
-      .returns<Database['public']['Tables']['japan_info']['Row'][]>();
+      .range(offset, offset + pageSize - 1);
     
     if (error) {
       console.error('Error fetching Japan info:', error);
@@ -45,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Process data based on language preference
-    const processedData = data.map((item: Database['public']['Tables']['japan_info']['Row']) => ({
+    const processedData = data?.map((item: any) => ({
       ...item,
       title: language === 'ko' && item.korean_title ? item.korean_title : item.title,
       description: language === 'ko' && item.korean_description ? item.korean_description : item.description,

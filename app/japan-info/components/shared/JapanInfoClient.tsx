@@ -9,14 +9,14 @@ import { useState } from 'react';
 import { useLanguage } from '@/contexts/language-context';
 import { getAllJapanInfoArticles } from '@/lib/strapi/client';
 import { JapanInfo } from '@/types/japan-info';
-import { getTranslation } from '../lib/translations';
+import { getTranslation } from '../../lib/translations';
 import {
-  ApplePageHeader,
-  AppleArticleCard,
-  AppleLoadingSpinner,
-  AppleEmptyState,
-  AppleLoadMoreButton
-} from './index';
+  PageHeader,
+  ArticleCard,
+  LoadingSpinner,
+  EmptyState,
+  LoadMoreButton
+} from '../index';
 
 // ===================================
 // 型定義
@@ -77,7 +77,11 @@ export function JapanInfoClient({ initialData }: JapanInfoClientProps) {
   return (
     <>
       {/* ページヘッダー */}
-      <ApplePageHeader language={language} />
+      <PageHeader 
+        title={getTranslation(language, 'pageTitle')}
+        description={getTranslation(language, 'pageDescription')}
+        
+      />
       
       {/* メインコンテンツ */}
       <main className="container-responsive py-12">
@@ -90,7 +94,10 @@ export function JapanInfoClient({ initialData }: JapanInfoClientProps) {
 
         {/* 記事一覧 */}
         {articles.length === 0 ? (
-          <AppleEmptyState language={language} />
+          <EmptyState 
+            message={getTranslation(language, 'noArticles')}
+            description={getTranslation(language, 'comingSoon')}
+          />
         ) : (
           <>
             {/* 記事数表示 */}
@@ -101,30 +108,32 @@ export function JapanInfoClient({ initialData }: JapanInfoClientProps) {
             </div>
 
             {/* 記事カード一覧 */}
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {articles.map((article, index) => (
-                <AppleArticleCard
+                <ArticleCard
                   key={article.id}
                   article={article}
                   language={language}
-                  index={index}
+                  priority={index < 3}
                 />
               ))}
             </div>
 
             {/* もっと読み込むボタン */}
             {hasMore && (
-              <AppleLoadMoreButton
-                language={language}
+              <LoadMoreButton
                 onClick={handleLoadMore}
+                loading={loading}
                 disabled={loading}
-              />
+              >
+                {getTranslation(language, 'loadMore')}
+              </LoadMoreButton>
             )}
             
             {/* 読み込み中表示 */}
             {loading && (
               <div className="mt-8">
-                <AppleLoadingSpinner />
+                <LoadingSpinner />
               </div>
             )}
           </>

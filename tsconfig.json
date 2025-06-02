@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "node_modules",
-    "参考"
+    "参考",
+    "フロントエンドYaml設定"
   ]
 }

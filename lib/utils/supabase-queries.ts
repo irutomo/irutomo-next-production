@@ -15,9 +15,7 @@ import {
 /**
  * レストラン検索用の共通クエリビルダー
  */
-export async function buildRestaurantQuery(filters: RestaurantSearchFilters) {
-  const supabase = await createServerSupabaseClient();
-  
+export function buildRestaurantQuery(filters: RestaurantSearchFilters, supabase: any) {
   let baseQuery = supabase
     .from('restaurants')
     .select('*, restaurant_categories(*)');
@@ -72,12 +70,17 @@ export async function searchRestaurants(filters: RestaurantSearchFilters) {
     countQuery = applyPriceFilter(countQuery, filters.minPrice, filters.maxPrice);
 
     // データ取得用クエリ
-    const dataQuery = await buildRestaurantQuery(filters);
+    const dataQuery = buildRestaurantQuery(filters, supabase);
+    
+    // データクエリにrangeとorderを適用
+    const dataQueryWithPagination = dataQuery
+      .range(from, to)
+      .order('created_at', { ascending: false });
     
     // 並行実行
     const [countResult, dataResult] = await Promise.all([
       countQuery,
-      dataQuery.range(from, to).order('created_at', { ascending: false })
+      dataQueryWithPagination
     ]);
 
     if (countResult.error) {

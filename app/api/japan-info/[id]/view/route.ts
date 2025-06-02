@@ -3,12 +3,39 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
-    // Supabaseクライアントの作成
+    // Strapiで閲覧数をインクリメント（メイン）
+    try {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+      const strapiResponse = await fetch(`${strapiUrl}/api/japan-info-articles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {
+            views: { $inc: 1 } // Strapiのincrement操作
+          }
+        })
+      });
+      
+      if (strapiResponse.ok) {
+        const data = await strapiResponse.json();
+        return NextResponse.json({ 
+          success: true, 
+          views: data.data?.attributes?.views || 0,
+          source: 'strapi'
+        });
+      }
+    } catch (strapiError) {
+      console.warn('Strapi閲覧数更新失敗、Supabaseフォールバックを試行:', strapiError);
+    }
+    
+    // Supabaseフォールバック
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -45,7 +72,11 @@ export async function POST(
       );
     }
     
-    return NextResponse.json({ success: true, views: newViews });
+    return NextResponse.json({ 
+      success: true, 
+      views: newViews,
+      source: 'supabase'
+    });
   } catch (error) {
     console.error('予期せぬエラー:', error);
     return NextResponse.json(

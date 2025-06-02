@@ -25,7 +25,7 @@ export default function HowToUseContent() {
         steps: [
           {
             number: '01',
-            icon: '🏯',
+            icon: '🍚',
             title: 'レストラン選択',
             description: '地域、料理の種類などで希望のレストランを検索して選択してください。'
           },
@@ -65,7 +65,7 @@ export default function HowToUseContent() {
         steps: [
           {
             number: '01',
-            icon: '🏯',
+            icon: '🍚',
             title: '레스토랑 선택',
             description: '지역, 요리 종류 등으로 원하는 레스토랑을 검색하여 선택하세요.'
           },

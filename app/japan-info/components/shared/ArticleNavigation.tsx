@@ -4,8 +4,8 @@
 
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { LanguageKey, japanInfoTranslations } from '../lib/translations';
-import { getFontClass } from '../lib/utils';
+import { LanguageKey, japanInfoTranslations } from '../../lib/translations';
+import { getFontClass } from '../../lib/utils';
 
 interface LanguageToggleProps {
   currentLang: LanguageKey;

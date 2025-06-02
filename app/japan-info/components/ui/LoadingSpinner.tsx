@@ -1,10 +1,10 @@
 // ===================================
-// Apple風ローディングスピナーコンポーネント
+// ローディングスピナーコンポーネント
 // ===================================
 
 import { SparklesIcon } from 'lucide-react';
 
-export function AppleLoadingSpinner() {
+export function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center py-20">
       <div className="relative">
@@ -14,4 +14,7 @@ export function AppleLoadingSpinner() {
       </div>
     </div>
   );
-} 
+}
+
+// Backward compatibility
+export { LoadingSpinner as AppleLoadingSpinner }; 

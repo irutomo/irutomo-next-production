@@ -175,6 +175,7 @@ async function getJapanInfoFromSupabase(
       content: item.content,
       korean_content: item.korean_content || item.content,
       featured_image: item.image_url,
+      image_url: item.image_url,  // 後方互換性のため
       tags: item.tags || [],
       location: item.location || '',
       prefecture: '',
@@ -246,6 +247,7 @@ async function getJapanInfoByIdFromSupabase(id: string): Promise<JapanInfo | nul
       content: item.content,
       korean_content: item.korean_content || item.content,
       featured_image: item.image_url,
+      image_url: item.image_url,  // 後方互換性のため
       tags: item.tags || [],
       location: item.location || '',
       prefecture: '',
@@ -394,6 +396,25 @@ function transformStrapiArticle(strapiArticle: any): JapanInfo {
   const description = data.description || data.koreanDescription || '';
   const content = data.content || data.koreanContent || '';
   
+  // 画像URLの取得（複数のフィールド名に対応）
+  const imageUrl = data.imageUrl || 
+                   data.featured_image?.data?.attributes?.url || 
+                   data.featuredImage?.data?.attributes?.url || 
+                   data.image?.data?.attributes?.url || null;
+  
+  // デバッグ: 画像データの確認
+  debugLog('🖼️ Image data check', {
+    id: strapiArticle.id,
+    title: title,
+    imageUrl,
+    rawImageFields: {
+      imageUrl: data.imageUrl,
+      featured_image: data.featured_image,
+      featuredImage: data.featuredImage,
+      image: data.image
+    }
+  });
+
   return {
     id: customId,
     title: title,
@@ -402,10 +423,8 @@ function transformStrapiArticle(strapiArticle: any): JapanInfo {
     korean_description: data.koreanDescription || description,
     content: content,
     korean_content: data.koreanContent || content,
-    featured_image: data.imageUrl || 
-                   data.featured_image?.data?.attributes?.url || 
-                   data.featuredImage?.data?.attributes?.url || 
-                   data.image?.data?.attributes?.url || null,
+    featured_image: imageUrl,
+    image_url: imageUrl,  // 後方互換性のため
     tags: data.tags || [],
     location: data.location || '',
     prefecture: data.prefecture || '',

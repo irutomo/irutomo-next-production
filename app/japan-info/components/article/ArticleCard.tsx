@@ -26,7 +26,7 @@ export function ArticleCard({ article, language, priority = false }: ArticleCard
         {/* 画像 */}
         <div className="relative aspect-video overflow-hidden">
           <Image
-            src={article.image_url || '/images/placeholder-japan.jpg'}
+            src={article.featured_image || article.image_url || '/images/placeholder-japan.jpg'}
             alt={title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"

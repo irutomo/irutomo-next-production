@@ -19,10 +19,10 @@ import {
 // ===================================
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: '日本MZ情報🍯 | IRUTOMO',
+    title: '일본 MZ 정보🍯 | IRUTOMO',
     description: '日本のMZ世代トレンド・カルチャー・ライフスタイル情報をお届け!!',
     openGraph: {
-      title: '日本MZ情報🍯 | IRUTOMO',
+      title: '일본 MZ 정보🍯🍯 | IRUTOMO',
       description: '日本のMZ世代トレンド・カルチャー・ライフスタイル情報をお届け!!',
       type: 'website',
       locale: 'ko_KR',
@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: '日本MZ情報🍯 | IRUTOMO',
+      title: '일본 MZ 정보🍯🍯 | IRUTOMO',
       description: '日本のMZ世代トレンド・カルチャー・ライフスタイル情報をお届け!!',
     },
   };

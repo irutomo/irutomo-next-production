@@ -402,18 +402,7 @@ function transformStrapiArticle(strapiArticle: any): JapanInfo {
                    data.featuredImage?.data?.attributes?.url || 
                    data.image?.data?.attributes?.url || null;
   
-  // デバッグ: 画像データの確認
-  debugLog('🖼️ Image data check', {
-    id: strapiArticle.id,
-    title: title,
-    imageUrl,
-    rawImageFields: {
-      imageUrl: data.imageUrl,
-      featured_image: data.featured_image,
-      featuredImage: data.featuredImage,
-      image: data.image
-    }
-  });
+
 
   return {
     id: customId,

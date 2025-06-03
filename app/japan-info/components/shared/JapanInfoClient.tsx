@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useLanguage } from '@/contexts/language-context';
-import { getAllJapanInfoArticles } from '@/lib/strapi/client';
+import { getAllJapanInfoArticles } from '@/lib/services/japan-info';
 import { JapanInfo } from '@/types/japan-info';
 import { getTranslation } from '../../lib/translations';
 import {

@@ -6,7 +6,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getJapanInfoArticleById, getAllJapanInfoArticles } from '@/lib/strapi/client';
+import { getJapanInfoArticleById, getAllJapanInfoArticles } from '@/lib/services/japan-info';
 import { getArticleTitle, getArticleDescription } from '../lib/utils';
 import { AppleLoadingSpinner } from '../components';
 import { JapanInfoDetailClient } from './components/JapanInfoDetailClient';

@@ -5,7 +5,7 @@
 
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { getAllJapanInfoArticles } from '@/lib/strapi/client';
+import { getAllJapanInfoArticles } from '@/lib/services/japan-info';
 import { getTranslation, japanInfoTranslations } from './lib/translations';
 import {
   ApplePageHeader,

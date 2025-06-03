@@ -23,7 +23,22 @@ export function getArticleDescription(article: JapanInfo, language: LanguageKey)
  * 言語に応じて記事のコンテンツを取得
  */
 export function getArticleContent(article: JapanInfo, language: LanguageKey): string {
-  return language === 'ko' ? (article.korean_content || article.content) : article.content;
+  const content = language === 'ko' ? (article.korean_content || article.content) : article.content;
+  
+  // デバッグ: コンテンツの詳細を出力
+  if (typeof window !== 'undefined') {
+    console.log('Article content details:', {
+      language,
+      contentPreview: content?.substring(0, 500),
+      hasHtml: /<[^>]+>/.test(content || ''),
+      hasMarkdown: /^#|\*\*|__|\[.*\]|\n\s*[-*+]/.test(content || ''),
+      hasLinks: /\[([^\]]+)\]\(([^)]+)\)/.test(content || ''),
+      linkExamples: content?.match(/\[([^\]]+)\]\(([^)]+)\)/g),
+      rawContent: content
+    });
+  }
+  
+  return content;
 }
 
 /**
@@ -88,39 +103,48 @@ export interface TocItem {
 }
 
 /**
- * HTMLコンテンツから目次（Table of Contents）を生成
+ * HTMLコンテンツまたはMarkdownコンテンツから目次（Table of Contents）を生成
  */
-export function generateTableOfContents(htmlContent: string): TocItem[] {
-  if (typeof window === 'undefined') {
-    // Server-side: 簡易HTML解析
-    return parseHeadingsServerSide(htmlContent);
-  }
+export function generateTableOfContents(content: string): TocItem[] {
+  // HTMLタグが含まれているかチェック
+  const hasHtmlTags = /<[^>]+>/.test(content);
   
-  // Client-side: DOM解析
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlContent, 'text/html');
-  const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  
-  const tocItems: TocItem[] = [];
-  
-  headings.forEach((heading, index) => {
-    const level = parseInt(heading.tagName.charAt(1));
-    const text = heading.textContent?.trim() || '';
-    const id = createHeadingId(text, index);
-    
-    // 元のHTMLにIDを追加（クライアント側でのみ実行）
-    if (!heading.id) {
-      heading.id = id;
+  if (hasHtmlTags) {
+    // HTMLコンテンツの場合
+    if (typeof window === 'undefined') {
+      // Server-side: 簡易HTML解析
+      return parseHeadingsServerSide(content);
     }
     
-    tocItems.push({
-      id,
-      text,
-      level,
+    // Client-side: DOM解析
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    
+    const tocItems: TocItem[] = [];
+    
+    headings.forEach((heading, index) => {
+      const level = parseInt(heading.tagName.charAt(1));
+      const text = heading.textContent?.trim() || '';
+      const id = createHeadingId(text, index);
+      
+      // 元のHTMLにIDを追加（クライアント側でのみ実行）
+      if (!heading.id) {
+        heading.id = id;
+      }
+      
+      tocItems.push({
+        id,
+        text,
+        level,
+      });
     });
-  });
-  
-  return buildHierarchicalToc(tocItems);
+    
+    return buildHierarchicalToc(tocItems);
+  } else {
+    // Markdownコンテンツの場合
+    return parseMarkdownHeadings(content);
+  }
 }
 
 /**
@@ -216,4 +240,35 @@ export function addHeadingIds(htmlContent: string): string {
       return `<h${level}${attributes} id="${id}">${text}</h${level}>`;
     }
   );
+}
+
+/**
+ * Markdownコンテンツから見出しを解析
+ */
+function parseMarkdownHeadings(markdownContent: string): TocItem[] {
+  const lines = markdownContent.split('\n');
+  const tocItems: TocItem[] = [];
+  let index = 0;
+  
+  lines.forEach(line => {
+    const trimmedLine = line.trim();
+    
+    // Markdown見出しの解析 (# ## ### など)
+    const headingMatch = trimmedLine.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const text = headingMatch[2].trim();
+      const id = createHeadingId(text, index);
+      
+      tocItems.push({
+        id,
+        text,
+        level,
+      });
+      
+      index++;
+    }
+  });
+  
+  return buildHierarchicalToc(tocItems);
 } 

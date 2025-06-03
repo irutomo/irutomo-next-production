@@ -151,7 +151,7 @@ export function ArticleShareButtons({ title, url, language }: ArticleShareButton
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6">
       <h3 className={`text-lg font-bold text-gray-900 mb-4 text-center ${fontClass}`}>
-        {language === 'ja' ? 'この記事をシェア🔗' : '이 기사 공유하기🔗'}
+        {language === 'ja' ? '友達にシェア🔗' : '친구에게 공유하기🔗'}
       </h3>
       
       <div className="flex flex-wrap justify-center gap-3">

@@ -9,6 +9,9 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { useLanguage } from '@/contexts/language-context';
 import { JapanInfo } from '@/types/japan-info';
 import { 
@@ -45,18 +48,255 @@ interface JapanInfoDetailClientProps {
 }
 
 // ===================================
-// HTMLコンテンツレンダリングコンポーネント
+// コンテンツ前処理関数
 // ===================================
-function HtmlContent({ content, className = "" }: { content: string; className?: string }) {
-  // 見出しにIDを追加
-  const contentWithIds = addHeadingIds(content);
+function preprocessStrapiContent(content: string): string {
+  if (!content) return '';
   
-  return (
-    <div 
-      className={`prose-article ${className}`}
-      dangerouslySetInnerHTML={{ __html: contentWithIds }}
-    />
+  // Strapiの改行形式を正規化
+  let processedContent = content
+    // Windows形式の改行を統一
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    // エスケープされた改行文字を実際の改行に変換
+    .replace(/\\n/g, '\n')
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\r/g, '\n')
+    // Strapiのリッチテキストエディターで使われる可能性のある改行
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>\s*<p>/gi, '\n\n')
+    .replace(/<p>/gi, '')
+    .replace(/<\/p>/gi, '\n\n')
+    // 連続する改行を段落区切りとして適切に処理
+    .replace(/\n{3,}/g, '\n\n')
+    // HTMLエンティティをデコード
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+  
+  // Markdownリンクの特殊処理
+  // [URL](text) の形式を [text](URL) の正しいMarkdown形式に変換
+  processedContent = processedContent.replace(
+    /\[([^[\]]*(?:https?:\/\/[^[\]]*)?)\]\(([^()]*)\)/g,
+    (match, p1, p2) => {
+      // p1 が URL で p2 がテキストの場合は入れ替える
+      if (p1.includes('http') && !p2.includes('http')) {
+        return `[${p2}](${p1})`;
+      }
+      // それ以外はそのまま
+      return match;
+    }
   );
+  
+  // 最終的な整理
+  processedContent = processedContent
+    .trim()
+    // 行末の余分なスペースを削除（ただしMarkdownの改行用の2つのスペースは保持）
+    .replace(/[ \t]+$/gm, '')
+    // 空行の整理
+    .replace(/^\s*\n/gm, '\n');
+  
+  return processedContent;
+}
+
+// ===================================
+// コンテンツレンダリングコンポーネント
+// ===================================
+function ArticleContent({ content, className = "" }: { content: string; className?: string }) {
+  // コンテンツの前処理
+  const processedContent = preprocessStrapiContent(content);
+  
+  // 詳細なコンテンツタイプ判定
+  const hasHtmlTags = /<[^>]+>/.test(processedContent);
+  const hasMarkdownSyntax = /^#{1,6}\s|^\*\*.*\*\*|\*.*\*|\[.*\]\(.*\)|^[-*+]\s|\n\s*[-*+]\s|```/.test(processedContent);
+  
+  // 見出しにIDを生成するためのカウンター
+  let headingIndex = 0;
+  
+  console.log('Content analysis:', {
+    originalLength: content.length,
+    processedLength: processedContent.length,
+    hasHtmlTags,
+    hasMarkdownSyntax,
+    contentPreview: processedContent.substring(0, 500),
+    renderingAs: hasHtmlTags && !hasMarkdownSyntax ? 'HTML' : 'Markdown',
+    hasLinks: /\[([^\]]+)\]\(([^)]+)\)/.test(processedContent),
+    linkMatches: processedContent.match(/\[([^\]]+)\]\(([^)]+)\)/g)
+  });
+  
+  if (hasHtmlTags && !hasMarkdownSyntax) {
+    // HTMLコンテンツの場合
+    const contentWithIds = addHeadingIds(processedContent);
+    return (
+      <div 
+        className={`prose-article ${className}`}
+        dangerouslySetInnerHTML={{ __html: contentWithIds }}
+      />
+    );
+  } else {
+    // Markdownコンテンツまたは生テキストの場合
+    return (
+      <div className={`prose-article ${className}`} style={{ whiteSpace: 'pre-wrap' }}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkBreaks]}
+          components={{
+            h1: ({ children, ...props }) => {
+              const text = children?.toString() || '';
+              const id = `heading-${headingIndex++}`;
+              return (
+                <h1 id={id} className="text-3xl font-bold text-gray-900 mb-6 mt-8 first:mt-0" {...props}>
+                  {children}
+                </h1>
+              );
+            },
+            h2: ({ children, ...props }) => {
+              const text = children?.toString() || '';
+              const id = `heading-${headingIndex++}`;
+              return (
+                <h2 id={id} className="text-2xl font-bold text-gray-900 mb-4 mt-6" {...props}>
+                  {children}
+                </h2>
+              );
+            },
+            h3: ({ children, ...props }) => {
+              const text = children?.toString() || '';
+              const id = `heading-${headingIndex++}`;
+              return (
+                <h3 id={id} className="text-xl font-bold text-gray-900 mb-3 mt-5" {...props}>
+                  {children}
+                </h3>
+              );
+            },
+            h4: ({ children, ...props }) => {
+              const text = children?.toString() || '';
+              const id = `heading-${headingIndex++}`;
+              return (
+                <h4 id={id} className="text-lg font-bold text-gray-900 mb-2 mt-4" {...props}>
+                  {children}
+                </h4>
+              );
+            },
+            h5: ({ children, ...props }) => {
+              const text = children?.toString() || '';
+              const id = `heading-${headingIndex++}`;
+              return (
+                <h5 id={id} className="text-base font-bold text-gray-900 mb-2 mt-3" {...props}>
+                  {children}
+                </h5>
+              );
+            },
+            h6: ({ children, ...props }) => {
+              const text = children?.toString() || '';
+              const id = `heading-${headingIndex++}`;
+              return (
+                <h6 id={id} className="text-sm font-bold text-gray-900 mb-2 mt-3" {...props}>
+                  {children}
+                </h6>
+              );
+            },
+            p: ({ children, ...props }) => (
+              <p className="text-gray-800 leading-relaxed mb-4" {...props}>
+                {children}
+              </p>
+            ),
+            // 改行を適切に処理するため、brタグのスタイルを追加
+            br: ({ ...props }) => (
+              <br className="leading-relaxed" {...props} />
+            ),
+            ul: ({ children, ...props }) => (
+              <ul className="list-disc list-inside text-gray-800 mb-4 space-y-2" {...props}>
+                {children}
+              </ul>
+            ),
+            ol: ({ children, ...props }) => (
+              <ol className="list-decimal list-inside text-gray-800 mb-4 space-y-2" {...props}>
+                {children}
+              </ol>
+            ),
+            li: ({ children, ...props }) => (
+              <li className="text-gray-800" {...props}>
+                {children}
+              </li>
+            ),
+            blockquote: ({ children, ...props }) => (
+              <blockquote className="border-l-4 border-accent pl-4 py-2 mb-4 text-gray-700 italic bg-gray-50 rounded-r" {...props}>
+                {children}
+              </blockquote>
+            ),
+            code: ({ children, className, ...props }) => {
+              const isInline = !className;
+              return isInline ? (
+                <code className="bg-gray-100 text-accent px-1 py-0.5 rounded text-sm font-mono" {...props}>
+                  {children}
+                </code>
+              ) : (
+                <code className="block bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono mb-4" {...props}>
+                  {children}
+                </code>
+              );
+            },
+            pre: ({ children, ...props }) => (
+              <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono mb-4" {...props}>
+                {children}
+              </pre>
+            ),
+            a: ({ children, href, ...props }) => {
+              console.log('Link component received:', { children, href, props });
+              return (
+                <a 
+                  href={href} 
+                  className="text-accent hover:text-accent/80 underline transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...props}
+                >
+                  {children}
+                </a>
+              );
+            },
+            img: ({ src, alt }) => (
+              <div className="my-6">
+                <Image
+                  src={src || ''}
+                  alt={alt || ''}
+                  width={800}
+                  height={400}
+                  className="rounded-lg shadow-md w-full h-auto"
+                />
+              </div>
+            ),
+            table: ({ children, ...props }) => (
+              <div className="overflow-x-auto mb-6">
+                <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg" {...props}>
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children, ...props }) => (
+              <thead className="bg-gray-50" {...props}>
+                {children}
+              </thead>
+            ),
+            th: ({ children, ...props }) => (
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" {...props}>
+                {children}
+              </th>
+            ),
+            td: ({ children, ...props }) => (
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200" {...props}>
+                {children}
+              </td>
+            ),
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
+      </div>
+    );
+  }
 }
 
 // ===================================
@@ -108,6 +348,8 @@ function ArticleDetail({
   const t = japanInfoTranslations[language];
   const fontClass = getFontClass(language);
   
+
+  
   // 目次を生成
   const tocItems = content ? generateTableOfContents(content) : [];
 
@@ -153,7 +395,7 @@ function ArticleDetail({
           {/* 記事コンテンツ */}
           {content ? (
             <div className="mb-12">
-              <HtmlContent 
+              <ArticleContent 
                 content={content} 
                 className={`text-gray-800 leading-relaxed ${fontClass}`}
               />

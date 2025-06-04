@@ -32,6 +32,7 @@ import {
   TableOfContents,
   ArticleFooter,
 } from '../../components';
+import { ContentProtection, ProtectedImage } from '../../components/shared/ContentProtection';
 
 // ===================================
 // 型定義
@@ -130,9 +131,9 @@ function ArticleContent({ content, className = "" }: { content: string; classNam
   if (hasHtmlTags && !hasMarkdownSyntax) {
     // HTMLコンテンツの場合
     const contentWithIds = addHeadingIds(processedContent);
-    return (
-      <div 
-        className={`prose-article ${className}`}
+  return (
+    <div 
+      className={`prose-article ${className}`}
         dangerouslySetInnerHTML={{ __html: contentWithIds }}
       />
     );
@@ -142,6 +143,7 @@ function ArticleContent({ content, className = "" }: { content: string; classNam
       <div className={`prose-article ${className}`} style={{ whiteSpace: 'pre-wrap' }}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkBreaks]}
+          skipHtml={false}
           components={{
             h1: ({ children, ...props }) => {
               const text = children?.toString() || '';
@@ -257,17 +259,25 @@ function ArticleContent({ content, className = "" }: { content: string; classNam
                 </a>
               );
             },
-            img: ({ src, alt }) => (
-              <div className="my-6">
-                <Image
+            img: ({ src, alt }) => {
+              // インライン画像として扱い、ブロック要素を避ける
+              return (
+                <img
                   src={src || ''}
                   alt={alt || ''}
-                  width={800}
-                  height={400}
-                  className="rounded-lg shadow-md w-full h-auto"
+                  className="rounded-lg shadow-md max-w-full h-auto select-none pointer-events-none my-2 block"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable={false}
                 />
-              </div>
-            ),
+              );
+            },
             table: ({ children, ...props }) => (
               <div className="overflow-x-auto mb-6">
                 <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg" {...props}>
@@ -380,26 +390,36 @@ function ArticleDetail({
 
           {/* フィーチャー画像 */}
           {article.featured_image && (
-            <div className="relative w-full h-64 md:h-96 lg:h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-8 md:mb-12 shadow-lg">
-              <Image
-                src={article.featured_image}
-                alt={getArticleTitle(article, language)}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                priority
-              />
-            </div>
+            <ContentProtection>
+              <div className="relative w-full h-64 md:h-96 lg:h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden mb-8 md:mb-12 shadow-lg">
+                <img
+                  src={article.featured_image}
+                  alt={getArticleTitle(article, language)}
+                  className="object-cover w-full h-full select-none pointer-events-none"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  draggable={false}
+                />
+              </div>
+            </ContentProtection>
           )}
 
           {/* 記事コンテンツ */}
           {content ? (
-            <div className="mb-12">
-              <ArticleContent 
-                content={content} 
-                className={`text-gray-800 leading-relaxed ${fontClass}`}
-              />
-            </div>
+            <ContentProtection>
+              <div className="mb-12">
+                <ArticleContent 
+                  content={content} 
+                  className={`text-gray-800 leading-relaxed ${fontClass}`}
+                />
+              </div>
+            </ContentProtection>
           ) : (
             <div className={`text-center py-12 text-gray-500 ${fontClass}`}>
               {t.noContent}
@@ -456,7 +476,7 @@ export function JapanInfoDetailClient({ id, initialData }: JapanInfoDetailClient
     <ArticleDetail 
       article={article} 
       language={language} 
-      onLanguageChange={handleLanguageChange}
+      onLanguageChange={handleLanguageChange} 
       relatedArticles={initialData.relatedArticles}
     />
   );
